@@ -3,25 +3,25 @@ import Image from "next/image";
 
 export default function Download() {
     return (
-        <section className={`px-[7.5rem] py-[4rem] flex gap-[5rem] items-center bg-white`}>
-            <div className={`flex flex-col gap-[1rem] py-[1rem]`}>
-                <h1 className="text-[3rem] font-semibold text-almost-black">Download The App</h1>
-                <p className="text-neutral-text">CivicSignal is available on both mobile and desktop platforms. Download now and start making a difference in your community</p>
+        <section className="px-4 md:px-8 lg:px-[7.5rem] py-12 md:py-16 lg:py-[4rem] flex flex-col lg:flex-row gap-8 lg:gap-[5rem] items-center bg-white">
+            <div className="flex flex-col gap-4 md:gap-6 py-4 text-center lg:text-left">
+                <h1 className="text-2xl md:text-4xl lg:text-[3rem] font-semibold text-almost-black">Download The App</h1>
+                <p className="text-sm md:text-base text-neutral-text max-w-lg mx-auto lg:mx-0">CivicSignal is available on both mobile and desktop platforms. Download now and start making a difference in your community</p>
             </div>
 
-            <div className={`flex flex-col gap-[1rem] items-center justify-center`}>
-                <div className="flex gap-[2rem]">
+            <div className="flex flex-col gap-4 md:gap-6 items-center justify-center w-full lg:w-auto">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto">
                     <MainBtn test="Download For Android" toDo={() => {}} />
                     <MainBtn test="Download For iOS" toDo={() => {}} />
                 </div>
-                <p className="text-lg text-neutral-text">Or you can get the app from...</p>
-                <div className="flex gap-[2rem]">
-                    <button className="rounded-[0.5rem] px-[2rem] py-[.4rem] bg-light-gray hover:bg-accent2 text-primary font-semibold transition-all flex gap-[1rem]">
-                        <Image src="/images/playStore.png" alt="googlePlay" width={23} height={23} />  
+                <p className="text-sm md:text-lg text-neutral-text">Or you can get the app from...</p>
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto">
+                    <button className="rounded-lg px-4 md:px-6 py-2 md:py-3 bg-light-gray hover:bg-accent2 text-primary font-semibold transition-all flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
+                        <Image src="/images/playStore.png" alt="googlePlay" width={20} height={20} className="md:w-6 md:h-6" />  
                         Google Play
                     </button>
-                    <button className="rounded-[0.5rem] px-[2rem] py-[.4rem] bg-light-gray hover:bg-accent2 text-primary font-semibold transition-all flex gap-[1rem]">
-                        <Image src="/images/appleStore.png" alt="appStore" width={50} height={20} />
+                    <button className="rounded-lg px-4 md:px-6 py-2 md:py-3 bg-light-gray hover:bg-accent2 text-primary font-semibold transition-all flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
+                        <Image src="/images/appleStore.png" alt="appStore" width={24} height={18} className="md:w-7 md:h-5" />
                         App Store
                     </button>
                 </div>
