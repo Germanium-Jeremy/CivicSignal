@@ -88,7 +88,7 @@ export default function Testimonials() {
                                         <div className="flex flex-col items-center text-center space-y-6">
                                             {/* Profile Image */}
                                             <div className="relative">
-                                                <Image src={comment.profile} alt={comment.name} width={80} height={80} className="rounded-full border-4 border-accent2/20 w-[7rem] h-[7rem]" resource="image" />
+                                                <Image src={comment.profile} alt={comment.name} width={80} height={80} className="rounded-full border-4 border-accent2/20 w-[7rem] h-[7rem]" objectFit="contain" />
                                             </div>
                                             
                                             {/* Rating Stars */}
@@ -109,7 +109,7 @@ export default function Testimonials() {
                                                 <h3 className="text-xl font-semibold text-almost-black">
                                                     {comment.name}
                                                 </h3>
-                                                <p className="text-sm text-accent font-medium">
+                                                <p className="text-sm text-accent2 font-medium">
                                                     {comment.role}
                                                 </p>
                                             </div>
