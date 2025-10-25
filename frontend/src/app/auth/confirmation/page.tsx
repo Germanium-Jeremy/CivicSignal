@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { FaCheck, FaArrowRight, FaHome, FaUser } from "react-icons/fa";
 
-export default function ConfirmationPage() {
+function ConfirmationContent() {
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -204,5 +204,29 @@ export default function ConfirmationPage() {
                 }
             `}</style>
         </AuthLayout>
+    );
+}
+
+function LoadingFallback() {
+    return (
+        <AuthLayout 
+            title="Loading..."
+            subtitle="Please wait while we load your confirmation"
+        >
+            <div className="text-center space-y-8">
+                <div className="w-24 h-24 mx-auto bg-gradient-to-r from-accent2 to-accent rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </div>
+                <p className="text-neutral-text">Loading confirmation details...</p>
+            </div>
+        </AuthLayout>
+    );
+}
+
+export default function ConfirmationPage() {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <ConfirmationContent />
+        </Suspense>
     );
 }

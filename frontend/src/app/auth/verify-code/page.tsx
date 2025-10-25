@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { FaEnvelope, FaPhone, FaArrowRight, FaRedo } from "react-icons/fa";
 
-export default function VerifyCodePage() {
+function VerifyCodeContent() {
     const [code, setCode] = useState(['', '', '', '', '', '']);
     const [isLoading, setIsLoading] = useState(false);
     const [isResending, setIsResending] = useState(false);
@@ -225,5 +225,29 @@ export default function VerifyCodePage() {
                 </div>
             </div>
         </AuthLayout>
+    );
+}
+
+function LoadingFallback() {
+    return (
+        <AuthLayout 
+            title="Loading Verification"
+            subtitle="Please wait while we prepare your verification code"
+        >
+            <div className="text-center space-y-6">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-r from-accent2 to-accent rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </div>
+                <p className="text-neutral-text">Loading verification details...</p>
+            </div>
+        </AuthLayout>
+    );
+}
+
+export default function VerifyCodePage() {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <VerifyCodeContent />
+        </Suspense>
     );
 }
