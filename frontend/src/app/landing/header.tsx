@@ -99,7 +99,7 @@ export default function HeaderUnAuthenticated() {
 
                 {/* Desktop CTA */}
                 <div className="hidden md:block">
-                    <MainBtn test="Login" toDo={() => {}} />
+                    <MainBtn text="Login" onClick={() => {}} />
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -132,7 +132,7 @@ export default function HeaderUnAuthenticated() {
                         </a>
                     ))}
                     <div className="pt-4 border-t border-light-gray/30">
-                        <MainBtn test="Login" toDo={() => {}} />
+                        <MainBtn text="Login" onClick={() => {}} />
                     </div>
                 </nav>
             </div>
