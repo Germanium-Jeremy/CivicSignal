@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { FaExclamationTriangle, FaCheckCircle, FaClock, FaCheck, FaArrowUp, FaArrowDown, FaEye, FaCalendarAlt, FaMapMarkerAlt, FaUser} from "react-icons/fa";
 
+// Force static generation
+export const dynamic = 'force-static';
+
 // Mock data - replace with actual API calls
 const mockAgencyData = {
     name: "City Municipal Corporation",
