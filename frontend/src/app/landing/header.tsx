@@ -1,7 +1,7 @@
 "use client";
 import MainBtn from "@/components/mainBtn";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 
 const navLinks = [
@@ -15,13 +15,55 @@ const navLinks = [
 
 export default function HeaderUnAuthenticated() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState("hero");
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     };
 
-    const closeMenu = () => {
+    const closeMenu = () => { 
         setIsMenuOpen(false);
+    };
+
+    // Function to check which section is currently in view
+    const checkActiveSection = () => {
+        const sections = navLinks.map(link => link.relativeLink.substring(1)); // Remove # from links
+        const scrollPosition = window.scrollY + 100; // Add offset for header height
+
+        for (let i = sections.length - 1; i >= 0; i--) {
+            const section = document.getElementById(sections[i]);
+            if (section) {
+                const sectionTop = section.offsetTop;
+                if (scrollPosition >= sectionTop) {
+                    setActiveSection(sections[i]);
+                    break;
+                }
+            }
+        }
+    };
+
+    // Set up scroll listener
+    useEffect(() => {
+        // Check initial section on mount
+        checkActiveSection();
+
+        // Add scroll event listener
+        const handleScroll = () => {
+            checkActiveSection();
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Cleanup
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
+    // Helper function to check if a link is active
+    const isLinkActive = (link: string) => {
+        const sectionId = link.substring(1); // Remove # from link
+        return activeSection === sectionId;
     };
 
     return (
@@ -37,12 +79,20 @@ export default function HeaderUnAuthenticated() {
                 <nav className="hidden lg:flex gap-6">
                     {navLinks.map((link) => (
                         <a 
-                            className="font-medium text-neutral-text hover:text-primary hover:font-semibold transition-all duration-300 relative group" 
+                            className={`font-medium transition-all duration-300 relative group ${
+                                isLinkActive(link.relativeLink) 
+                                    ? 'text-accent2 font-semibold' 
+                                    : 'text-neutral-text hover:text-primary hover:font-semibold'
+                            }`}
                             key={link.id} 
                             href={link.relativeLink}
                         >
                             {link.name}
-                            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent2 transition-all duration-300 group-hover:w-full"></span>
+                            <span className={`absolute -bottom-1 left-0 h-0.5 bg-accent2 transition-all duration-300 ${
+                                isLinkActive(link.relativeLink) 
+                                    ? 'w-full' 
+                                    : 'w-0 group-hover:w-full'
+                            }`}></span>
                         </a>
                     ))}
                 </nav>
@@ -69,7 +119,11 @@ export default function HeaderUnAuthenticated() {
                 <nav className="p-6 space-y-4">
                     {navLinks.map((link) => (
                         <a 
-                            className="block py-3 px-4 font-medium text-neutral-text hover:text-primary hover:bg-accent2/5 rounded-xl transition-all duration-300" 
+                            className={`block py-3 px-4 font-medium rounded-xl transition-all duration-300 ${
+                                isLinkActive(link.relativeLink)
+                                    ? 'text-accent2 bg-accent2/10 font-semibold'
+                                    : 'text-neutral-text hover:text-primary hover:bg-accent2/5'
+                            }`}
                             key={link.id} 
                             href={link.relativeLink}
                             onClick={closeMenu}
