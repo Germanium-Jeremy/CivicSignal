@@ -1,3 +1,4 @@
+"use client"
 import MainBtn from "@/components/mainBtn";
 import Image from "next/image";
 
@@ -11,8 +12,8 @@ export default function Download() {
 
             <div className="flex flex-col gap-4 md:gap-6 items-center justify-center w-full lg:w-auto">
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto">
-                    <MainBtn test="Download For Android" toDo={() => {}} />
-                    <MainBtn test="Download For iOS" toDo={() => {}} />
+                    <MainBtn text="Download For Android" onClick={() => {}} />
+                    <MainBtn text="Download For iOS" onClick={() => {}} />
                 </div>
                 <p className="text-sm md:text-lg text-neutral-text">Or you can get the app from...</p>
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto">
