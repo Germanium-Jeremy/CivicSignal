@@ -43,6 +43,16 @@ function ConfirmationContent() {
                     secondaryAction: "Explore Features",
                     secondaryHref: "/features"
                 };
+            case 'agency-registered':
+                return {
+                    title: "Agency Registration Complete!",
+                    subtitle: "Your agency has been successfully registered with CivicSignal. Your account is now under review and will be activated once verified.",
+                    icon: "🏛️",
+                    primaryAction: "Go to Dashboard",
+                    primaryHref: "/dashboard",
+                    secondaryAction: "View Profile",
+                    secondaryHref: "/profile"
+                };
             default:
                 return {
                     title: "Success!",

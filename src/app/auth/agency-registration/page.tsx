@@ -103,15 +103,28 @@ export default function AgencyRegistrationPage() {
             agency: formData
         };
         
-        // Simulate API call
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            // TODO: Replace with real API call to save agency registration
+            // const response = await authAPI.registerAgency(completeRegistration);
+            
+            // Simulate API call for now
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
             console.log("Complete registration:", completeRegistration);
+            
             // Clear stored data
             localStorage.removeItem('officerData');
-            // Navigate to verification
-            router.push('/auth/verify-account');
-        }, 2000);
+            localStorage.removeItem('agencyData');
+            
+            // Navigate to confirmation page (users are already verified at this point)
+            router.push('/auth/confirmation?type=agency-registered');
+            
+        } catch (error) {
+            console.error('Agency registration error:', error);
+            // TODO: Add error handling UI
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleBack = () => {

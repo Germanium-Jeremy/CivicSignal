@@ -1,11 +1,11 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { authAPI } from "@/lib/api";
 import { FaEnvelope, FaPhone, FaCheck, FaRedo, FaExclamationTriangle } from "react-icons/fa";
 
-export default function VerifyAccountPage() {
+function VerifyAccountContent() {
     const [emailCode, setEmailCode] = useState(['', '', '', '', '', '']);
     const [phoneCode, setPhoneCode] = useState(['', '', '', '', '', '']);
     const [emailVerified, setEmailVerified] = useState(false);
@@ -415,5 +415,22 @@ export default function VerifyAccountPage() {
                 </div>
             </div>
         </AuthLayout>
+    );
+}
+
+export default function VerifyAccountPage() {
+    return (
+        <Suspense fallback={
+            <AuthLayout 
+                title="Verify Your Account" 
+                subtitle="Loading verification page..."
+            >
+                <div className="flex items-center justify-center py-12">
+                    <div className="w-8 h-8 border-2 border-accent2/30 border-t-accent2 rounded-full animate-spin"></div>
+                </div>
+            </AuthLayout>
+        }>
+            <VerifyAccountContent />
+        </Suspense>
     );
 }
