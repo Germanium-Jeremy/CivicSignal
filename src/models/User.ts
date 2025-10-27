@@ -138,8 +138,6 @@ const UserSchema = new Schema<IUser>({
 });
 
 // Indexes for better performance
-UserSchema.index({ email: 1 });
-UserSchema.index({ phone: 1 });
 UserSchema.index({ emailVerificationCode: 1 });
 UserSchema.index({ passwordResetToken: 1 });
 

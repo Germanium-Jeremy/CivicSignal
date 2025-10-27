@@ -33,9 +33,9 @@ async function connectDB(): Promise<typeof mongoose> {
   // Create a new connection promise if it doesn't exist
   if (!cached.promise) {
     const opts = {
-      // maxPoolSize: 10, // Maximum number of connections in the pool
-      // serverSelectionTimeoutMS: 5000, // Timeout for server selection
-      // socketTimeoutMS: 45000, // Timeout for socket operations
+      maxPoolSize: 10, // Maximum number of connections in the pool
+      serverSelectionTimeoutMS: 5000, // Timeout for server selection
+      socketTimeoutMS: 45000, // Timeout for socket operations
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
