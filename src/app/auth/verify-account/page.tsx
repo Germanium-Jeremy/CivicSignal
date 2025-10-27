@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { FaEnvelope, FaPhone, FaCheck, FaRedo } from "react-icons/fa";
+import { authAPI } from "@/lib/api";
+import { FaEnvelope, FaPhone, FaCheck, FaRedo, FaExclamationTriangle } from "react-icons/fa";
 
 export default function VerifyAccountPage() {
     const [emailCode, setEmailCode] = useState(['', '', '', '', '', '']);
@@ -17,14 +18,17 @@ export default function VerifyAccountPage() {
     const [canResendPhone, setCanResendPhone] = useState(false);
     const [isResendingEmail, setIsResendingEmail] = useState(false);
     const [isResendingPhone, setIsResendingPhone] = useState(false);
+    const [emailError, setEmailError] = useState("");
+    const [phoneError, setPhoneError] = useState("");
     
     const emailInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const phoneInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const router = useRouter();
+    const searchParams = useSearchParams();
 
-    // Mock user data
-    const userEmail = "user@example.com";
-    const userPhone = "+1 (555) 123-4567";
+    // Get user data from URL params
+    const userEmail = searchParams.get('email') || "";
+    const userPhone = searchParams.get('phone') || "";
 
     // Timer for email resend
     useEffect(() => {
@@ -100,30 +104,53 @@ export default function VerifyAccountPage() {
 
     const handleVerifyEmail = async (code: string) => {
         setIsVerifyingEmail(true);
+        setEmailError("");
         
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const response = await authAPI.verifyEmail(userEmail, code);
+            
+            if (response.success) {
+                setEmailVerified(true);
+                checkBothVerified(true, phoneVerified);
+            }
+        } catch (err: any) {
+            console.error('Email verification error:', err);
+            setEmailError(err.message || 'Verification failed. Please try again.');
+            // Clear the code inputs on error
+            setEmailCode(['', '', '', '', '', '']);
+            emailInputRefs.current[0]?.focus();
+        } finally {
             setIsVerifyingEmail(false);
-            setEmailVerified(true);
-            checkBothVerified(true, phoneVerified);
-        }, 1500);
+        }
     };
 
     const handleVerifyPhone = async (code: string) => {
         setIsVerifyingPhone(true);
+        setPhoneError("");
         
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const response = await authAPI.verifyPhone(userPhone, code);
+            
+            if (response.success) {
+                setPhoneVerified(true);
+                checkBothVerified(emailVerified, true);
+            }
+        } catch (err: any) {
+            console.error('Phone verification error:', err);
+            setPhoneError(err.message || 'Verification failed. Please try again.');
+            // Clear the code inputs on error
+            setPhoneCode(['', '', '', '', '', '']);
+            phoneInputRefs.current[0]?.focus();
+        } finally {
             setIsVerifyingPhone(false);
-            setPhoneVerified(true);
-            checkBothVerified(emailVerified, true);
-        }, 1500);
+        }
     };
 
     const checkBothVerified = (emailStatus: boolean, phoneStatus: boolean) => {
         if (emailStatus && phoneStatus) {
             setTimeout(() => {
-                router.push('/auth/confirmation?type=account-verified');
+                // Redirect to agency registration instead of confirmation
+                router.push('/auth/agency-registration');
             }, 1000);
         }
     };
@@ -131,22 +158,42 @@ export default function VerifyAccountPage() {
     const handleResendCode = async (type: 'email' | 'phone') => {
         if (type === 'email') {
             setIsResendingEmail(true);
-            setTimeout(() => {
+            setEmailError("");
+            
+            try {
+                const response = await authAPI.resendEmailVerification(userEmail);
+                
+                if (response.success) {
+                    setEmailTimeLeft(60);
+                    setCanResendEmail(false);
+                    setEmailCode(['', '', '', '', '', '']);
+                    emailInputRefs.current[0]?.focus();
+                }
+            } catch (err: any) {
+                console.error('Resend email error:', err);
+                setEmailError(err.message || 'Failed to resend email. Please try again.');
+            } finally {
                 setIsResendingEmail(false);
-                setEmailTimeLeft(60);
-                setCanResendEmail(false);
-                setEmailCode(['', '', '', '', '', '']);
-                emailInputRefs.current[0]?.focus();
-            }, 2000);
+            }
         } else {
             setIsResendingPhone(true);
-            setTimeout(() => {
+            setPhoneError("");
+            
+            try {
+                const response = await authAPI.resendPhoneVerification(userPhone);
+                
+                if (response.success) {
+                    setPhoneTimeLeft(60);
+                    setCanResendPhone(false);
+                    setPhoneCode(['', '', '', '', '', '']);
+                    phoneInputRefs.current[0]?.focus();
+                }
+            } catch (err: any) {
+                console.error('Resend phone error:', err);
+                setPhoneError(err.message || 'Failed to resend SMS. Please try again.');
+            } finally {
                 setIsResendingPhone(false);
-                setPhoneTimeLeft(60);
-                setCanResendPhone(false);
-                setPhoneCode(['', '', '', '', '', '']);
-                phoneInputRefs.current[0]?.focus();
-            }, 2000);
+            }
         }
     };
 
@@ -239,6 +286,13 @@ export default function VerifyAccountPage() {
                             <>
                                 {renderCodeInput(emailCode, setEmailCode, emailInputRefs, 'email', emailVerified, isVerifyingEmail)}
                                 
+                                {emailError && (
+                                    <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" size={14} />
+                                        <p className="text-red-800 text-sm">{emailError}</p>
+                                    </div>
+                                )}
+                                
                                 {isVerifyingEmail && (
                                     <div className="flex items-center justify-center gap-2 text-accent2">
                                         <div className="w-4 h-4 border-2 border-accent2/30 border-t-accent2 rounded-full animate-spin"></div>
@@ -304,6 +358,13 @@ export default function VerifyAccountPage() {
                         {!phoneVerified && (
                             <>
                                 {renderCodeInput(phoneCode, setPhoneCode, phoneInputRefs, 'phone', phoneVerified, isVerifyingPhone)}
+                                
+                                {phoneError && (
+                                    <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" size={14} />
+                                        <p className="text-red-800 text-sm">{phoneError}</p>
+                                    </div>
+                                )}
                                 
                                 {isVerifyingPhone && (
                                     <div className="flex items-center justify-center gap-2 text-accent2">

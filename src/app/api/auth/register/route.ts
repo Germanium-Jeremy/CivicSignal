@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Generate verification tokens
-    const emailVerificationToken = generateVerificationToken();
+    // Generate verification codes (both email and phone use 6-digit codes)
+    const emailVerificationCode = generateVerificationCode();
     const phoneVerificationCode = generateVerificationCode();
 
     // Create new user
@@ -103,20 +103,19 @@ export async function POST(request: NextRequest) {
       email: email.toLowerCase(),
       phone: phone.replace(/\s/g, ''),
       password: hashedPassword,
-      emailVerificationToken,
+      emailVerificationCode,
       phoneVerificationCode,
-      emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      emailVerificationExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes (same as phone)
       phoneVerificationExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
       role: 'citizen'
     });
 
     await newUser.save();
 
-    // Send verification email
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${emailVerificationToken}`;
+    // Send verification email with code
     const emailSent = await sendEmail(email, 'email-verification', {
       fullName: fullName.trim(),
-      verificationUrl
+      verificationCode: emailVerificationCode
     });
 
     // Send verification SMS
@@ -150,11 +149,20 @@ export async function POST(request: NextRequest) {
     console.error('Registration error:', error);
     
     // Handle mongoose validation errors
-    if ((error as Error).name === 'ValidationError') {
-      const errors = Object.values((error as Error).message).map((err: any) => err.message);
+    if ((error as any).name === 'ValidationError') {
+      const errors = Object.values((error as any).errors).map((err: any) => err.message);
       return NextResponse.json(
         { error: 'Validation failed', details: errors }, 
         { status: 400 }
+      );
+    }
+
+    // Handle duplicate key errors
+    if ((error as any).code === 11000) {
+      const field = Object.keys((error as any).keyValue)[0];
+      return NextResponse.json(
+        { error: `An account with this ${field} already exists` }, 
+        { status: 409 }
       );
     }
 

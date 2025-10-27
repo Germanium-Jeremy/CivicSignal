@@ -39,7 +39,7 @@ export default function AuthLayout({ children, title, subtitle, showBackButton =
                     </Link>
 
                     {/* Back Button */}
-                    {showBackButton && (
+                    {/* {showBackButton && (
                         <Link 
                             href={backHref}
                             className="inline-flex items-center gap-2 text-sm text-neutral-text hover:text-accent2 transition-colors duration-300 mb-4"
@@ -49,7 +49,7 @@ export default function AuthLayout({ children, title, subtitle, showBackButton =
                             </svg>
                             Back
                         </Link>
-                    )}
+                    )} */}
 
                     {/* Title */}
                     <h1 className="text-2xl md:text-3xl font-bold text-almost-black mb-2">

@@ -5,11 +5,22 @@ import twilio from 'twilio';
 const emailTransporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  tls: {
+    // Do not fail on invalid certs
+    rejectUnauthorized: false,
+    // Allow self-signed certificates
+    ciphers: 'SSLv3'
+  },
+  // Additional options for Gmail
+  requireTLS: true,
+  connectionTimeout: 60000, // 60 seconds
+  greetingTimeout: 30000, // 30 seconds
+  socketTimeout: 60000, // 60 seconds
 });
 
 // SMS configuration
@@ -28,14 +39,17 @@ const getEmailTemplate = (type: string, data: any): { subject: string; html: str
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #2563eb;">Welcome to CivicSignal!</h2>
             <p>Hello ${data.fullName},</p>
-            <p>Thank you for registering with CivicSignal. Please verify your email address by clicking the link below:</p>
+            <p>Thank you for registering with CivicSignal. Please verify your email address by entering the verification code below:</p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${data.verificationUrl}" 
-                 style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Verify Email Address
-              </a>
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; border: 2px solid #2563eb;">
+                <p style="margin: 0; color: #374151; font-size: 14px; font-weight: 500;">Your verification code is:</p>
+                <div style="font-size: 32px; font-weight: bold; color: #2563eb; letter-spacing: 4px; margin: 10px 0;">
+                  ${data.verificationCode}
+                </div>
+                <p style="margin: 0; color: #6b7280; font-size: 12px;">Enter this code in the verification page</p>
+              </div>
             </div>
-            <p>This link will expire in 24 hours.</p>
+            <p style="color: #dc2626; font-size: 14px;"><strong>Important:</strong> This code will expire in 10 minutes.</p>
             <p>If you didn't create an account with CivicSignal, please ignore this email.</p>
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
             <p style="color: #666; font-size: 12px;">
@@ -99,21 +113,54 @@ const getEmailTemplate = (type: string, data: any): { subject: string; html: str
   }
 };
 
-// Send email
+// Verify email transporter connection
+export const verifyEmailConnection = async (): Promise<boolean> => {
+  try {
+    await emailTransporter.verify();
+    console.log('Email transporter is ready');
+    return true;
+  } catch (error) {
+    console.error('Email transporter verification failed:', error);
+    return false;
+  }
+};
+
+// Send email with improved error handling
 export const sendEmail = async (to: string, type: string, data: any): Promise<boolean> => {
   try {
+    // Verify connection first
+    const isConnected = await verifyEmailConnection();
+    if (!isConnected) {
+      console.error('Email transporter not ready');
+      return false;
+    }
+
     const { subject, html } = getEmailTemplate(type, data);
     
-    await emailTransporter.sendMail({
+    const mailOptions = {
       from: `"CivicSignal" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
       to,
       subject,
       html,
-    });
+    };
+
+    console.log('Sending email to:', to);
+    const result = await emailTransporter.sendMail(mailOptions);
+    console.log('Email sent successfully:', result.messageId);
     
     return true;
   } catch (error) {
     console.error('Email sending failed:', error);
+    
+    // Log specific error details
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      if ('code' in error) {
+        console.error('Error code:', (error as any).code);
+      }
+    }
+    
     return false;
   }
 };

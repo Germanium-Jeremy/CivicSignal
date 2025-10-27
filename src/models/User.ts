@@ -8,7 +8,7 @@ export interface IUser extends Document {
   password: string;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
-  emailVerificationToken?: string;
+  emailVerificationCode?: string;
   phoneVerificationCode?: string;
   emailVerificationExpires?: Date;
   phoneVerificationExpires?: Date;
@@ -67,7 +67,7 @@ const UserSchema = new Schema<IUser>({
     type: Boolean,
     default: false
   },
-  emailVerificationToken: {
+  emailVerificationCode: {
     type: String,
     select: false
   },
@@ -131,7 +131,7 @@ const UserSchema = new Schema<IUser>({
   timestamps: true,
   toJSON: {
     transform: function(doc, ret) {
-    const { password, emailVerificationToken, phoneVerificationCode, passwordResetToken, refreshTokens, ...rest } = ret;
+    const { password, emailVerificationCode, phoneVerificationCode, passwordResetToken, refreshTokens, ...rest } = ret;
     return rest;
     }
   }
@@ -140,7 +140,7 @@ const UserSchema = new Schema<IUser>({
 // Indexes for better performance
 UserSchema.index({ email: 1 });
 UserSchema.index({ phone: 1 });
-UserSchema.index({ emailVerificationToken: 1 });
+UserSchema.index({ emailVerificationCode: 1 });
 UserSchema.index({ passwordResetToken: 1 });
 
 // Export model

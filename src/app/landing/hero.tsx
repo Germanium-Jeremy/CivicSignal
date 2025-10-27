@@ -8,7 +8,7 @@ export default function Hero() {
     const router = useRouter();
 
     const handleGetStarted = () => {
-        router.push('/auth/login');
+        router.push('/auth/signup');
     };
 
     const handleWatchDemo = () => {

@@ -160,10 +160,10 @@ export const authAPI = {
     return response;
   },
 
-  verifyEmail: async (token: string) => {
+  verifyEmail: async (email: string, code: string) => {
     return apiCall('/auth/verify-email', {
       method: 'POST',
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ email, code }),
     });
   },
 
@@ -171,6 +171,13 @@ export const authAPI = {
     return apiCall('/auth/verify-phone', {
       method: 'POST',
       body: JSON.stringify({ phone, code }),
+    });
+  },
+
+  resendEmailVerification: async (email: string) => {
+    return apiCall('/auth/verify-email', {
+      method: 'PATCH',
+      body: JSON.stringify({ email }),
     });
   },
 

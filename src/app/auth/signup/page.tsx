@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { FaEye, FaEyeSlash, FaGoogle, FaFacebook, FaApple, FaCheck } from "react-icons/fa";
+import { authAPI } from "@/lib/api";
+import { FaEye, FaEyeSlash, FaGoogle, FaFacebook, FaApple, FaCheck, FaExclamationTriangle } from "react-icons/fa";
 
 export default function SignupPage() {
     const [formData, setFormData] = useState({
@@ -19,6 +21,9 @@ export default function SignupPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [passwordStrength, setPasswordStrength] = useState(0);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState(false);
+    const router = useRouter();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -26,6 +31,9 @@ export default function SignupPage() {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+
+        // Clear error when user starts typing
+        if (error) setError("");
 
         // Calculate password strength
         if (name === 'password') {
@@ -59,28 +67,86 @@ export default function SignupPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError("");
+        setSuccess(false);
+        
+        // Client-side validation
+        if (!formData.firstName.trim() || !formData.lastName.trim()) {
+            setError("Please enter your full name.");
+            return;
+        }
+
+        if (!formData.email || !formData.phone || !formData.password) {
+            setError("Please fill in all required fields.");
+            return;
+        }
+
         if (formData.password !== formData.confirmPassword) {
-            alert("Passwords don't match!");
+            setError("Passwords don't match!");
+            return;
+        }
+
+        if (passwordStrength < 3) {
+            setError("Please choose a stronger password.");
+            return;
+        }
+
+        if (!formData.agreeToTerms) {
+            setError("Please agree to the Terms of Service and Privacy Policy.");
             return;
         }
         
         setIsLoading(true);
         
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            // Combine first and last name for API
+            const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+            
+            const response = await authAPI.register({
+                fullName,
+                email: formData.email,
+                phone: formData.phone,
+                password: formData.password
+            });
+
+            if (response.success) {
+                setSuccess(true);
+                // Redirect to verification page after a short delay with both email and phone
+                setTimeout(() => {
+                    router.push(`/auth/verify-account?email=${encodeURIComponent(formData.email)}&phone=${encodeURIComponent(formData.phone)}`);
+                }, 2000);
+            }
+        } catch (err: any) {
+            console.error('Registration error:', err);
+            
+            // Handle specific error cases
+            if (err.message.includes('Access denied')) {
+                setError("Registration is only available from Rwanda. Please check your location.");
+            } else if (err.message.includes('already exists')) {
+                setError(err.message);
+            } else if (err.message.includes('Password does not meet requirements')) {
+                setError("Password does not meet security requirements. Please choose a stronger password.");
+            } else if (err.message.includes('valid email')) {
+                setError("Please enter a valid email address.");
+            } else if (err.message.includes('valid phone')) {
+                setError("Please enter a valid phone number.");
+            } else {
+                setError("Registration failed. Please try again later.");
+            }
+        } finally {
             setIsLoading(false);
-            console.log("Signup attempt:", formData);
-        }, 2000);
+        }
     };
 
     const handleSocialSignup = (provider: string) => {
         console.log(`Signup with ${provider}`);
+        setError("Social registration is not yet implemented. Please use the form above.");
     };
 
     return (
         <AuthLayout 
-            title="Officer Registration" 
-            subtitle="Step 1: Enter your personal details as the agency representative"
+            title="Create Your Account" 
+            subtitle="Step 1: Enter your personal details to get started"
         >
             <div className="space-y-6">
                 {/* Progress Indicator */}
@@ -89,18 +155,44 @@ export default function SignupPage() {
                         <div className="w-8 h-8 bg-accent2 text-white rounded-full flex items-center justify-center text-sm font-semibold">
                             1
                         </div>
-                        <span className="ml-2 text-sm font-medium text-accent2">Officer Details</span>
+                        <span className="ml-2 text-sm font-medium text-accent2">Personal Details</span>
                     </div>
                     <div className="w-12 h-0.5 bg-light-gray"></div>
                     <div className="flex items-center">
                         <div className="w-8 h-8 bg-light-gray text-neutral-text rounded-full flex items-center justify-center text-sm font-semibold">
                             2
                         </div>
-                        <span className="ml-2 text-sm font-medium text-neutral-text">Agency Details</span>
+                        <span className="ml-2 text-sm font-medium text-neutral-text">Agency Registration</span>
                     </div>
                 </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Success Message */}
+                {success && (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <div className="flex items-start gap-3">
+                            <FaCheck className="text-green-500 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-green-800 text-sm font-medium">Registration successful!</p>
+                                <p className="text-green-700 text-xs mt-1">
+                                    Please check your email and phone for verification instructions. Redirecting...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Error Display */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <div className="flex items-start gap-3">
+                            <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-red-800 text-sm font-medium">{error}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {/* Name Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -290,7 +382,7 @@ export default function SignupPage() {
                             Creating account...
                         </div>
                     ) : (
-                        "Continue to Agency Details"
+                        "Continue to Agency Registration"
                     )}
                 </button>
 
@@ -329,7 +421,7 @@ export default function SignupPage() {
                     </button>
                 </div>
 
-                </form>
+            </form>
 
                 {/* Login Link */}
                 <div className="text-center text-sm">
