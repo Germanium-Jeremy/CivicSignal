@@ -1,7 +1,16 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import crypto from 'crypto';
 // import geoip from 'geoip-country';
+
+// JWT Payload interface
+export interface CustomJwtPayload extends JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key';
@@ -56,18 +65,28 @@ export const generateTokens = (payload: any) => {
 };
 
 // Verify access token
-export const verifyAccessToken = (token: string) => {
+export const verifyAccessToken = (token: string): CustomJwtPayload | null => {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    // Type guard to ensure it's an object with our expected properties
+    if (typeof decoded === 'object' && decoded !== null && 'userId' in decoded) {
+      return decoded as CustomJwtPayload;
+    }
+    return null;
   } catch (error) {
     return null;
   }
 };
 
 // Verify refresh token
-export const verifyRefreshToken = (token: string) => {
+export const verifyRefreshToken = (token: string): CustomJwtPayload | null => {
   try {
-    return jwt.verify(token, JWT_REFRESH_SECRET);
+    const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
+    // Type guard to ensure it's an object with our expected properties
+    if (typeof decoded === 'object' && decoded !== null && 'userId' in decoded) {
+      return decoded as CustomJwtPayload;
+    }
+    return null;
   } catch (error) {
     return null;
   }
