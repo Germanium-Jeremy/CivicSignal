@@ -11,13 +11,7 @@ interface AuthLayoutProps {
     backHref?: string;
 }
 
-export default function AuthLayout({ 
-    children, 
-    title, 
-    subtitle, 
-    showBackButton = false, 
-    backHref = "/" 
-}: AuthLayoutProps) {
+export default function AuthLayout({ children, title, subtitle, showBackButton = false, backHref = "/" }: AuthLayoutProps) {
     return (
         <div className="min-h-screen bg-gradient-to-br from-panel via-white to-accent2/5 flex items-center justify-center p-4 relative overflow-hidden">
             {/* Background Elements */}

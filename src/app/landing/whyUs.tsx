@@ -1,4 +1,6 @@
+"use client"
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { FaUsers, FaChartLine, FaDollarSign, FaRocket, FaCheckCircle } from "react-icons/fa";
 
 const whyUs = [
@@ -33,6 +35,12 @@ const whyUs = [
 ]
 
 export default function WhyUs() {
+    const router = useRouter();
+    
+    const handleStartFreeTrialClick = () => {
+        router.push('/auth/signup');
+    };
+
     return (
         <section className="relative py-16 md:py-24 lg:py-[10rem] px-4 md:px-8 lg:px-[7.5rem] whyUsGradient overflow-hidden" id="whyUs">
             {/* Background Elements - Hidden on mobile */}
@@ -108,7 +116,7 @@ export default function WhyUs() {
                                     <h3 className="text-base md:text-lg font-bold text-almost-black">Ready to get started?</h3>
                                     <p className="text-xs md:text-sm text-neutral-text">Join 25K+ communities already using CivicSignal</p>
                                 </div>
-                                <button className="px-4 md:px-6 py-2 md:py-3 bg-accent2 hover:bg-accent text-white font-semibold rounded-lg md:rounded-xl transition-all duration-300 hover:scale-105 shadow-lg text-sm md:text-base whitespace-nowrap">
+                                <button className="px-4 md:px-6 py-2 md:py-3 bg-accent2 hover:bg-accent text-white font-semibold rounded-lg md:rounded-xl transition-all duration-300 hover:scale-105 shadow-lg text-sm md:text-base whitespace-nowrap" onClick={handleStartFreeTrialClick}>
                                     Start Free Trial
                                 </button>
                             </div>

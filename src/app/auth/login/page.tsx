@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { FaEye, FaEyeSlash, FaGoogle, FaFacebook, FaApple } from "react-icons/fa";
+import { authAPI } from "@/lib/api";
+import { FaEye, FaEyeSlash, FaGoogle, FaFacebook, FaApple, FaExclamationTriangle } from "react-icons/fa";
 
 export default function LoginPage() {
     const [formData, setFormData] = useState({
@@ -12,6 +14,13 @@ export default function LoginPage() {
     });
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [verificationRequired, setVerificationRequired] = useState(false);
+    const [verificationStatus, setVerificationStatus] = useState({
+        emailVerified: false,
+        phoneVerified: false
+    });
+    const router = useRouter();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -19,21 +28,104 @@ export default function LoginPage() {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+        // Clear error when user starts typing
+        if (error) setError("");
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setError("");
+        setVerificationRequired(false);
         
-        // Simulate API call
-        setTimeout(() => {
+        // Basic validation
+        if (!formData.email || !formData.password) {
+            setError("Please fill in all required fields.");
             setIsLoading(false);
-            console.log("Login attempt:", formData);
-        }, 2000);
+            return;
+        }
+
+        if (!formData.email.includes('@')) {
+            setError("Please enter a valid email address.");
+            setIsLoading(false);
+            return;
+        }
+        
+        try {
+            // Get device info for security tracking
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language
+            };
+
+            const response = await authAPI.login(
+                formData.email, 
+                formData.password, 
+                deviceInfo
+            );
+
+            if (response.success) {
+                // Store user data if needed
+                if (typeof window !== 'undefined') {
+                    sessionStorage.setItem('user', JSON.stringify(response.user));
+                }
+
+                // Show success message if it's a new device
+                if (response.isNewDevice) {
+                    // You could show a toast notification here
+                    console.log('New device login detected - security email sent');
+                }
+
+                // Redirect to dashboard
+                router.push('/dashboard');
+            }
+        } catch (err: any) {
+            console.error('Login error:', err);
+            
+            // Handle verification required error (check both error data and message)
+            const errorData = (err as any).data;
+            if (errorData?.requiresVerification || err.message.includes('Account not fully verified')) {
+                setVerificationRequired(true);
+                setVerificationStatus({
+                    emailVerified: errorData?.emailVerified || false,
+                    phoneVerified: errorData?.phoneVerified || false
+                });
+                setError("Your account requires verification to continue.");
+                return;
+            }
+            
+            // Handle other specific errors
+            const errorMessage = err.message || 'Unknown error';
+            
+            if (errorMessage.includes('Access denied') || errorMessage.includes('only available in Rwanda')) {
+                setError("Access is only available from Rwanda. Please check your location.");
+            } else if (errorMessage.includes('Invalid credentials')) {
+                setError("Invalid email or password. Please try again.");
+            } else if (errorMessage.includes('Account is deactivated')) {
+                setError("Your account has been deactivated. Please contact support.");
+            } else if (errorMessage.includes('Email and password are required')) {
+                setError("Please fill in all required fields.");
+            } else {
+                setError("Login failed. Please check your credentials and try again.");
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleSocialLogin = (provider: string) => {
         console.log(`Login with ${provider}`);
+        // TODO: Implement social login
+        setError("Social login is not yet implemented. Please use email and password.");
+    };
+
+    const handleVerificationRedirect = () => {
+        if (!verificationStatus.emailVerified) {
+            router.push('/auth/verify-code?method=email&contact=' + encodeURIComponent(formData.email));
+        } else if (!verificationStatus.phoneVerified) {
+            router.push('/auth/verify-code?method=phone');
+        }
     };
 
     return (
@@ -42,6 +134,46 @@ export default function LoginPage() {
             subtitle="Sign in to your account to continue"
         >
             <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Error Display */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <div className="flex items-start gap-3">
+                            <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-red-800 text-sm font-medium">{error}</p>
+                                {verificationRequired && (
+                                    <div className="mt-3">
+                                        <p className="text-red-700 text-xs mb-2">
+                                            Verification Status:
+                                        </p>
+                                        <div className="space-y-1 text-xs">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full ${verificationStatus.emailVerified ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                                <span className="text-red-700">
+                                                    Email {verificationStatus.emailVerified ? 'Verified' : 'Not Verified'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full ${verificationStatus.phoneVerified ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                                <span className="text-red-700">
+                                                    Phone {verificationStatus.phoneVerified ? 'Verified' : 'Not Verified'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleVerificationRedirect}
+                                            className="mt-3 text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded-lg transition-colors duration-300"
+                                        >
+                                            Complete Verification
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Email Input */}
                 <div className="space-y-2">
                     <label htmlFor="email" className="block text-sm font-medium text-almost-black">

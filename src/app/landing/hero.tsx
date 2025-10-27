@@ -1,9 +1,21 @@
 "use client"
 import Image from "next/image";
 import MainBtn from "../../components/mainBtn";
+import { useRouter } from "next/navigation";
 import { FaArrowRight, FaPlay } from "react-icons/fa";
 
 export default function Hero() {
+    const router = useRouter();
+
+    const handleGetStarted = () => {
+        router.push('/auth/login');
+    };
+
+    const handleWatchDemo = () => {
+        // You can add a demo video modal or redirect to a demo page
+        console.log('Watch demo clicked');
+    };
+
     return (
         <section className="relative px-4 md:px-8 lg:px-[7.5rem] py-20 md:py-32 lg:py-[14rem] flex flex-col lg:flex-row gap-8 lg:gap-[4rem] items-center heroGradient overflow-hidden" id="hero">
             {/* Floating Elements - Hidden on mobile */}
@@ -39,8 +51,11 @@ export default function Hero() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 justify-center lg:justify-start">
-                    <MainBtn text="Get Started Free" onClick={() => {}} />
-                    <button className="flex items-center gap-3 px-4 md:px-6 py-3 text-primary font-semibold hover:text-accent2 transition-all duration-300 group">
+                    <MainBtn text="Get Started Free" onClick={handleGetStarted} />
+                    <button 
+                        onClick={handleWatchDemo}
+                        className="flex items-center gap-3 px-4 md:px-6 py-3 text-primary font-semibold hover:text-accent2 transition-all duration-300 group"
+                    >
                         <div className="w-10 md:w-12 h-10 md:h-12 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
                             <FaPlay className="text-primary ml-1 text-sm md:text-base" />
                         </div>

@@ -1,6 +1,7 @@
 "use client";
 import MainBtn from "@/components/mainBtn";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 
@@ -16,6 +17,7 @@ const navLinks = [
 export default function HeaderUnAuthenticated() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState("hero");
+    const router = useRouter();
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -23,6 +25,14 @@ export default function HeaderUnAuthenticated() {
 
     const closeMenu = () => { 
         setIsMenuOpen(false);
+    };
+
+    const handleLoginClick = () => {
+        router.push('/auth/login');
+    };
+    
+    const handleLandingClick = () => {
+        router.push('/');
     };
 
     // Function to check which section is currently in view
@@ -62,7 +72,7 @@ export default function HeaderUnAuthenticated() {
 
     // Helper function to check if a link is active
     const isLinkActive = (link: string) => {
-        const sectionId = link.substring(1); // Remove # from link
+        const sectionId = link.substring(1);
         return activeSection === sectionId;
     };
 
@@ -70,7 +80,7 @@ export default function HeaderUnAuthenticated() {
         <header className="py-3 md:py-4 bg-white px-4 md:px-8 fixed top-2 md:top-2 left-4 md:left-[7.5rem] right-4 md:right-[7.5rem] z-[20] rounded-2xl shadow-2xl">
             <div className="flex justify-between items-center">
                 {/* Logo */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" onClick={handleLandingClick}>
                     <Image src="/images/pin.png" alt="Logo" width={32} height={32} className="md:w-10 md:h-10" />
                     <span className="font-bold text-lg text-primary md:hidden">CivicSignal</span>
                 </div>
@@ -99,7 +109,7 @@ export default function HeaderUnAuthenticated() {
 
                 {/* Desktop CTA */}
                 <div className="hidden md:block">
-                    <MainBtn text="Login" onClick={() => {}} />
+                    <MainBtn text="Login" onClick={handleLoginClick} />
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -132,7 +142,7 @@ export default function HeaderUnAuthenticated() {
                         </a>
                     ))}
                     <div className="pt-4 border-t border-light-gray/30">
-                        <MainBtn text="Login" onClick={() => {}} />
+                        <MainBtn text="Login" onClick={handleLoginClick} />
                     </div>
                 </nav>
             </div>
