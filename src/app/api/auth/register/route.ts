@@ -150,8 +150,8 @@ export async function POST(request: NextRequest) {
     console.error('Registration error:', error);
     
     // Handle mongoose validation errors
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map((err: any) => err.message);
+    if ((error as Error).name === 'ValidationError') {
+      const errors = Object.values((error as Error).message).map((err: any) => err.message);
       return NextResponse.json(
         { error: 'Validation failed', details: errors }, 
         { status: 400 }

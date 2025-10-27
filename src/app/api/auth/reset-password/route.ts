@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     user.refreshTokens = [];
     
     // Deactivate all login devices for security
-    user.loginDevices.forEach(device => {
+    user.loginDevices.forEach((device: any) => {
       device.isActive = false;
     });
     

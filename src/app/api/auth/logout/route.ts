@@ -41,14 +41,14 @@ export async function POST(request: NextRequest) {
     if (logoutAll) {
       // Logout from all devices
       user.refreshTokens = [];
-      user.loginDevices.forEach(device => {
+      user.loginDevices.forEach((device: any) => {
         device.isActive = false;
       });
     } else {
       // Logout from current device only
       if (refreshToken) {
         // Remove specific refresh token
-        user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
+        user.refreshTokens = user.refreshTokens.filter((token: String) => token !== refreshToken);
       }
       
       // Deactivate current device
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       const userAgent = request.headers.get('user-agent') || '';
       const deviceId = generateDeviceId(userAgent, clientIP);
       
-      const currentDevice = user.loginDevices.find(device => device.deviceId === deviceId);
+      const currentDevice = user.loginDevices.find((device: any) => device.deviceId === deviceId);
       if (currentDevice) {
         currentDevice.isActive = false;
       }
