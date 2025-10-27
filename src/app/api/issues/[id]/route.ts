@@ -20,10 +20,11 @@ let issues = [
 // GET /api/issues/[id] - Get single issue
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const issue = issues.find(i => i.id === params.id);
+    const { id } = await params;
+    const issue = issues.find(i => i.id === id);
     
     if (!issue) {
       return NextResponse.json(
@@ -48,11 +49,12 @@ export async function GET(
 // PATCH /api/issues/[id] - Update issue
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
-    const issueIndex = issues.findIndex(i => i.id === params.id);
+    const issueIndex = issues.findIndex(i => i.id === id);
     
     if (issueIndex === -1) {
       return NextResponse.json(
