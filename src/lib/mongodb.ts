@@ -12,11 +12,16 @@ interface CachedMongoose {
   promise: Promise<typeof mongoose> | null;
 }
 
-// Use global to cache the connection
-let cached: CachedMongoose = global.mongoose;
+// Extend global namespace to include mongoose cache
+declare global {
+  var mongoose: CachedMongoose | undefined;
+}
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+// Use global to cache the connection
+let cached: CachedMongoose = global.mongoose || { conn: null, promise: null };
+
+if (!global.mongoose) {
+  global.mongoose = cached;
 }
 
 async function connectDB(): Promise<typeof mongoose> {
@@ -41,6 +46,7 @@ async function connectDB(): Promise<typeof mongoose> {
 
   try {
     cached.conn = await cached.promise;
+    global.mongoose = cached; // Update global cache
   } catch (e) {
     cached.promise = null; // Reset promise on error
     console.error('MongoDB connection error:', e);
