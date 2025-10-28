@@ -68,6 +68,7 @@ export const generateTokens = (payload: any) => {
 export const verifyAccessToken = (token: string): CustomJwtPayload | null => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    console.log("Decoded from token: ", decoded)
     // Type guard to ensure it's an object with our expected properties
     if (typeof decoded === 'object' && decoded !== null && 'userId' in decoded) {
       return decoded as CustomJwtPayload;

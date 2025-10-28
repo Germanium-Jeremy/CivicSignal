@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { comparePassword, generateTokens, isRwandanIP, generateDeviceId, getDeviceName, getLocationFromIP } from '@/lib/utils/auth';
 import { sendEmail } from '@/lib/services/notification';
+import { ADMIN_CONFIG, isAdminCredentials } from '@/config/admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,6 +29,38 @@ export async function POST(request: NextRequest) {
         { error: 'Email and password are required' }, 
         { status: 400 }
       );
+    }
+
+    // Check if this is an admin login
+    if (isAdminCredentials(email, password)) {
+      // Generate tokens for admin
+      const adminTokenPayload = {
+        userId: 'admin',
+        email: ADMIN_CONFIG.email,
+        role: ADMIN_CONFIG.role,
+        isEmailVerified: true,
+        isPhoneVerified: true
+      };
+
+      const { accessToken, refreshToken } = generateTokens(adminTokenPayload);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Admin login successful',
+        user: {
+          id: 'admin',
+          fullName: ADMIN_CONFIG.fullName,
+          email: ADMIN_CONFIG.email,
+          role: ADMIN_CONFIG.role,
+          isEmailVerified: true,
+          isPhoneVerified: true
+        },
+        tokens: {
+          accessToken,
+          refreshToken
+        },
+        isAdmin: true
+      });
     }
 
     // Find user and include password for comparison

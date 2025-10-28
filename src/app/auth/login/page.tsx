@@ -77,8 +77,14 @@ export default function LoginPage() {
                     console.log('New device login detected - security email sent');
                 }
 
-                // Redirect to dashboard
-                router.push('/dashboard');
+                // Redirect based on user role
+                if (response.user.role === 'admin' || response.isAdmin) {
+                    // Redirect admin to admin dashboard
+                    router.push('/admin/dashboard');
+                } else {
+                    // Redirect regular users to their dashboard
+                    router.push('/dashboard');
+                }
             }
         } catch (err: any) {
             console.error('Login error:', err);
