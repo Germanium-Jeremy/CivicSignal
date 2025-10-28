@@ -24,7 +24,7 @@ export interface IUser extends Document {
     isActive: boolean;
   }[];
   isActive: boolean;
-  role: 'citizen' | 'agency';
+  role: 'citizen' | 'agency_officer' | 'admin';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -124,7 +124,7 @@ const UserSchema = new Schema<IUser>({
   },
   role: {
     type: String,
-    enum: ['citizen', 'agency'],
+    enum: ['citizen', 'agency_officer', 'admin'],
     default: 'citizen'
   }
 }, {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import { generateTokens } from '@/lib/utils/auth';
 import { generateVerificationCode } from '@/lib/utils/auth';
 import { sendEmail } from '@/lib/services/notification';
 
@@ -46,6 +47,36 @@ export async function POST(request: NextRequest) {
     
     await user.save();
 
+    // Check if both email and phone are verified, then generate tokens
+    let tokens = null;
+    if (user.isEmailVerified && user.isPhoneVerified) {
+      const tokenPayload = {
+        userId: user._id,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        isPhoneVerified: user.isPhoneVerified
+      };
+
+      const { accessToken, refreshToken } = generateTokens(tokenPayload);
+      
+      // Store refresh token
+      user.refreshTokens = user.refreshTokens || [];
+      user.refreshTokens.push(refreshToken);
+      
+      // Keep only last 5 refresh tokens per user
+      if (user.refreshTokens.length > 5) {
+        user.refreshTokens = user.refreshTokens.slice(-5);
+      }
+      
+      await user.save();
+      
+      tokens = {
+        accessToken,
+        refreshToken
+      };
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Email verified successfully!',
@@ -53,9 +84,13 @@ export async function POST(request: NextRequest) {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        phone: user.phone,
+        role: user.role,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified
-      }
+      },
+      tokens: tokens, // Will be null if phone not yet verified
+      fullyVerified: user.isEmailVerified && user.isPhoneVerified
     });
 
   } catch (error) {

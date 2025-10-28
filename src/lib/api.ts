@@ -10,14 +10,16 @@ export const tokenManager = {
   setTokens: (tokens: { accessToken: string; refreshToken: string }) => {
     accessToken = tokens.accessToken;
     refreshToken = tokens.refreshToken;
-    sessionStorage.setItem('accessToken', tokens.accessToken);
-    sessionStorage.setItem('refreshToken', tokens.refreshToken);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('accessToken', tokens.accessToken);
+      localStorage.setItem('refreshToken', tokens.refreshToken);
+    }
   },
 
   getTokens: () => {
     if (typeof window !== 'undefined') {
-      accessToken = accessToken || sessionStorage.getItem('accessToken');
-      refreshToken = refreshToken || sessionStorage.getItem('refreshToken');
+      accessToken = accessToken || localStorage.getItem('accessToken');
+      refreshToken = refreshToken || localStorage.getItem('refreshToken');
     }
     return { accessToken, refreshToken };
   },
@@ -26,8 +28,8 @@ export const tokenManager = {
     accessToken = null;
     refreshToken = null;
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('accessToken');
-      sessionStorage.removeItem('refreshToken');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
     }
   },
 
@@ -204,6 +206,29 @@ export const authAPI = {
     return apiCall('/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify({ identifier, resetCode, newPassword, method }),
+    });
+  },
+
+  registerAgency: async (agencyData: {
+    agencyName: string;
+    agencyType: string;
+    registrationNumber: string;
+    website?: string;
+    address: string;
+    district: string;
+    sector: string;
+    description?: string;
+    serviceDomains: string[];
+  }) => {
+    return apiCall('/auth/register-agency', {
+      method: 'POST',
+      body: JSON.stringify(agencyData),
+    });
+  },
+
+  getAgencyStatus: async () => {
+    return apiCall('/auth/register-agency', {
+      method: 'GET',
     });
   },
 };

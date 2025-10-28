@@ -111,7 +111,14 @@ function VerifyAccountContent() {
             
             if (response.success) {
                 setEmailVerified(true);
-                checkBothVerified(true, phoneVerified);
+                
+                // If both are verified and tokens are returned, store them
+                if (response.tokens) {
+                    localStorage.setItem('accessToken', response.tokens.accessToken);
+                    localStorage.setItem('refreshToken', response.tokens.refreshToken);
+                }
+                
+                checkBothVerified(true, phoneVerified, response.tokens);
             }
         } catch (err: any) {
             console.error('Email verification error:', err);
@@ -133,7 +140,14 @@ function VerifyAccountContent() {
             
             if (response.success) {
                 setPhoneVerified(true);
-                checkBothVerified(emailVerified, true);
+                
+                // If both are verified and tokens are returned, store them
+                if (response.tokens) {
+                    localStorage.setItem('accessToken', response.tokens.accessToken);
+                    localStorage.setItem('refreshToken', response.tokens.refreshToken);
+                }
+                
+                checkBothVerified(emailVerified, true, response.tokens);
             }
         } catch (err: any) {
             console.error('Phone verification error:', err);
@@ -146,10 +160,11 @@ function VerifyAccountContent() {
         }
     };
 
-    const checkBothVerified = (emailStatus: boolean, phoneStatus: boolean) => {
+    const checkBothVerified = (emailStatus: boolean, phoneStatus: boolean, tokens?: any) => {
         if (emailStatus && phoneStatus) {
+            // Tokens should be stored at this point
             setTimeout(() => {
-                // Redirect to agency registration instead of confirmation
+                // Redirect to agency registration page (user is now authenticated)
                 router.push('/auth/agency-registration');
             }, 1000);
         }

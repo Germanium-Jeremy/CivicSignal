@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { FaBuilding, FaGlobe, FaMapMarkerAlt, FaCheck } from "react-icons/fa";
+import { authAPI, userAPI } from "@/lib/api";
+import { FaBuilding, FaGlobe, FaMapMarkerAlt, FaCheck, FaExclamationTriangle } from "react-icons/fa";
 
 const agencyTypes = [
     { value: "government", label: "Government Agency" },
@@ -61,19 +62,70 @@ export default function AgencyRegistrationPage() {
         description: "",
         serviceDomains: [] as string[]
     });
-    const [isLoading, setIsLoading] = useState(false);
-    const [officerData, setOfficerData] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [userData, setUserData] = useState<any>(null);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        // Get officer data from localStorage
-        const storedOfficerData = localStorage.getItem('officerData');
-        if (storedOfficerData) {
-            setOfficerData(JSON.parse(storedOfficerData));
-        } else {
-            // Redirect back to step 1 if no officer data
-            router.push('/auth/signup');
-        }
+        // Check if user is authenticated and fetch their data
+        const fetchUserData = async () => {
+            try {
+                setIsLoading(true);
+                
+                // First, get user profile to ensure authentication
+                console.log('Fetching user profile...');
+                const profile = await userAPI.getProfile();
+                
+                if (!profile.success) {
+                    console.error('Profile fetch failed:', profile);
+                    // User not authenticated, redirect to login
+                    router.push('/auth/login');
+                    return;
+                }
+                
+                console.log('User profile fetched successfully:', profile.user);
+                
+                // Check if user is verified
+                if (!profile.user.isEmailVerified || !profile.user.isPhoneVerified) {
+                    console.log('User not fully verified, redirecting...');
+                    // User not verified, redirect to verification
+                    router.push(`/auth/verify-account?email=${encodeURIComponent(profile.user.email)}&phone=${encodeURIComponent(profile.user.phone)}`);
+                    return;
+                }
+                
+                // Check if user has already registered an agency
+                console.log('Checking agency status...');
+                try {
+                    const agencyStatus = await authAPI.getAgencyStatus();
+                    console.log('Agency status:', agencyStatus);
+                    
+                    if (agencyStatus.hasAgency) {
+                        // User already has an agency, redirect to dashboard
+                        console.log('User already has agency, redirecting to dashboard');
+                        router.push('/dashboard');
+                        return;
+                    }
+                } catch (agencyErr: any) {
+                    // If agency status check fails, log but continue
+                    // (user might not have registered agency yet, which is fine)
+                    console.warn('Agency status check failed (this is OK for new registration):', agencyErr.message);
+                }
+                
+                setUserData(profile.user);
+            } catch (err: any) {
+                console.error('Error fetching user data:', err);
+                setError(err.message || 'Failed to load user data');
+                // If authentication fails, redirect to login
+                setTimeout(() => router.push('/auth/login'), 2000);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchUserData();
     }, [router]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -95,52 +147,105 @@ export default function AgencyRegistrationPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
+        setError("");
+        setSuccess(false);
         
-        // Combine officer and agency data
-        const completeRegistration = {
-            officer: officerData,
-            agency: formData
-        };
+        // Validate required fields
+        if (!formData.agencyName || !formData.agencyType || !formData.registrationNumber || 
+            !formData.address || !formData.district || !formData.sector || 
+            formData.serviceDomains.length === 0) {
+            setError("Please fill in all required fields and select at least one service domain.");
+            return;
+        }
+        
+        setIsSubmitting(true);
         
         try {
-            // TODO: Replace with real API call to save agency registration
-            // const response = await authAPI.registerAgency(completeRegistration);
+            const response = await authAPI.registerAgency(formData);
             
-            // Simulate API call for now
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            if (response.success) {
+                setSuccess(true);
+                
+                // Clear any stored data
+                localStorage.removeItem('officerData');
+                localStorage.removeItem('agencyData');
+                
+                // Navigate to confirmation page after a short delay
+                setTimeout(() => {
+                    router.push('/auth/confirmation?type=agency-registered');
+                }, 2000);
+            }
+        } catch (err: any) {
+            console.error('Agency registration error:', err);
             
-            console.log("Complete registration:", completeRegistration);
-            
-            // Clear stored data
-            localStorage.removeItem('officerData');
-            localStorage.removeItem('agencyData');
-            
-            // Navigate to confirmation page (users are already verified at this point)
-            router.push('/auth/confirmation?type=agency-registered');
-            
-        } catch (error) {
-            console.error('Agency registration error:', error);
-            // TODO: Add error handling UI
+            if (err.message.includes('verification required')) {
+                setError("Please verify your email and phone number before registering an agency.");
+            } else if (err.message.includes('Authentication')) {
+                setError("Your session has expired. Please log in again.");
+                setTimeout(() => router.push('/auth/login'), 2000);
+            } else {
+                setError(err.message || "Failed to register agency. Please try again.");
+            }
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
     };
 
     const handleBack = () => {
-        // Store current agency data and go back to step 1
-        localStorage.setItem('agencyData', JSON.stringify(formData));
-        router.push('/auth/signup');
+        // Go back to dashboard or profile
+        router.push('/dashboard');
     };
+
+    // Show loading state while fetching user data
+    if (isLoading) {
+        return (
+            <AuthLayout 
+                title="Agency Registration" 
+                subtitle="Loading..."
+                showBackButton={false}
+                backHref="/dashboard"
+            >
+                <div className="flex items-center justify-center py-12">
+                    <div className="w-8 h-8 border-2 border-accent2/30 border-t-accent2 rounded-full animate-spin"></div>
+                </div>
+            </AuthLayout>
+        );
+    }
 
     return (
         <AuthLayout 
             title="Agency Registration" 
-            subtitle="Step 2: Enter your agency/organization details"
+            subtitle={userData ? `Welcome, ${userData.fullName}! Register your agency below.` : "Step 2: Enter your agency/organization details"}
             showBackButton={false}
-            backHref="/auth/signup"
+            backHref="/dashboard"
         >
             <div className="space-y-6">
+                {/* Success Message */}
+                {success && (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <div className="flex items-start gap-3">
+                            <FaCheck className="text-green-500 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-green-800 text-sm font-medium">Agency registered successfully!</p>
+                                <p className="text-green-700 text-xs mt-1">
+                                    Your agency is now under review. Redirecting to confirmation page...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Error Message */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <div className="flex items-start gap-3">
+                            <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-red-800 text-sm font-medium">{error}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {/* Progress Indicator */}
                 <div className="flex items-center justify-center space-x-4 mb-6">
                     <div className="flex items-center">
@@ -352,10 +457,10 @@ export default function AgencyRegistrationPage() {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={isLoading || formData.serviceDomains.length === 0}
+                        disabled={isSubmitting || formData.serviceDomains.length === 0}
                         className="w-full bg-gradient-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
                     >
-                        {isLoading ? (
+                        {isSubmitting ? (
                             <div className="flex items-center justify-center gap-2">
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 Completing registration...
@@ -369,9 +474,10 @@ export default function AgencyRegistrationPage() {
                     <button
                         type="button"
                         onClick={handleBack}
-                        className="w-full border-2 border-light-gray text-neutral-text font-semibold py-3 px-6 rounded-xl hover:border-accent2 hover:text-accent2 hover:bg-accent2/5 transition-all duration-300 text-sm md:text-base"
+                        disabled={isSubmitting}
+                        className="w-full border-2 border-light-gray text-neutral-text font-semibold py-3 px-6 rounded-xl hover:border-accent2 hover:text-accent2 hover:bg-accent2/5 transition-all duration-300 disabled:opacity-50 text-sm md:text-base"
                     >
-                        Back to Officer Details
+                        Cancel
                     </button>
                 </form>
 
