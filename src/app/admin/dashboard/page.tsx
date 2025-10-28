@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { adminAPI } from '@/lib/api';
 import { 
   FaBuilding, FaExclamationTriangle, FaUsers, FaCheckCircle,
   FaClock, FaTimes, FaChartLine, FaTasks
@@ -41,34 +42,19 @@ export default function AdminDashboardPage() {
 
   const fetchDashboardStats = async () => {
     try {
-      // TODO: Replace with real API call
-      // const response = await adminAPI.getDashboardStats();
+      const response = await adminAPI.getDashboardStats();
       
-      // Mock data for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setStats({
-        agencies: {
-          total: 45,
-          pending: 12,
-          approved: 28,
-          rejected: 5
-        },
-        issues: {
-          total: 234,
-          open: 45,
-          inProgress: 32,
-          resolved: 157
-        },
-        users: {
-          total: 1247,
-          citizens: 1202,
-          officers: 45,
-          active: 1198
-        }
-      });
+      if (response.success) {
+        setStats(response.stats);
+      }
     } catch (error) {
       console.error('Error fetching stats:', error);
+      // Set default values on error
+      setStats({
+        agencies: { total: 0, pending: 0, approved: 0, rejected: 0 },
+        issues: { total: 0, open: 0, inProgress: 0, resolved: 0 },
+        users: { total: 0, citizens: 0, officers: 0, active: 0 }
+      });
     } finally {
       setIsLoading(false);
     }

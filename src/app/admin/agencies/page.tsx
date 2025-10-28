@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { adminAPI } from '@/lib/api';
 import { 
   FaCheckCircle, FaTimes, FaClock, FaEye, FaTrash,
   FaSearch, FaFilter, FaBuilding, FaExclamationTriangle
@@ -45,52 +46,11 @@ export default function AgencyManagementPage() {
 
   const fetchAgencies = async () => {
     try {
-      // TODO: Replace with real API call
-      // const response = await adminAPI.getAllAgencies();
+      const response = await adminAPI.getAllAgencies();
       
-      // Mock data for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockAgencies: Agency[] = [
-        {
-          _id: '1',
-          name: 'Kigali City Council',
-          type: 'municipal',
-          registrationNumber: 'KCC-2024-001',
-          address: 'KN 5 Ave, Kigali',
-          district: 'Gasabo',
-          sector: 'Kacyiru',
-          serviceDomains: ['infrastructure', 'waste', 'utilities'],
-          primaryOfficer: {
-            fullName: 'John Doe',
-            email: 'john@kigali.gov.rw',
-            phone: '+250788123456'
-          },
-          verificationStatus: 'pending',
-          isVerified: false,
-          createdAt: new Date().toISOString()
-        },
-        {
-          _id: '2',
-          name: 'Rwanda National Police',
-          type: 'government',
-          registrationNumber: 'RNP-2024-002',
-          address: 'KG 11 Ave, Kigali',
-          district: 'Kicukiro',
-          sector: 'Gikondo',
-          serviceDomains: ['safety', 'emergency'],
-          primaryOfficer: {
-            fullName: 'Jane Smith',
-            email: 'jane@police.gov.rw',
-            phone: '+250788234567'
-          },
-          verificationStatus: 'approved',
-          isVerified: true,
-          createdAt: new Date(Date.now() - 86400000).toISOString()
-        }
-      ];
-      
-      setAgencies(mockAgencies);
+      if (response.success) {
+        setAgencies(response.agencies);
+      }
     } catch (error) {
       console.error('Error fetching agencies:', error);
     } finally {
@@ -121,23 +81,22 @@ export default function AgencyManagementPage() {
   const handleApprove = async (agencyId: string) => {
     setActionLoading(true);
     try {
-      // TODO: Replace with real API call
-      // await adminAPI.approveAgency(agencyId);
+      const response = await adminAPI.approveAgency(agencyId);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update local state
-      setAgencies(prev => prev.map(agency => 
-        agency._id === agencyId 
-          ? { ...agency, verificationStatus: 'approved', isVerified: true }
-          : agency
-      ));
-      
-      setShowModal(false);
-      setSelectedAgency(null);
-    } catch (error) {
+      if (response.success) {
+        // Update local state
+        setAgencies(prev => prev.map(agency => 
+          agency._id === agencyId 
+            ? { ...agency, verificationStatus: 'approved', isVerified: true }
+            : agency
+        ));
+        
+        setShowModal(false);
+        setSelectedAgency(null);
+      }
+    } catch (error: any) {
       console.error('Error approving agency:', error);
-      alert('Failed to approve agency');
+      alert(error.message || 'Failed to approve agency');
     } finally {
       setActionLoading(false);
     }
@@ -146,23 +105,22 @@ export default function AgencyManagementPage() {
   const handleReject = async (agencyId: string) => {
     setActionLoading(true);
     try {
-      // TODO: Replace with real API call
-      // await adminAPI.rejectAgency(agencyId);
+      const response = await adminAPI.rejectAgency(agencyId);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update local state
-      setAgencies(prev => prev.map(agency => 
-        agency._id === agencyId 
-          ? { ...agency, verificationStatus: 'rejected', isVerified: false }
-          : agency
-      ));
-      
-      setShowModal(false);
-      setSelectedAgency(null);
-    } catch (error) {
+      if (response.success) {
+        // Update local state
+        setAgencies(prev => prev.map(agency => 
+          agency._id === agencyId 
+            ? { ...agency, verificationStatus: 'rejected', isVerified: false }
+            : agency
+        ));
+        
+        setShowModal(false);
+        setSelectedAgency(null);
+      }
+    } catch (error: any) {
       console.error('Error rejecting agency:', error);
-      alert('Failed to reject agency');
+      alert(error.message || 'Failed to reject agency');
     } finally {
       setActionLoading(false);
     }
@@ -175,19 +133,18 @@ export default function AgencyManagementPage() {
 
     setActionLoading(true);
     try {
-      // TODO: Replace with real API call
-      // await adminAPI.deleteAgency(agencyId);
+      const response = await adminAPI.deleteAgency(agencyId);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Remove from local state
-      setAgencies(prev => prev.filter(agency => agency._id !== agencyId));
-      
-      setShowModal(false);
-      setSelectedAgency(null);
-    } catch (error) {
+      if (response.success) {
+        // Remove from local state
+        setAgencies(prev => prev.filter(agency => agency._id !== agencyId));
+        
+        setShowModal(false);
+        setSelectedAgency(null);
+      }
+    } catch (error: any) {
       console.error('Error deleting agency:', error);
-      alert('Failed to delete agency');
+      alert(error.message || 'Failed to delete agency');
     } finally {
       setActionLoading(false);
     }

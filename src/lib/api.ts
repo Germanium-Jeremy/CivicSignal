@@ -294,3 +294,44 @@ export const userAPI = {
     });
   },
 };
+
+// Admin API
+export const adminAPI = {
+  // Get dashboard statistics
+  getDashboardStats: async () => {
+    return apiCall('/admin/stats');
+  },
+
+  // Get all agencies
+  getAllAgencies: async () => {
+    return apiCall('/admin/agencies');
+  },
+
+  // Get single agency
+  getAgency: async (agencyId: string) => {
+    return apiCall(`/admin/agencies/${agencyId}`);
+  },
+
+  // Approve agency
+  approveAgency: async (agencyId: string, notes?: string) => {
+    return apiCall(`/admin/agencies/${agencyId}/approve`, {
+      method: 'PATCH',
+      body: JSON.stringify({ notes }),
+    });
+  },
+
+  // Reject agency
+  rejectAgency: async (agencyId: string, notes?: string) => {
+    return apiCall(`/admin/agencies/${agencyId}/reject`, {
+      method: 'PATCH',
+      body: JSON.stringify({ notes }),
+    });
+  },
+
+  // Delete agency
+  deleteAgency: async (agencyId: string) => {
+    return apiCall(`/admin/agencies/${agencyId}`, {
+      method: 'DELETE',
+    });
+  },
+};
