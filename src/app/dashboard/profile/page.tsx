@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { agencyAPI } from "@/lib/api";
 import { 
     FaUser, 
     FaBuilding, 
@@ -20,69 +21,89 @@ import {
     FaShieldAlt
 } from "react-icons/fa";
 
-// Mock data for agency profile
-const mockProfileData = {
+interface ProfileData {
     officer: {
-        firstName: "John",
-        lastName: "Smith",
-        email: "john.smith@citymunicorp.gov",
-        phone: "+1-555-0123",
-        position: "Chief Operations Officer",
-        employeeId: "EMP-2024-001"
-    },
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone: string;
+    };
     agency: {
-        name: "City Municipal Corporation",
-        type: "Municipal Corporation",
-        registrationNumber: "MUN-2024-NYC-001",
-        website: "https://www.citymunicorp.gov",
-        address: "123 City Hall Plaza, New York, NY 10001",
-        district: "Metropolitan Area",
-        sector: "Urban Core",
-        description: "The City Municipal Corporation is responsible for providing essential public services to residents including infrastructure maintenance, public safety coordination, and community development initiatives.",
-        serviceDomains: ["Infrastructure & Roads", "Public Safety & Security", "Utilities", "Parks & Recreation"],
-        establishedDate: "1995-03-15",
-        employeeCount: "250-500",
-        budgetRange: "$10M - $50M"
-    },
+        name: string;
+        type: string;
+        registrationNumber: string;
+        website?: string;
+        address: string;
+        district: string;
+        sector: string;
+        description?: string;
+        serviceDomains: string[];
+        createdAt: string;
+    };
     verification: {
-        status: "verified",
-        verifiedAt: "2024-01-10T14:30:00Z",
-        verifiedBy: "Admin Sarah Johnson",
-        verificationNotes: "All documents verified successfully. Agency credentials confirmed."
-    },
-    documents: [
-        {
-            id: "doc-1",
-            name: "Business License",
-            type: "license",
-            uploadedAt: "2024-01-05T10:00:00Z",
-            size: "2.4 MB",
-            status: "verified"
-        },
-        {
-            id: "doc-2",
-            name: "Tax Exemption Certificate",
-            type: "certificate",
-            uploadedAt: "2024-01-05T10:15:00Z",
-            size: "1.8 MB",
-            status: "verified"
-        },
-        {
-            id: "doc-3",
-            name: "Insurance Certificate",
-            type: "insurance",
-            uploadedAt: "2024-01-05T10:30:00Z",
-            size: "3.1 MB",
-            status: "pending"
-        }
-    ]
-};
+        status: string;
+        verifiedAt?: string;
+        verificationNotes?: string;
+    };
+}
 
 export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
-    const [editData, setEditData] = useState(mockProfileData);
+    const [profileData, setProfileData] = useState<ProfileData | null>(null);
+    const [editData, setEditData] = useState<ProfileData | null>(null);
     const [activeTab, setActiveTab] = useState("overview");
     const [uploadingDocument, setUploadingDocument] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        fetchProfileData();
+    }, []);
+
+    const fetchProfileData = async () => {
+        try {
+            const response = await agencyAPI.getDashboardData();
+            
+            if (response.success) {
+                // Parse fullName into firstName and lastName
+                const nameParts = response.user.fullName.split(' ');
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.slice(1).join(' ') || '';
+
+                const data: ProfileData = {
+                    officer: {
+                        firstName,
+                        lastName,
+                        email: response.user.email,
+                        phone: response.user.phone
+                    },
+                    agency: {
+                        name: response.agency.name,
+                        type: response.agency.type,
+                        registrationNumber: response.agency.registrationNumber,
+                        website: response.agency.website,
+                        address: response.agency.address,
+                        district: response.agency.district,
+                        sector: response.agency.sector,
+                        description: response.agency.description,
+                        serviceDomains: response.agency.serviceDomains || [],
+                        createdAt: response.agency.createdAt
+                    },
+                    verification: {
+                        status: response.agency.verificationStatus,
+                        verifiedAt: response.agency.verifiedAt,
+                        verificationNotes: response.agency.verificationNotes
+                    }
+                };
+
+                setProfileData(data);
+                setEditData(data);
+            }
+        } catch (error) {
+            console.error('Error fetching profile data:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSave = () => {
         // Here you would save the changes to the backend
@@ -91,18 +112,20 @@ export default function ProfilePage() {
     };
 
     const handleCancel = () => {
-        setEditData(mockProfileData);
+        setEditData(profileData);
         setIsEditing(false);
     };
 
     const handleInputChange = (section: string, field: string, value: string) => {
-        setEditData(prev => ({
-            ...prev,
+        if (!editData) return;
+        
+        setEditData({
+            ...editData,
             [section]: {
-                ...prev[section as keyof typeof prev],
+                ...editData[section as keyof ProfileData],
                 [field]: value
             }
-        }));
+        } as ProfileData);
     };
 
     const handleDocumentUpload = () => {
@@ -145,6 +168,27 @@ export default function ProfilePage() {
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent2 mx-auto"></div>
+                    <p className="mt-4 text-neutral-text">Loading profile data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!profileData || !editData) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <p className="text-neutral-text">No profile data available</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -156,7 +200,7 @@ export default function ProfilePage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    {mockProfileData.verification.status === 'verified' && (
+                    {profileData.verification.status === 'approved' && (
                         <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                             <FaCheckCircle size={14} />
                             Verified Agency
@@ -239,7 +283,7 @@ export default function ProfilePage() {
                                                     className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                                 />
                                             ) : (
-                                                <p className="text-neutral-text">{mockProfileData.officer.firstName}</p>
+                                                <p className="text-neutral-text">{profileData.officer.firstName}</p>
                                             )}
                                         </div>
                                         <div>
@@ -256,23 +300,8 @@ export default function ProfilePage() {
                                             ) : (
                                                 <div className="flex items-center gap-2">
                                                     <FaEnvelope className="text-neutral-text" size={16} />
-                                                    <p className="text-neutral-text">{mockProfileData.officer.email}</p>
+                                                    <p className="text-neutral-text">{profileData.officer.email}</p>
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Position
-                                            </label>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={editData.officer.position}
-                                                    onChange={(e) => handleInputChange('officer', 'position', e.target.value)}
-                                                    className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
-                                                />
-                                            ) : (
-                                                <p className="text-neutral-text">{mockProfileData.officer.position}</p>
                                             )}
                                         </div>
                                     </div>
@@ -289,7 +318,7 @@ export default function ProfilePage() {
                                                     className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                                 />
                                             ) : (
-                                                <p className="text-neutral-text">{mockProfileData.officer.lastName}</p>
+                                                <p className="text-neutral-text">{profileData.officer.lastName}</p>
                                             )}
                                         </div>
                                         <div>
@@ -306,18 +335,9 @@ export default function ProfilePage() {
                                             ) : (
                                                 <div className="flex items-center gap-2">
                                                     <FaPhone className="text-neutral-text" size={16} />
-                                                    <p className="text-neutral-text">{mockProfileData.officer.phone}</p>
+                                                    <p className="text-neutral-text">{profileData.officer.phone}</p>
                                                 </div>
                                             )}
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Employee ID
-                                            </label>
-                                            <div className="flex items-center gap-2">
-                                                <FaIdCard className="text-neutral-text" size={16} />
-                                                <p className="text-neutral-text">{mockProfileData.officer.employeeId}</p>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -332,10 +352,10 @@ export default function ProfilePage() {
                                     <div>
                                         <h4 className="font-semibold text-green-800">Account Verified</h4>
                                         <p className="text-green-700 text-sm mt-1">
-                                            Your agency account was verified on {formatDate(mockProfileData.verification.verifiedAt)}
+                                            Your agency account was verified on {profileData.verification.verifiedAt ? formatDate(profileData.verification.verifiedAt) : 'N/A'}
                                         </p>
                                         <p className="text-green-600 text-xs mt-2">
-                                            Verified by: {mockProfileData.verification.verifiedBy}
+                                            {profileData.verification.verificationNotes || 'Verified by administrator'}
                                         </p>
                                     </div>
                                 </div>
@@ -364,7 +384,7 @@ export default function ProfilePage() {
                                             ) : (
                                                 <div className="flex items-center gap-2">
                                                     <FaBuilding className="text-neutral-text" size={16} />
-                                                    <p className="text-neutral-text">{mockProfileData.agency.name}</p>
+                                                    <p className="text-neutral-text">{profileData.agency.name}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -372,13 +392,13 @@ export default function ProfilePage() {
                                             <label className="block text-sm font-medium text-almost-black mb-2">
                                                 Agency Type
                                             </label>
-                                            <p className="text-neutral-text">{mockProfileData.agency.type}</p>
+                                            <p className="text-neutral-text">{profileData.agency.type}</p>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-almost-black mb-2">
                                                 Registration Number
                                             </label>
-                                            <p className="text-neutral-text">{mockProfileData.agency.registrationNumber}</p>
+                                            <p className="text-neutral-text">{profileData.agency.registrationNumber}</p>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-almost-black mb-2">
@@ -395,12 +415,12 @@ export default function ProfilePage() {
                                                 <div className="flex items-center gap-2">
                                                     <FaGlobe className="text-neutral-text" size={16} />
                                                     <a 
-                                                        href={mockProfileData.agency.website} 
+                                                        href={profileData.agency.website} 
                                                         target="_blank" 
                                                         rel="noopener noreferrer"
                                                         className="text-accent2 hover:text-accent"
                                                     >
-                                                        {mockProfileData.agency.website}
+                                                        {profileData.agency.website}
                                                     </a>
                                                 </div>
                                             )}
@@ -411,25 +431,19 @@ export default function ProfilePage() {
                                             <label className="block text-sm font-medium text-almost-black mb-2">
                                                 Service District
                                             </label>
-                                            <p className="text-neutral-text">{mockProfileData.agency.district}</p>
+                                            <p className="text-neutral-text">{profileData.agency.district}</p>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-almost-black mb-2">
                                                 Service Sector
                                             </label>
-                                            <p className="text-neutral-text">{mockProfileData.agency.sector}</p>
+                                            <p className="text-neutral-text">{profileData.agency.sector}</p>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Established Date
+                                                Created Date
                                             </label>
-                                            <p className="text-neutral-text">{formatDate(mockProfileData.agency.establishedDate)}</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Employee Count
-                                            </label>
-                                            <p className="text-neutral-text">{mockProfileData.agency.employeeCount}</p>
+                                            <p className="text-neutral-text">{formatDate(profileData.agency.createdAt)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -449,7 +463,7 @@ export default function ProfilePage() {
                                 ) : (
                                     <div className="flex items-start gap-2">
                                         <FaMapMarkerAlt className="text-neutral-text mt-1" size={16} />
-                                        <p className="text-neutral-text">{mockProfileData.agency.address}</p>
+                                        <p className="text-neutral-text">{profileData.agency.address}</p>
                                     </div>
                                 )}
                             </div>
@@ -466,7 +480,7 @@ export default function ProfilePage() {
                                         className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2 resize-none"
                                     />
                                 ) : (
-                                    <p className="text-neutral-text leading-relaxed">{mockProfileData.agency.description}</p>
+                                    <p className="text-neutral-text leading-relaxed">{profileData.agency.description || 'No description provided'}</p>
                                 )}
                             </div>
 
@@ -475,7 +489,7 @@ export default function ProfilePage() {
                                     Service Domains
                                 </label>
                                 <div className="flex flex-wrap gap-2">
-                                    {mockProfileData.agency.serviceDomains.map((domain, index) => (
+                                    {profileData.agency.serviceDomains.map((domain: string, index: number) => (
                                         <span
                                             key={index}
                                             className="px-3 py-1 bg-accent2/10 text-accent2 text-sm font-medium rounded-full"
@@ -503,8 +517,15 @@ export default function ProfilePage() {
                                 </button>
                             </div>
 
+                            <div className="text-center py-12">
+                                <FaUpload className="mx-auto text-neutral-text mb-4" size={48} />
+                                <p className="text-neutral-text">Document management coming soon</p>
+                                <p className="text-sm text-neutral-text/70 mt-2">Upload and manage your agency documents here</p>
+                            </div>
+
+                            {/* Commented out for now until document API is implemented
                             <div className="grid grid-cols-1 gap-4">
-                                {mockProfileData.documents.map((doc) => {
+                                {[].map((doc: any) => {
                                     const DocIcon = getDocumentIcon(doc.type);
                                     return (
                                         <div key={doc.id} className="bg-light-gray/30 rounded-xl p-4 border border-light-gray">

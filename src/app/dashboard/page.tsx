@@ -1,24 +1,23 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { agencyAPI } from "@/lib/api";
 import { FaExclamationTriangle, FaCheckCircle, FaClock, FaCheck, FaArrowUp, FaArrowDown, FaEye, FaCalendarAlt, FaMapMarkerAlt, FaUser} from "react-icons/fa";
 
-// Force static generation
-export const dynamic = 'force-static';
+interface AgencyData {
+    name: string;
+    isVerified: boolean;
+    verificationStatus: string;
+    type: string;
+    district: string;
+    sector: string;
+}
 
-// Mock data - replace with actual API calls
-const mockAgencyData = {
-    name: "City Municipal Corporation",
-    logo: "/images/pin.png",
-    isVerified: false, // Change to true to see verified state
-    notifications: 5
-};
-
-const mockStats = {
-    reported: { count: 45, change: 12, trend: "up" },
-    acknowledged: { count: 23, change: -5, trend: "down" },
-    pending: { count: 18, change: 3, trend: "up" },
-    resolved: { count: 156, change: 28, trend: "up" }
-};
+interface Stats {
+    reported: { count: number; change: number; trend: string };
+    acknowledged: { count: number; change: number; trend: string };
+    pending: { count: number; change: number; trend: string };
+    resolved: { count: number; change: number; trend: string };
+}
 
 const mockRecentIssues = [
     {
@@ -78,6 +77,35 @@ const priorityColors = {
 
 export default function DashboardHome() {
     const [timeRange, setTimeRange] = useState("7d");
+    const [agencyData, setAgencyData] = useState<AgencyData | null>(null);
+    const [stats, setStats] = useState<Stats>({
+        reported: { count: 0, change: 0, trend: "up" },
+        acknowledged: { count: 0, change: 0, trend: "up" },
+        pending: { count: 0, change: 0, trend: "up" },
+        resolved: { count: 0, change: 0, trend: "up" }
+    });
+    const [recentIssues, setRecentIssues] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            const response = await agencyAPI.getDashboardData();
+            
+            if (response.success) {
+                setAgencyData(response.agency);
+                setStats(response.stats);
+                setRecentIssues(response.recentIssues || []);
+            }
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const getStatusIcon = (status: string) => {
         switch (status) {
@@ -123,6 +151,22 @@ export default function DashboardHome() {
         </div>
     );
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="w-12 h-12 border-4 border-accent2/30 border-t-accent2 rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    if (!agencyData) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <p className="text-neutral-text">No agency data available</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -130,7 +174,7 @@ export default function DashboardHome() {
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-almost-black">Dashboard Overview</h1>
                     <p className="text-neutral-text mt-1">
-                        Welcome back! Here's what's happening in your jurisdiction.
+                        Welcome back to {agencyData.name}! Here's what's happening in {agencyData.district}, {agencyData.sector}.
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -148,17 +192,24 @@ export default function DashboardHome() {
             </div>
 
             {/* Verification Alert */}
-            {!mockAgencyData.isVerified && (
+            {!agencyData.isVerified && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                         <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                             <FaExclamationTriangle className="text-white text-xs" />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-yellow-800">Account Verification Pending</h3>
+                            <h3 className="font-semibold text-yellow-800">
+                                {agencyData.verificationStatus === 'pending' ? 'Account Verification Pending' : 
+                                 agencyData.verificationStatus === 'rejected' ? 'Account Verification Rejected' :
+                                 'Account Not Verified'}
+                            </h3>
                             <p className="text-yellow-700 text-sm mt-1">
-                                Your agency account is under review. You have limited access until verification is complete. 
-                                This usually takes 2-3 business days.
+                                {agencyData.verificationStatus === 'pending' 
+                                    ? 'Your agency account is under review by administrators. You have limited access until verification is complete. This usually takes 2-3 business days.'
+                                    : agencyData.verificationStatus === 'rejected'
+                                    ? 'Your agency verification was rejected. Please contact support for more information.'
+                                    : 'Your agency account requires verification. You have limited access until verification is complete.'}
                             </p>
                         </div>
                     </div>
@@ -169,33 +220,33 @@ export default function DashboardHome() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     title="Reported Issues"
-                    count={mockStats.reported.count}
-                    change={mockStats.reported.change}
-                    trend={mockStats.reported.trend}
+                    count={stats.reported.count}
+                    change={stats.reported.change}
+                    trend={stats.reported.trend}
                     color={statusColors.reported}
                     icon={FaExclamationTriangle}
                 />
                 <StatCard
                     title="Acknowledged"
-                    count={mockStats.acknowledged.count}
-                    change={mockStats.acknowledged.change}
-                    trend={mockStats.acknowledged.trend}
+                    count={stats.acknowledged.count}
+                    change={stats.acknowledged.change}
+                    trend={stats.acknowledged.trend}
                     color={statusColors.acknowledged}
                     icon={FaCheckCircle}
                 />
                 <StatCard
                     title="Pending Action"
-                    count={mockStats.pending.count}
-                    change={mockStats.pending.change}
-                    trend={mockStats.pending.trend}
+                    count={stats.pending.count}
+                    change={stats.pending.change}
+                    trend={stats.pending.trend}
                     color={statusColors.pending}
                     icon={FaClock}
                 />
                 <StatCard
                     title="Resolved"
-                    count={mockStats.resolved.count}
-                    change={mockStats.resolved.change}
-                    trend={mockStats.resolved.trend}
+                    count={stats.resolved.count}
+                    change={stats.resolved.change}
+                    trend={stats.resolved.trend}
                     color={statusColors.resolved}
                     icon={FaCheck}
                 />
@@ -214,7 +265,17 @@ export default function DashboardHome() {
                 </div>
                 
                 <div className="divide-y divide-light-gray">
-                    {mockRecentIssues.map((issue) => {
+                    {recentIssues.length === 0 ? (
+                        <div className="p-12 text-center">
+                            <FaExclamationTriangle className="mx-auto text-4xl text-gray-300 mb-4" />
+                            <p className="text-neutral-text">No issues reported yet</p>
+                            <p className="text-sm text-gray-400 mt-1">
+                                {agencyData.isVerified 
+                                    ? 'Issues from citizens will appear here once they are reported.'
+                                    : 'Once your agency is verified, citizen-reported issues will appear here.'}
+                            </p>
+                        </div>
+                    ) : recentIssues.map((issue) => {
                         const StatusIcon = getStatusIcon(issue.status);
                         return (
                             <div key={issue.id} className="p-6 hover:bg-light-gray/30 transition-colors duration-200">
@@ -257,7 +318,7 @@ export default function DashboardHome() {
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <FaUser size={10} />
-                                                        <span>{mockAgencyData.isVerified ? issue.reportedBy : 'Citizen'}</span>
+                                                        <span>{agencyData.isVerified ? issue.reportedBy : 'Citizen'}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <FaCalendarAlt size={10} />

@@ -335,3 +335,11 @@ export const adminAPI = {
     });
   },
 };
+
+// Agency API (for agency officers)
+export const agencyAPI = {
+  // Get agency dashboard data
+  getDashboardData: async () => {
+    return apiCall('/agency/dashboard');
+  },
+};

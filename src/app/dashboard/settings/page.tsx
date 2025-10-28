@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { userAPI } from "@/lib/api";
 import { 
     FaCog, 
     FaUser, 
@@ -20,36 +21,86 @@ import {
     FaCheckCircle
 } from "react-icons/fa";
 
-// Mock current user data
-const mockUserData = {
-    firstName: "John",
-    lastName: "Smith",
-    email: "john.smith@citymunicorp.gov",
-    phone: "+1-555-0123",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: ""
-};
+interface UserData {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}
 
-const mockNotificationSettings = {
-    emailNotifications: true,
-    smsNotifications: false,
-    pushNotifications: true,
-    issueUpdates: true,
-    systemAlerts: true,
-    weeklyReports: false
-};
+interface NotificationSettings {
+    emailNotifications: boolean;
+    smsNotifications: boolean;
+    pushNotifications: boolean;
+    issueUpdates: boolean;
+    systemAlerts: boolean;
+    weeklyReports: boolean;
+}
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState("account");
     const [isEditing, setIsEditing] = useState(false);
-    const [userData, setUserData] = useState(mockUserData);
-    const [notificationSettings, setNotificationSettings] = useState(mockNotificationSettings);
+    const [userData, setUserData] = useState<UserData>({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+    });
+    const [originalUserData, setOriginalUserData] = useState<UserData | null>(null);
+    const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
+        emailNotifications: true,
+        smsNotifications: false,
+        pushNotifications: true,
+        issueUpdates: true,
+        systemAlerts: true,
+        weeklyReports: false
+    });
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        fetchUserData();
+    }, []);
+
+    const fetchUserData = async () => {
+        try {
+            const response = await userAPI.getProfile();
+            
+            if (response.success) {
+                // Parse fullName into firstName and lastName
+                const nameParts = response.user.fullName.split(' ');
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.slice(1).join(' ') || '';
+
+                const data: UserData = {
+                    firstName,
+                    lastName,
+                    email: response.user.email,
+                    phone: response.user.phone,
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: ""
+                };
+
+                setUserData(data);
+                setOriginalUserData(data);
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleInputChange = (field: string, value: string) => {
         setUserData(prev => ({
@@ -67,6 +118,14 @@ export default function SettingsPage() {
 
     const handleSaveAccount = () => {
         console.log("Saving account settings:", userData);
+        // TODO: Implement API call to update user profile
+        setIsEditing(false);
+    };
+
+    const handleCancelEdit = () => {
+        if (originalUserData) {
+            setUserData(originalUserData);
+        }
         setIsEditing(false);
     };
 
@@ -112,6 +171,17 @@ export default function SettingsPage() {
 
     const passwordRequirements = validatePassword(userData.newPassword);
     const isPasswordValid = Object.values(passwordRequirements).every(req => req);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent2 mx-auto"></div>
+                    <p className="mt-4 text-neutral-text">Loading settings...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -178,7 +248,7 @@ export default function SettingsPage() {
                                             Save
                                         </button>
                                         <button
-                                            onClick={() => setIsEditing(false)}
+                                            onClick={handleCancelEdit}
                                             className="px-4 py-2 border border-light-gray text-neutral-text rounded-lg hover:border-red-300 hover:text-red-600 transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                                         >
                                             <FaTimes size={14} />
