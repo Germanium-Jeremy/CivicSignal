@@ -23,6 +23,14 @@ export interface IUser extends Document {
     lastLogin: Date;
     isActive: boolean;
   }[];
+  registeredDevices?: {
+    deviceId: string;
+    deviceModel?: string;
+    osVersion?: string;
+    appVersion?: string;
+    registeredAt: Date;
+    lastUsed: Date;
+  }[];
   isActive: boolean;
   role: 'citizen' | 'agency_officer' | 'admin';
   createdAt: Date;
@@ -116,6 +124,23 @@ const UserSchema = new Schema<IUser>({
     isActive: {
       type: Boolean,
       default: true
+    }
+  }],
+  registeredDevices: [{
+    deviceId: {
+      type: String,
+      required: false
+    },
+    deviceModel: String,
+    osVersion: String,
+    appVersion: String,
+    registeredAt: {
+      type: Date,
+      default: Date.now
+    },
+    lastUsed: {
+      type: Date,
+      default: Date.now
     }
   }],
   isActive: {

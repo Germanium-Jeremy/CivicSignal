@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
 // import geoip from 'geoip-country';
 
 // JWT Payload interface
@@ -90,6 +91,88 @@ export const verifyRefreshToken = (token: string): CustomJwtPayload | null => {
     return null;
   } catch (error) {
     return null;
+  }
+};
+
+// Verify authentication from request headers
+export const verifyAuth = (request: NextRequest): {
+  isAuthenticated: boolean;
+  userId?: string;
+  user?: CustomJwtPayload;
+  error?: NextResponse;
+} => {
+  try {
+    // Get Authorization header
+    const authHeader = request.headers.get('authorization');
+    
+    if (!authHeader) {
+      return {
+        isAuthenticated: false,
+        error: NextResponse.json(
+          {
+            success: false,
+            error: 'Authentication required',
+            message: 'No authorization header provided'
+          },
+          { status: 401 }
+        )
+      };
+    }
+
+    // Check if it's a Bearer token
+    if (!authHeader.startsWith('Bearer ')) {
+      return {
+        isAuthenticated: false,
+        error: NextResponse.json(
+          {
+            success: false,
+            error: 'Invalid authorization format',
+            message: 'Authorization header must be in format: Bearer <token>'
+          },
+          { status: 401 }
+        )
+      };
+    }
+
+    // Extract token
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+    // Verify token
+    const decoded = verifyAccessToken(token);
+
+    if (!decoded) {
+      return {
+        isAuthenticated: false,
+        error: NextResponse.json(
+          {
+            success: false,
+            error: 'Invalid or expired token',
+            message: 'Please login again'
+          },
+          { status: 401 }
+        )
+      };
+    }
+
+    // Return authenticated user info
+    return {
+      isAuthenticated: true,
+      userId: decoded.userId,
+      user: decoded
+    };
+  } catch (error) {
+    console.error('Auth verification error:', error);
+    return {
+      isAuthenticated: false,
+      error: NextResponse.json(
+        {
+          success: false,
+          error: 'Authentication failed',
+          message: 'An error occurred during authentication'
+        },
+        { status: 401 }
+      )
+    };
   }
 };
 

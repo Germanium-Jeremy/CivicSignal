@@ -343,3 +343,119 @@ export const agencyAPI = {
     return apiCall('/agency/dashboard');
   },
 };
+
+// Issue API (for citizens and mobile app)
+export const issueAPI = {
+  // Get issue categories
+  getCategories: async () => {
+    return apiCall('/issues/categories');
+  },
+
+  // Create new issue
+  createIssue: async (issueData: {
+    title: string;
+    description?: string;
+    category: string;
+    location: {
+      latitude: number;
+      longitude: number;
+      address?: string;
+      district?: string;
+      sector?: string;
+    };
+    photos?: Array<{
+      url: string;
+      thumbnailUrl?: string;
+      size?: number;
+      mimeType?: string;
+    }>;
+    deviceInfo: {
+      deviceId: string;
+      deviceModel?: string;
+      osVersion?: string;
+      appVersion?: string;
+    };
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+  }) => {
+    return apiCall('/issues', {
+      method: 'POST',
+      body: JSON.stringify(issueData),
+    });
+  },
+
+  // Get issues list with filters
+  getIssues: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    priority?: string;
+    category?: string;
+    district?: string;
+    sector?: string;
+    userId?: string;
+    latitude?: number;
+    longitude?: number;
+    radius?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    return apiCall(`/issues${queryString ? '?' + queryString : ''}`);
+  },
+
+  // Get single issue by ID
+  getIssue: async (issueId: string) => {
+    return apiCall(`/issues/${issueId}`);
+  },
+
+  // Get issues by tracking number
+  getIssueByTracking: async (trackingNumber: string) => {
+    return apiCall(`/issues/tracking/${trackingNumber}`);
+  },
+
+  // Upload issue photos
+  uploadPhotos: async (images: Array<{
+    data: string; // base64 string
+    mimeType: string;
+  }>) => {
+    return apiCall('/issues/upload', {
+      method: 'POST',
+      body: JSON.stringify({ images }),
+    });
+  },
+
+  // Upvote an issue
+  upvoteIssue: async (issueId: string) => {
+    return apiCall(`/issues/${issueId}/upvote`, {
+      method: 'POST',
+    });
+  },
+
+  // Remove upvote
+  removeUpvote: async (issueId: string) => {
+    return apiCall(`/issues/${issueId}/upvote`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Get user's own issues
+  getMyIssues: async (userId: string, params?: { page?: number; limit?: number }) => {
+    return issueAPI.getIssues({ ...params, userId });
+  },
+
+  // Get nearby issues
+  getNearbyIssues: async (
+    latitude: number,
+    longitude: number,
+    radius?: number,
+    params?: { page?: number; limit?: number }
+  ) => {
+    return issueAPI.getIssues({ ...params, latitude, longitude, radius });
+  },
+};
