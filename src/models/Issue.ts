@@ -20,7 +20,7 @@ export interface IIssuePhoto {
 
 // Interface for Issue Update/Activity
 export interface IIssueActivity {
-  action: 'created' | 'acknowledged' | 'in_progress' | 'resolved' | 'rejected' | 'comment' | 'status_changed';
+  action: 'submitted' | 'acknowledged' | 'pending' | 'resolved';
   description: string;
   performedBy: mongoose.Types.ObjectId;
   performedByModel: 'User' | 'Agency';
@@ -46,8 +46,8 @@ export interface IIssue extends Document {
   title: string;
   description?: string;
   category: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'submitted' | 'acknowledged' | 'in_progress' | 'resolved' | 'rejected' | 'closed';
+  priority: 'low' | 'medium' | 'high';
+  status: 'submitted' | 'acknowledged' | 'pending' | 'resolved';
   
   // Location Information
   location: ILocation;
@@ -126,14 +126,14 @@ const IssueSchema = new Schema<IIssue>(
     
     priority: {
       type: String,
-      enum: ['low', 'medium', 'high', 'urgent'],
+      enum: ['low', 'medium', 'high'],
       default: 'medium',
       index: true,
     },
     
     status: {
       type: String,
-      enum: ['submitted', 'acknowledged', 'in_progress', 'resolved', 'rejected', 'closed'],
+      enum: ['submitted', 'acknowledged', 'pending', 'resolved'],
       default: 'submitted',
       index: true,
     },
@@ -227,7 +227,7 @@ const IssueSchema = new Schema<IIssue>(
     activities: [{
       action: {
         type: String,
-        enum: ['created', 'acknowledged', 'in_progress', 'resolved', 'rejected', 'comment', 'status_changed'],
+        enum: ['submitted', 'acknowledged', 'pending', 'resolved'],
         required: true,
       },
       description: {
@@ -348,8 +348,11 @@ IssueSchema.methods.changeStatus = async function(
     case 'resolved':
       this.resolvedAt = new Date();
       break;
-    case 'closed':
-      this.closedAt = new Date();
+    case 'pending':
+      this.pendingAt = new Date();
+      break;
+    case 'submitted':
+      this.submittedAt = new Date();
       break;
   }
   
