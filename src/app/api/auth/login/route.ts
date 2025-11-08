@@ -127,13 +127,13 @@ export async function POST(request: NextRequest) {
       });
 
       // Send new device login alert
-      await sendEmail(user.email, 'new-device-login', {
-        fullName: user.fullName,
-        deviceName,
-        location,
-        ipAddress: clientIP,
-        loginTime: new Date().toLocaleString()
-      });
+      // await sendEmail(user.email, 'new-device-login', {
+      //   fullName: user.fullName,
+      //   deviceName,
+      //   location,
+      //   ipAddress: clientIP,
+      //   loginTime: new Date().toLocaleString()
+      // });
     }
 
     // Generate tokens
