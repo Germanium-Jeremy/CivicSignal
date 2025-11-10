@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/mongodb';
 import Issue, { IIssuePhoto } from '@/models/Issue';
 import { verifyAuth } from '@/lib/utils/auth';
 import { verifyDevice, checkSubmissionLimit, registerDevice } from '@/lib/utils/deviceVerification';
 import { isValidCategory, getCategoryById, ISSUE_CATEGORIES } from '@/config/issueCategories';
 import mongoose from 'mongoose';
+import connectDB from '@/lib/mongodb';
 
-/**
- * GET /api/issues
- * Get all issues with filtering and pagination
- * Public endpoint - can be accessed without authentication for viewing public issues
- * Authentication optional but allows for personalized results
- */
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
@@ -173,26 +167,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify device to prevent scam reports
-    const deviceVerification = await verifyDevice(userId, deviceInfo);
+    // const deviceVerification = await verifyDevice(userId, deviceInfo);
     
-    if (!deviceVerification.isVerified) {
-      // Register device if it's a new device (trust score above minimum threshold)
-      if (deviceVerification.trustScore >= 30) {
-        await registerDevice(userId, deviceInfo);
-      } else {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Device verification failed',
-            message: 'This device is not registered with your account. Please use the device you registered with or contact support.',
-            trustScore: deviceVerification.trustScore,
-          },
-          { status: 403 }
-        );
-      }
-    }
+    // if (!deviceVerification.isVerified) {
+    //   // Register device if it's a new device (trust score above minimum threshold)
+    //   if (deviceVerification.trustScore >= 30) {
+    //     await registerDevice(userId, deviceInfo);
+    //   } else {
+    //     return NextResponse.json(
+    //       {
+    //         success: false,
+    //         error: 'Device verification failed',
+    //         message: 'This device is not registered with your account. Please use the device you registered with or contact support.',
+    //         trustScore: deviceVerification.trustScore,
+    //       },
+    //       { status: 403 }
+    //     );
+    //   }
+    // }
 
     // Check submission limit to prevent spam
+    if (!userId) return
     const submissionCheck = await checkSubmissionLimit(userId);
     if (!submissionCheck.allowed) {
       return NextResponse.json(
@@ -243,7 +238,7 @@ export async function POST(request: NextRequest) {
         appVersion: deviceInfo.appVersion,
         registeredAt: new Date(),
       },
-      isVerifiedReporter: deviceVerification.trustScore >= 70,
+      // isVerifiedReporter: deviceVerification.trustScore >= 70,
       submittedAt: new Date(),
       isPublic: true,
       showOnMap: true,
