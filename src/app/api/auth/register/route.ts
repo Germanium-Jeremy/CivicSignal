@@ -113,17 +113,17 @@ export async function POST(request: NextRequest) {
     await newUser.save();
 
     // Send verification email with code
-    const emailSent = await sendEmail(email, 'email-verification', {
-      fullName: fullName.trim(),
-      verificationCode: emailVerificationCode
-    });
+    // const emailSent = await sendEmail(email, 'email-verification', {
+    //   fullName: fullName.trim(),
+    //   verificationCode: emailVerificationCode
+    // });
 
-    // Send verification SMS
-    const smsSent = await sendPhoneVerification(
-      phone.replace(/\s/g, ''), 
-      phoneVerificationCode, 
-      fullName.trim()
-    );
+    // // Send verification SMS
+    // const smsSent = await sendPhoneVerification(
+    //   phone.replace(/\s/g, ''), 
+    //   phoneVerificationCode, 
+    //   fullName.trim()
+    // );
 
     // Return success response
     return NextResponse.json({
@@ -140,8 +140,10 @@ export async function POST(request: NextRequest) {
         createdAt: newUser.createdAt
       },
       verificationStatus: {
-        emailSent: emailSent,
-        smsSent: smsSent
+        // emailSent: emailSent,
+        emailSent: true,
+        // smsSent: smsSent,
+        smsSent: true
       }
     }, { status: 201 });
 

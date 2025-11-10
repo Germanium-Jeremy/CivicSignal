@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CIVICSIGNAL
 
-## Getting Started
+## PROBLEM STATEMENT
 
-First, run the development server:
+In our community, reporting civic issues like potholes, broken streetlight, and public safety concerns is fragmented and ineffective. Citizens face three main challenges: not knowing the correct reporting channels, experiencing frustration with lack of follow-up, and having no transparency in resolution processes. This leads to unresolved community issues, citizen dissatisfaction, and inefficient government resource allocation.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## OUR SOLUTION
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```CivicSignal``` is a platform that simplifies civic reporting and creates accountability through public tracking. Our ```mobile app``` enables citizens to report any non-emergency civic issue in under 40 seconds using category-based reporting, automatic GPS location capture and photo documentation. Our ```web based platform``` enables agencies, private authorized companoes, monitor issues related to their services, organize them based on desired criterias and track resolution process. Each report receives a public tracking number with status updates, creating transparency from submission to resolution.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## UNIQUE VALUE PROPOSITION
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+We bridge the gap between citizens and local government by transforming chaotic complaints into structured actionable data. Unlike scattered social media complaints or forgotten phone calls, ```CivicSignal``` provides a centralized, accountable system that benefits both citizens and municipal authorities.
 
-## Learn More
+## IMPACT METRICS
 
-To learn more about Next.js, take a look at the following resources:
+Success will be measured by:
+- 40% reduction in average issue resolution time
+- 300% increase in citizen reporting participation
+- 75% user satisfaction rate
+- Improved government efficiency metrics
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## CALL TO ACTION
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+We are seeking support through this competition to launch our pilot program and demonstrate the trans-formative potential of civic technologies in creating more responsive, transparent local governments.
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# What to try it out? Web Platform <a href="https://civic-signal.vercel.app" target="_black">Web Platform</a> or download our mobile application <a href="https://expo.dev/accounts/djeremiah/projects/civic-signal/builds/2bdc2779-08eb-4d1b-a361-45eb315268d5" target="_blank">Mobile App</a>

@@ -6,9 +6,12 @@ export const API_CONFIG = {
   cors: {
     // In development: Allow all origins
     // In production: You can specify allowed domains if needed
-    allowedOrigins: process.env.NODE_ENV === 'production' 
-      ? process.env.ALLOWED_ORIGINS?.split(',') || ['*']
-      : ['*'],
+
+    // allowedOrigins: process.env.NODE_ENV === 'production' 
+    //   ? process.env.ALLOWED_ORIGINS?.split(',') || ['*']
+    //   : ['*'],
+    allowedOrigins: ['*'],
+
     
     // Allow credentials (needed for cookies, auth headers)
     allowCredentials: true,
