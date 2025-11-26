@@ -15,6 +15,7 @@ export interface IUser extends Document {
     passwordResetToken?: string;
     passwordResetExpires?: Date;
     refreshTokens: string[];
+    expoPushTokens?: string[]; // Expo push notification tokens for this user
     loginDevices: {
         deviceId: string;
         deviceName: string;
@@ -102,6 +103,10 @@ const UserSchema = new Schema<IUser>({
     refreshTokens: [{
         type: String,
         select: false
+    }],
+    expoPushTokens: [{
+        type: String,
+        default: []
     }],
     loginDevices: [{
         deviceId: {

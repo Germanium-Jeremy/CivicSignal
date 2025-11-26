@@ -7,17 +7,17 @@ export default function Download() {
     const router = useRouter();
 
     const handleDownloadAndroid = () => {
-        // For now, redirect to signup since mobile app isn't ready
-        router.push('/auth/signup');
+        const downloadmobile = document.createElement('a')
+        downloadmobile.href = 'https://expo.dev/artifacts/eas/3cLdd9mjXTJL2JPU57YTgJ.apk'
+        downloadmobile.target = '_black'
     };
 
     const handleDownloadIOS = () => {
-        // For now, redirect to signup since mobile app isn't ready
-        router.push('/auth/signup');
+        
     };
 
     return (
-        <section className="px-4 md:px-8 lg:px-[7.5rem] py-12 md:py-16 lg:py-[4rem] flex flex-col lg:flex-row gap-8 lg:gap-[5rem] items-center bg-white">
+        <section className="px-4 md:px-8 lg:px-30 py-12 md:py-16 flex flex-col lg:flex-row gap-8 lg:gap-20 items-center bg-white">
             <div className="flex flex-col gap-4 md:gap-6 py-4 text-center lg:text-left">
                 <h1 className="text-2xl md:text-4xl lg:text-[3rem] font-semibold text-almost-black">Download The App</h1>
                 <p className="text-sm md:text-base text-neutral-text max-w-lg mx-auto lg:mx-0">CivicSignal is available on both mobile and desktop platforms. Download now and start making a difference in your community</p>
