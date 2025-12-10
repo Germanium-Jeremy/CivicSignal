@@ -1,85 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
+import connectDB from '@/lib/mongodb';
+import Issue from '@/models/Issue';
+import { verifyAuth } from '@/lib/utils/auth';
+import mongoose from 'mongoose';
 
-// Mock database - in real app, this would be shared or in a database
-let issues = [
-  {
-    id: 'ISS-001',
-    title: 'Broken streetlight on Main Street',
-    status: 'reported',
-    priority: 'medium',
-    location: 'Kigali',
-    coordinates: { lat: -1.92935, lng: 30.03485 },
-    reportedAt: '2024-01-20T10:30:00Z',
-    category: 'Infrastructure',
-    description: 'The streetlight has been flickering and completely went out last night.',
-    reportedBy: 'citizen@example.com',
-    agencyId: 1
-  }
-];
-
-// GET /api/issues/[id] - Get single issue
+// GET /api/issues/[id] - Get single issue (public)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await connectDB();
     const { id } = await params;
-    const issue = issues.find(i => i.id === id);
-    
-    if (!issue) {
-      return NextResponse.json(
-        { error: 'Issue not found' }, 
-        { status: 404 }
-      );
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, error: 'Invalid id' }, { status: 400 });
     }
-
-    return NextResponse.json({
-      success: true,
-      data: issue
-    });
-
+    const issue = await Issue.findById(id).lean();
+    if (!issue) {
+      return NextResponse.json({ success: false, error: 'Issue not found' }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, data: { issue } });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch issue' }, 
-      { status: 500 }
-    );
+    console.error('GET issue error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to fetch issue' }, { status: 500 });
   }
 }
 
-// PATCH /api/issues/[id] - Update issue
+// PATCH /api/issues/[id] - Append photos or update simple fields (auth required)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const issueIndex = issues.findIndex(i => i.id === id);
-    
-    if (issueIndex === -1) {
-      return NextResponse.json(
-        { error: 'Issue not found' }, 
-        { status: 404 }
-      );
+    await connectDB();
+    const auth = verifyAuth(request);
+    if (!auth.isAuthenticated || !auth.userId) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
     }
 
-    // Update issue
-    issues[issueIndex] = {
-      ...issues[issueIndex],
-      ...body,
-      updatedAt: new Date().toISOString()
-    };
+    const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, error: 'Invalid id' }, { status: 400 });
+    }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Issue updated successfully',
-      data: issues[issueIndex]
-    });
+    const body = await request.json();
+    const updates: any = {};
 
+    // Append photos if provided
+    if (Array.isArray(body.photos) && body.photos.length) {
+      const newPhotos = body.photos.map((p: any) => ({
+        url: p.url,
+        thumbnailUrl: p.thumbnailUrl,
+        uploadedAt: new Date(),
+        size: p.size || 0,
+        mimeType: p.mimeType || 'image/jpeg',
+      }));
+      updates.$push = { photos: { $each: newPhotos } };
+    }
+
+    // Allow optional priority update (if sent)
+    if (typeof body.priority === 'string') {
+      updates.priority = body.priority;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ success: false, error: 'No valid updates provided' }, { status: 400 });
+    }
+
+    const issue = await Issue.findByIdAndUpdate(id, updates, { new: true }).lean();
+    if (!issue) {
+      return NextResponse.json({ success: false, error: 'Issue not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Issue updated successfully', data: { issue } });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to update issue' }, 
-      { status: 500 }
-    );
+    console.error('PATCH issue error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update issue' }, { status: 500 });
   }
 }

@@ -12,6 +12,9 @@ import sharp from 'sharp';
  * Compresses images automatically
  * Generates thumbnails
  */
+
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
  * Handle base64 image upload (typical from mobile apps)
  */
 async function handleBase64Upload(request: NextRequest, userId: string) {
+  console.log("Image is recieved 2")
   try {
     const body = await request.json();
     const { images } = body; // Array of {data: base64String, mimeType: string}
@@ -204,6 +208,7 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
  * Creates both full-size (compressed) and thumbnail versions
  */
 async function processAndSaveImage(buffer: Buffer, userId: string, mimeType: string) {
+  console.log("Image is recieved")
   try {
     // Generate unique filename
     const timestamp = Date.now();
@@ -211,54 +216,52 @@ async function processAndSaveImage(buffer: Buffer, userId: string, mimeType: str
     const filename = `${userId}-${timestamp}-${random}`;
     const extension = mimeType.split('/')[1] || 'jpg';
 
-    // Create upload directory if it doesn't exist
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'issues');
-    const thumbnailDir = join(process.cwd(), 'public', 'uploads', 'issues', 'thumbnails');
+    // Directories under Next public: /public/media/issues
+    const uploadDir = join(process.cwd(), 'public', 'media', 'issues');
+    const thumbnailDir = join(process.cwd(), 'public', 'media', 'issues', 'thumbnails');
 
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
+      console.log('Created dir:', uploadDir);
     }
     if (!existsSync(thumbnailDir)) {
       await mkdir(thumbnailDir, { recursive: true });
+      console.log('Created dir:', thumbnailDir);
     }
 
-    // Compress full-size image
-    // Max width: 1920px, quality: 80%
-    const compressedImage = await sharp(buffer)
-      .resize(1920, 1920, {
-        fit: 'inside',
-        withoutEnlargement: true,
-      })
-      .jpeg({ quality: 80 })
-      .toBuffer();
+    // Try sharp first, fallback to original buffer if it fails
+    let compressedImage: Buffer;
+    let thumbnail: Buffer;
+    try {
+      compressedImage = await sharp(buffer)
+        .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 80 })
+        .toBuffer();
 
-    // Create thumbnail
-    // Max width: 300px, quality: 70%
-    const thumbnail = await sharp(buffer)
-      .resize(300, 300, {
-        fit: 'cover',
-      })
-      .jpeg({ quality: 70 })
-      .toBuffer();
+      thumbnail = await sharp(buffer)
+        .resize(300, 300, { fit: 'cover' })
+        .jpeg({ quality: 70 })
+        .toBuffer();
+    } catch (e) {
+      console.warn('sharp failed, storing original buffer as-is:', e);
+      compressedImage = buffer;
+      thumbnail = buffer;
+    }
 
-    // Save files
     const imagePath = join(uploadDir, `${filename}.jpg`);
     const thumbnailPath = join(thumbnailDir, `${filename}.jpg`);
 
     await writeFile(imagePath, compressedImage);
     await writeFile(thumbnailPath, thumbnail);
+    console.log('Saved image:', imagePath);
+    console.log('Saved thumbnail:', thumbnailPath);
 
-    // Return URLs (relative to public directory)
-    const imageUrl = `/uploads/issues/${filename}.jpg`;
-    const thumbnailUrl = `/uploads/issues/thumbnails/${filename}.jpg`;
-
+    // URLs relative to Next public (serve as https://<host>/media/issues/...)
     return {
-      url: imageUrl,
-      thumbnailUrl: thumbnailUrl,
+      url: `/media/issues/${filename}.jpg`,
+      thumbnailUrl: `/media/issues/thumbnails/${filename}.jpg`,
       size: compressedImage.length,
-      originalSize: buffer.length,
       mimeType: 'image/jpeg',
-      compressionRatio: ((1 - compressedImage.length / buffer.length) * 100).toFixed(2) + '%',
     };
   } catch (error) {
     console.error('Image processing error:', error);

@@ -46,11 +46,11 @@ export interface IIssue extends Document {
     title: string;
     description?: string;
     category: string;
-    priority: 'low' | 'medium' | 'high';
+    priority: 'High' | 'Medium' | 'Low';
     status: 'submitted' | 'acknowledged' | 'pending' | 'resolved';
     
-    // Location Information
-    location: ILocation;
+    // Location Information (optional)
+    location?: ILocation;
     
     // Media
     photos: IIssuePhoto[];
@@ -121,8 +121,8 @@ const IssueSchema = new Schema<IIssue>({
     },
     priority: {
         type: String,
-        enum: ['low', 'medium', 'high'],
-        default: 'medium',
+        enum: ['High', 'Medium', 'Low'],
+        default: 'Medium',
         index: true,
     },   
     status: {
@@ -135,23 +135,24 @@ const IssueSchema = new Schema<IIssue>({
         type: {
             type: String,
             enum: ['Point'],
-            required: true,
+            required: false,
         },
         coordinates: {
             type: [Number], // [longitude, latitude]
-            required: true,
+            required: false,
             validate: {
-            validator: function(coords: number[]) {
-                return coords.length === 2 && 
-                    coords[0] >= -180 && coords[0] <= 180 && // longitude
-                    coords[1] >= -90 && coords[1] <= 90;      // latitude
+                validator: function(this: any, coords: number[]) {
+                    if (!coords || coords.length === 0) return true; // allow missing
+                    return coords.length === 2 &&
+                        coords[0] >= -180 && coords[0] <= 180 &&
+                        coords[1] >= -90 && coords[1] <= 90;
+                },
+                message: 'Invalid coordinates format',
             },
-            message: 'Invalid coordinates format',
         },
         address: String,
         district: String,
         sector: String,
-       }
     },
     photos: [{
         url: {
@@ -359,23 +360,26 @@ IssueSchema.methods.changeStatus = async function(
 
 // Static method to generate tracking number
 IssueSchema.statics.generateTrackingNumber = async function(): Promise<string> {
-    const year = new Date().getFullYear();
-    const prefix = 'CS';
-  
-    // Find the last tracking number for this year
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const prefix = `CS-Issue-${yyyy}-${mm}-${dd}`;
+
+    // Find the last for the same day
     const lastIssue = await this.findOne({
-        trackingNumber: new RegExp(`^${prefix}-${year}-`),
-    }).sort({ trackingNumber: -1 });
-  
+        trackingNumber: new RegExp(`^${prefix}-`),
+    }).sort({ trackingNumber: -1 }).lean();
+
     let sequenceNumber = 1;
-  
-    if (lastIssue) {
+    if (lastIssue && typeof lastIssue.trackingNumber === 'string') {
         const parts = lastIssue.trackingNumber.split('-');
-        sequenceNumber = parseInt(parts[2]) + 1;
+        const lastSeq = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastSeq)) sequenceNumber = lastSeq + 1;
     }
-  
-    // Format: CS-2024-0001
-    return `${prefix}-${year}-${String(sequenceNumber).padStart(4, '0')}`;
+
+    // Format: CS-Issue-YYYY-MM-DD-0001
+    return `${prefix}-${String(sequenceNumber).padStart(4, '0')}`;
 };
 
 // Static method to find nearby issues
@@ -397,13 +401,11 @@ IssueSchema.statics.findNearby = function(
     });
 };
 
-// Pre-save hook
-IssueSchema.pre('save', async function(next) {
-    // Generate tracking number if new
+// Ensure tracking number exists BEFORE validation
+IssueSchema.pre('validate', async function(next) {
     if (this.isNew && !this.trackingNumber) {
         this.trackingNumber = await (this.constructor as any).generateTrackingNumber();
     }
-  
     next();
 });
 

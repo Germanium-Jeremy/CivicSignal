@@ -117,25 +117,25 @@ export async function POST(request: NextRequest) {
     const userId = authResult.userId;
     const body = await request.json();
 
-    // Validate required fields
+    // Validate required fields (location is now optional)
     const {
       title,
       description,
       category,
-      location, // { latitude, longitude, address?, district?, sector? }
+      location, // optional: { latitude, longitude, address?, district?, sector? }
       photos, // Array of photo URLs (already uploaded)
       deviceInfo, // { deviceId, deviceModel?, osVersion?, appVersion? }
     } = body;
 
-    if (!title || !category || !location || !deviceInfo) {
+    if (!category || !deviceInfo) {
       return NextResponse.json(
         {
           success: false,
           error: 'Missing required fields',
           details: {
-            title: !title,
+            title: false,
             category: !category,
-            location: !location,
+            location: false,
             deviceInfo: !deviceInfo,
           },
         },
@@ -143,15 +143,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate location coordinates
-    if (!location.latitude || !location.longitude) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Location coordinates are required',
-        },
-        { status: 400 }
-      );
+    // Helper to get client IP (X-Forwarded-For aware)
+    const getClientIp = () => {
+      const xff = request.headers.get('x-forwarded-for');
+      if (xff) return xff.split(',')[0].trim();
+      // Next.js may not expose request.ip; leave undefined when not available
+      return undefined as string | undefined;
+    };
+
+    // If no location provided, try to resolve by IP
+    let finalLocation: any = null;
+    if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
+      finalLocation = {
+        type: 'Point',
+        coordinates: [location.longitude, location.latitude],
+        address: location.address,
+        district: location.district,
+        sector: location.sector,
+      };
+    } else {
+      try {
+        const ip = getClientIp();
+        if (ip) {
+          // Use a public IP geolocation service (no key). Suitable for dev; consider configuring a paid provider for prod.
+          const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { cache: 'no-store' });
+          if (geoRes.ok) {
+            const geo = await geoRes.json();
+            if (geo && typeof geo.latitude === 'number' && typeof geo.longitude === 'number') {
+              finalLocation = {
+                type: 'Point',
+                coordinates: [geo.longitude, geo.latitude],
+                address: geo.city || undefined,
+                district: geo.region || undefined,
+                sector: geo.country_name || undefined,
+              };
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('IP geolocation failed:', e);
+      }
     }
 
     // Validate category
@@ -204,7 +235,19 @@ export async function POST(request: NextRequest) {
 
     // Get category details for priority suggestion
     const categoryDetails = getCategoryById(category);
-    const suggestedPriority = body.priority || categoryDetails?.priority || 'medium';
+    const normalizePriority = (p?: string) => {
+      const v = String(p || '').toLowerCase();
+      if (v === 'high') return 'High';
+      if (v === 'medium' || v === 'normal' || v === '') return 'Medium';
+      if (v === 'low') return 'Low';
+      return 'Medium';
+    };
+    const suggestedPriority = normalizePriority(body.priority || categoryDetails?.priority);
+
+    // Derive a title when not provided: `${CategoryName}: snippet`
+    const snippet = (description || '').split(/\s+/).slice(0, 6).join(' ').trim();
+    const derivedTitle = `${categoryDetails?.name || category}${snippet ? ': ' + snippet : ''}`.trim();
+    const finalTitle = (typeof title === 'string' && title.trim().length > 0) ? title.trim() : derivedTitle;
 
     // Prepare photos array
     const issuePhotos: IIssuePhoto[] = (photos || []).map((photo: any) => ({
@@ -217,18 +260,12 @@ export async function POST(request: NextRequest) {
 
     // Create issue document
     const issue = new Issue({
-      title: title.trim(),
+      title: finalTitle,
       description: description?.trim() || undefined,
       category,
       priority: suggestedPriority,
       status: 'submitted',
-      location: {
-        type: 'Point',
-        coordinates: [location.longitude, location.latitude],
-        address: location.address,
-        district: location.district,
-        sector: location.sector,
-      },
+      ...(finalLocation ? { location: finalLocation } : {}),
       photos: issuePhotos,
       reportedBy: userId,
       reporterDevice: {
@@ -241,14 +278,14 @@ export async function POST(request: NextRequest) {
       // isVerifiedReporter: deviceVerification.trustScore >= 70,
       submittedAt: new Date(),
       isPublic: true,
-      showOnMap: true,
+      showOnMap: !!finalLocation,
       viewCount: 0,
       upvoteCount: 0,
       upvotedBy: [],
       activities: [
         {
-          action: 'created',
-          description: 'Issue reported by citizen',
+          action: 'submitted',
+          description: 'Issue submitted by citizen',
           performedBy: userId as any,
           performedByModel: 'User',
           timestamp: new Date(),
