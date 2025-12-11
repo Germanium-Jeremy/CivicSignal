@@ -17,14 +17,14 @@ export default function Hero() {
     };
 
     return (
-        <section className="relative px-4 md:px-8 lg:px-[7.5rem] py-20 md:py-32 lg:py-[14rem] flex flex-col lg:flex-row gap-8 lg:gap-[4rem] items-center heroGradient overflow-hidden" id="hero">
+        <section className="relative px-4 md:px-8 lg:px-30 py-20 md:py-32 lg:py-56 flex flex-col lg:flex-row gap-8 lg:gap-16 items-center heroGradient overflow-hidden" id="hero">
             {/* Floating Elements - Hidden on mobile */}
             <div className="hidden md:block absolute top-20 left-20 w-20 h-20 bg-accent2/10 rounded-full animate-pulse"></div>
             <div className="hidden md:block absolute top-40 right-32 w-16 h-16 bg-primary/10 rounded-full animate-bounce"></div>
             <div className="hidden lg:block absolute bottom-32 left-1/4 w-12 h-12 bg-accent/10 rounded-full animate-pulse delay-300"></div>
 
             {/* Content Section */}
-            <div className="flex-1 py-4 md:py-8 flex flex-col gap-6 md:gap-8 lg:gap-[3rem] animate-fade-in-up text-center lg:text-left">
+            <div className="flex-1 py-4 md:py-8 flex flex-col gap-6 md:gap-8 lg:gap-12 animate-fade-in-up text-center lg:text-left">
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-3 md:px-4 py-2 rounded-full border border-accent2/20 w-fit shadow-sm mx-auto lg:mx-0">
                     <div className="w-2 h-2 bg-accent2 rounded-full animate-pulse"></div>
@@ -33,14 +33,14 @@ export default function Hero() {
 
                 {/* Main Heading */}
                 <div className="space-y-3 md:space-y-4">
-                    <h1 className="text-3xl md:text-5xl lg:text-[4rem] font-bold text-almost-black leading-tight">
+                    <h1 className="text-3xl md:text-5xl lg:text-16 font-bold text-almost-black leading-tight">
                         Transform Your
-                        <span className="block bg-gradient-to-r from-primary via-accent to-accent2 bg-clip-text text-transparent">
+                        <span className="block bg-linear-to-r from-primary via-accent to-accent2 bg-clip-text text-transparent">
                             Community
                         </span>
                         <span className="block">Engagement</span>
                     </h1>
-                    <div className="w-16 md:w-20 lg:w-24 h-1 bg-gradient-to-r from-accent2 to-accent rounded-full mx-auto lg:mx-0"></div>
+                    <div className="w-16 md:w-20 lg:w-24 h-1 bg-linear-to-r from-accent2 to-accent rounded-full mx-auto lg:mx-0"></div>
                 </div>
 
                 {/* Description */}
@@ -85,8 +85,8 @@ export default function Hero() {
             {/* Image Section */}
             <div className="flex-1 relative animate-fade-in-right w-full max-w-lg lg:max-w-none mx-auto">
                 {/* Decorative Elements - Hidden on mobile */}
-                <div className="hidden md:block absolute -top-4 lg:-top-8 -right-4 lg:-right-8 w-20 md:w-24 lg:w-32 h-20 md:h-24 lg:h-32 bg-gradient-to-br from-accent2/20 to-accent/20 rounded-2xl lg:rounded-3xl rotate-12 animate-float"></div>
-                <div className="hidden md:block absolute -bottom-4 lg:-bottom-8 -left-4 lg:-left-8 w-16 md:w-20 lg:w-24 h-16 md:h-20 lg:h-24 bg-gradient-to-br from-primary/20 to-accent2/20 rounded-xl lg:rounded-2xl -rotate-12 animate-float delay-500"></div>
+                <div className="hidden md:block absolute -top-4 lg:-top-8 -right-4 lg:-right-8 w-20 md:w-24 lg:w-32 h-20 md:h-24 lg:h-32 bg-linear-to-br from-accent2/20 to-accent/20 rounded-2xl lg:rounded-3xl rotate-12 animate-float"></div>
+                <div className="hidden md:block absolute -bottom-4 lg:-bottom-8 -left-4 lg:-left-8 w-16 md:w-20 lg:w-24 h-16 md:h-20 lg:h-24 bg-linear-to-br from-primary/20 to-accent2/20 rounded-xl lg:rounded-2xl -rotate-12 animate-float delay-500"></div>
                 
                 {/* Main Image Container */}
                 <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-4 md:p-6 lg:p-8 shadow-2xl border border-white/20">

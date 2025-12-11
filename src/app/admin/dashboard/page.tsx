@@ -131,7 +131,7 @@ export default function AdminDashboardPage() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-accent2 to-accent rounded-xl p-6 text-white">
+        <div className="bg-linear-to-r from-accent2 to-accent rounded-xl p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">Welcome back, Administrator!</h1>
           <p className="text-white/90">
             Here's what's happening with CivicSignal today.

@@ -30,13 +30,13 @@ const achievements = [
 
 export default function Achievements() {
     return (
-        <section className="relative z-10 -mt-10 md:-mt-16 lg:-mt-20 mx-4 md:mx-8 lg:mx-[7.5rem]" id="achievements">
-            <div className="bg-white rounded-2xl lg:rounded-[2rem] shadow-2xl border border-light-gray/50 p-4 md:p-6 lg:p-8">
+        <section className="relative z-10 -mt-10 md:-mt-16 lg:-mt-20 mx-4 md:mx-8 lg:mx-30" id="achievements">
+            <div className="bg-white rounded-2xl lg:rounded-4xl shadow-2xl border border-light-gray/50 p-4 md:p-6 lg:p-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
                     {achievements.map((achievement, index) => (
                         <div 
                             key={achievement.id} 
-                            className={`group relative overflow-hidden rounded-xl lg:rounded-2xl bg-gradient-to-br ${
+                            className={`group relative overflow-hidden rounded-xl lg:rounded-2xl bg-linear-to-br ${
                                 index === 0 ? 'from-primary to-primary/80' :
                                 index === 1 ? 'from-accent2 to-accent2/80' :
                                 'from-accent to-accent/80'

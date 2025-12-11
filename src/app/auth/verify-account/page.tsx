@@ -303,7 +303,7 @@ function VerifyAccountContent() {
                                 
                                 {emailError && (
                                     <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                        <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" size={14} />
+                                        <FaExclamationTriangle className="text-red-500 mt-0.5  shrink-0" size={14} />
                                         <p className="text-red-800 text-sm">{emailError}</p>
                                     </div>
                                 )}
@@ -376,7 +376,7 @@ function VerifyAccountContent() {
                                 
                                 {phoneError && (
                                     <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                        <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" size={14} />
+                                        <FaExclamationTriangle className="text-red-500 mt-0.5  shrink-0" size={14} />
                                         <p className="text-red-800 text-sm">{phoneError}</p>
                                     </div>
                                 )}

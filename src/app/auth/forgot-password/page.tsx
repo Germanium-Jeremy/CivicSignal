@@ -124,7 +124,7 @@ export default function ForgotPasswordPage() {
                     <button
                         type="submit"
                         disabled={isLoading || !contactValue}
-                        className="w-full bg-gradient-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
+                        className="w-full bg-linear-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
                     >
                         {isLoading ? (
                             <div className="flex items-center justify-center gap-2">
@@ -142,7 +142,7 @@ export default function ForgotPasswordPage() {
                     {/* Help Text */}
                     <div className="bg-accent2/5 border border-accent2/20 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <div className="w-6 h-6 bg-accent2 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <div className="w-6 h-6 bg-accent2 rounded-full flex items-center justify-center  shrink-0 mt-0.5">
                                 <span className="text-white text-xs font-bold">i</span>
                             </div>
                             <div className="text-sm text-neutral-text">

@@ -144,7 +144,7 @@ export default function LoginPage() {
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" />
+                            <FaExclamationTriangle className="text-red-500 mt-0.5  shrink-0" />
                             <div className="flex-1">
                                 <p className="text-red-800 text-sm font-medium">{error}</p>
                                 {verificationRequired && (
@@ -247,7 +247,7 @@ export default function LoginPage() {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
+                    className="w-full bg-linear-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
                 >
                     {isLoading ? (
                         <div className="flex items-center justify-center gap-2">

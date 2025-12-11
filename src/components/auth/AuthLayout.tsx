@@ -33,7 +33,7 @@ export default function AuthLayout({ children, title, subtitle, showBackButton =
                                 height={48} 
                                 className="w-12 h-12"
                             />
-                            <div className="absolute -inset-2 bg-gradient-to-r from-accent2/20 to-accent/20 rounded-full blur-lg -z-10"></div>
+                            <div className="absolute -inset-2 bg-linear-to-r from-accent2/20 to-accent/20 rounded-full blur-lg -z-10"></div>
                         </div>
                         <span className="text-2xl font-bold text-primary">CivicSignal</span>
                     </Link>

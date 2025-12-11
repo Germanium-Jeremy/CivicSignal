@@ -42,12 +42,12 @@ export default function WhyUs() {
     };
 
     return (
-        <section className="relative py-16 md:py-24 lg:py-[10rem] px-4 md:px-8 lg:px-[7.5rem] whyUsGradient overflow-hidden" id="whyUs">
+        <section className="relative py-16 md:py-24 lg:py-40 px-4 md:px-8 lg:px-30 whyUsGradient overflow-hidden" id="whyUs">
             {/* Background Elements - Hidden on mobile */}
             <div className="hidden md:block absolute top-20 right-20 w-48 lg:w-64 h-48 lg:h-64 bg-accent2/5 rounded-full blur-3xl"></div>
             <div className="hidden md:block absolute bottom-20 left-20 w-32 lg:w-48 h-32 lg:h-48 bg-primary/5 rounded-full blur-2xl"></div>
             
-            <div className="flex flex-col lg:flex-row gap-8 lg:gap-[8rem] items-center">
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-32 items-center">
                 {/* Content Section */}
                 <div className="flex-1 py-4 md:py-8 space-y-6 md:space-y-8 text-center lg:text-left">
                     {/* Header */}
@@ -58,11 +58,11 @@ export default function WhyUs() {
                         </div>
                         <h1 className="text-2xl md:text-4xl lg:text-[3.5rem] font-bold text-almost-black leading-tight">
                             Built for
-                            <span className="block bg-gradient-to-r from-primary to-accent2 bg-clip-text text-transparent">
+                            <span className="block bg-linear-to-r from-primary to-accent2 bg-clip-text text-transparent">
                                 Real Impact
                             </span>
                         </h1>
-                        <div className="w-16 md:w-20 h-1 bg-gradient-to-r from-accent2 to-accent rounded-full mx-auto lg:mx-0"></div>
+                        <div className="w-16 md:w-20 h-1 bg-linear-to-r from-accent2 to-accent rounded-full mx-auto lg:mx-0"></div>
                     </div>
 
                     {/* Features Grid */}
@@ -75,7 +75,7 @@ export default function WhyUs() {
                             >
                                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 text-center sm:text-left">
                                     {/* Icon */}
-                                    <div className="flex-shrink-0 w-12 md:w-14 h-12 md:h-14 bg-accent2/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 mx-auto sm:mx-0">
+                                    <div className=" shrink-0 w-12 md:w-14 h-12 md:h-14 bg-accent2/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 mx-auto sm:mx-0">
                                         <div className="text-lg md:text-xl">
                                             {item.icon}
                                         </div>
@@ -110,7 +110,7 @@ export default function WhyUs() {
 
                     {/* Bottom CTA */}
                     <div className="pt-4 md:pt-6">
-                        <div className="bg-gradient-to-r from-primary/10 to-accent2/10 rounded-xl lg:rounded-2xl p-4 md:p-6 border border-accent2/20">
+                        <div className="bg-linear-to-r from-primary/10 to-accent2/10 rounded-xl lg:rounded-2xl p-4 md:p-6 border border-accent2/20">
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0 text-center sm:text-left">
                                 <div>
                                     <h3 className="text-base md:text-lg font-bold text-almost-black">Ready to get started?</h3>
@@ -127,8 +127,8 @@ export default function WhyUs() {
                 {/* Image Section */}
                 <div className="flex-1 relative w-full max-w-md lg:max-w-none mx-auto">
                     {/* Decorative Elements - Hidden on mobile */}
-                    <div className="hidden md:block absolute -top-4 lg:-top-8 -left-4 lg:-left-8 w-16 lg:w-24 h-16 lg:h-24 bg-gradient-to-br from-accent2/20 to-primary/20 rounded-2xl lg:rounded-3xl rotate-12 animate-float"></div>
-                    <div className="hidden md:block absolute -bottom-4 lg:-bottom-8 -right-4 lg:-right-8 w-20 lg:w-32 h-20 lg:h-32 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl lg:rounded-2xl -rotate-12 animate-float delay-700"></div>
+                    <div className="hidden md:block absolute -top-4 lg:-top-8 -left-4 lg:-left-8 w-16 lg:w-24 h-16 lg:h-24 bg-linear-to-br from-accent2/20 to-primary/20 rounded-2xl lg:rounded-3xl rotate-12 animate-float"></div>
+                    <div className="hidden md:block absolute -bottom-4 lg:-bottom-8 -right-4 lg:-right-8 w-20 lg:w-32 h-20 lg:h-32 bg-linear-to-br from-primary/20 to-accent/20 rounded-xl lg:rounded-2xl -rotate-12 animate-float delay-700"></div>
                     
                     {/* Main Image Container */}
                     <div className="relative bg-white/20 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-4 md:p-6 lg:p-8 border border-white/30 shadow-2xl">

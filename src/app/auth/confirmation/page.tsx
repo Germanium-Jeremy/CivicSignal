@@ -87,7 +87,7 @@ function ConfirmationContent() {
             <div className="text-center space-y-8">
                 {/* Success Animation */}
                 <div className="relative">
-                    <div className="w-24 h-24 mx-auto bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center animate-bounce">
+                    <div className="w-24 h-24 mx-auto bg-linear-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center animate-bounce">
                         <FaCheck className="text-white text-3xl" />
                     </div>
                     
@@ -104,7 +104,7 @@ function ConfirmationContent() {
                 </div>
 
                 {/* Success Stats */}
-                <div className="bg-gradient-to-r from-green-50 to-accent2/5 rounded-2xl p-6 border border-green-200">
+                <div className="bg-linear-to-r from-green-50 to-accent2/5 rounded-2xl p-6 border border-green-200">
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div className="space-y-1">
                             <div className="text-2xl font-bold text-green-600">✓</div>
@@ -126,7 +126,7 @@ function ConfirmationContent() {
                     <button
                         onClick={handlePrimaryAction}
                         disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-accent2 to-accent text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
+                        className="w-full bg-linear-to-r from-accent2 to-accent text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
                     >
                         {isLoading ? (
                             <div className="flex items-center justify-center gap-2">
@@ -153,7 +153,7 @@ function ConfirmationContent() {
                 {type === 'account-verified' && (
                     <div className="bg-accent2/5 border border-accent2/20 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <div className="w-6 h-6 bg-accent2 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <div className="w-6 h-6 bg-accent2 rounded-full flex items-center justify-center  shrink-0 mt-0.5">
                                 <span className="text-white text-xs font-bold">💡</span>
                             </div>
                             <div className="text-sm text-neutral-text text-left">
@@ -172,7 +172,7 @@ function ConfirmationContent() {
                 {type === 'password-reset' && (
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center  shrink-0 mt-0.5">
                                 <FaCheck className="text-white text-xs" />
                             </div>
                             <div className="text-sm text-neutral-text text-left">
@@ -224,7 +224,7 @@ function LoadingFallback() {
             subtitle="Please wait while we load your confirmation"
         >
             <div className="text-center space-y-8">
-                <div className="w-24 h-24 mx-auto bg-gradient-to-r from-accent2 to-accent rounded-full flex items-center justify-center">
+                <div className="w-24 h-24 mx-auto bg-linear-to-r from-accent2 to-accent rounded-full flex items-center justify-center">
                     <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                 </div>
                 <p className="text-neutral-text">Loading confirmation details...</p>

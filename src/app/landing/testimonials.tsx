@@ -69,13 +69,13 @@ const renderStars = (rating: number) => {
 
 export default function Testimonials() {
     return (
-        <section className="px-4 md:px-8 lg:px-[7.5rem] py-12 md:py-16 lg:py-[6rem] bg-panel relative overflow-hidden" id="testimonials">
+        <section className="px-4 md:px-8 lg:px-30 py-12 md:py-16 lg:py-24 bg-panel relative overflow-hidden" id="testimonials">
             {/* Background Elements */}
             <div className="hidden md:block absolute top-10 left-10 w-32 h-32 bg-accent2/5 rounded-full blur-2xl"></div>
             <div className="hidden md:block absolute bottom-10 right-10 w-24 h-24 bg-primary/5 rounded-full blur-xl"></div>
             
             {/* Header */}
-            <div className="text-center mb-8 md:mb-12 lg:mb-[5rem] space-y-3 md:space-y-4">
+            <div className="text-center mb-8 md:mb-12 lg:mb-20 space-y-3 md:space-y-4">
                 <div className="inline-flex items-center gap-2 bg-accent2/10 px-3 md:px-4 py-2 rounded-full">
                     <div className="w-2 h-2 bg-accent2 rounded-full"></div>
                     <span className="text-xs md:text-sm font-medium text-accent2">What Our Users Say</span>
@@ -89,7 +89,7 @@ export default function Testimonials() {
                     Hear from community leaders, residents, and officials who are making a difference with CivicSignal
                 </p>
                 
-                <div className="w-16 md:w-20 h-1 bg-gradient-to-r from-accent2 to-accent rounded-full mx-auto"></div>
+                <div className="w-16 md:w-20 h-1 bg-linear-to-r from-accent2 to-accent rounded-full mx-auto"></div>
             </div>
             
             <div className="max-w-5xl mx-auto relative">
@@ -118,7 +118,7 @@ export default function Testimonials() {
                                                     />
                                                 </div>
                                                 {/* Decorative ring */}
-                                                <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-accent2/20 to-accent/20 -z-10"></div>
+                                                <div className="absolute -inset-1 rounded-full bg-linear-to-r from-accent2/20 to-accent/20 -z-10"></div>
                                             </div>
                                             
                                             {/* Rating Stars */}
@@ -185,7 +185,7 @@ export default function Testimonials() {
                 </div>
                 
                 {/* Stats Section */}
-                <div className="mt-8 md:mt-12 bg-gradient-to-r from-primary/5 via-accent2/5 to-accent/5 rounded-2xl p-4 md:p-6 lg:p-8 border border-accent2/10">
+                <div className="mt-8 md:mt-12 bg-linear-to-r from-primary/5 via-accent2/5 to-accent/5 rounded-2xl p-4 md:p-6 lg:p-8 border border-accent2/10">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
                         <div className="space-y-1 md:space-y-2">
                             <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary">4.7/5</div>

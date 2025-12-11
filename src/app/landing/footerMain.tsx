@@ -41,7 +41,7 @@ export default function Footer() {
     return (
         <footer className="bg-primary text-white" id="contacts">
             {/* Main Footer Content */}
-            <div className="px-4 md:px-8 lg:px-[7.5rem] py-8 md:py-12 lg:py-[4rem]">
+            <div className="px-4 md:px-8 lg:px-30 py-8 md:py-12 lg:py-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 md:gap-8">
                     {/* Company Info & Newsletter */}
                     <div className="md:col-span-2 lg:col-span-2 space-y-4 md:space-y-6 text-center md:text-left">
@@ -80,15 +80,15 @@ export default function Footer() {
                             <h3 className="text-base md:text-lg font-semibold text-white">Contact Info</h3>
                             <div className="space-y-2 text-xs md:text-sm text-gray-300">
                                 <div className="flex items-center gap-3">
-                                    <FaLocationPin className="text-accent2 flex-shrink-0" />
+                                    <FaLocationPin className="text-accent2  shrink-0" />
                                     <span>123 Civic Street, Democracy City, DC 12345</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <FaPhone className="text-accent2 flex-shrink-0" />
+                                    <FaPhone className="text-accent2  shrink-0" />
                                     <span>+1 (555) 123-4567</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <FaEnvelope className="text-accent2 flex-shrink-0" />
+                                    <FaEnvelope className="text-accent2  shrink-0" />
                                     <span>hello@civicsignal.com</span>
                                 </div>
                             </div>
@@ -167,7 +167,7 @@ export default function Footer() {
 
             {/* Bottom Footer */}
             <div className="border-t border-white/10">
-                <div className="px-4 md:px-8 lg:px-[7.5rem] py-4 md:py-6">
+                <div className="px-4 md:px-8 lg:px-30 py-4 md:py-6">
                     <div className="flex flex-col lg:flex-row justify-between items-center gap-4 text-center lg:text-left">
                         {/* Copyright */}
                         <div className="text-xs md:text-sm text-gray-300">

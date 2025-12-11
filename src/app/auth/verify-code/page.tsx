@@ -156,7 +156,7 @@ function VerifyCodeContent() {
                     <button
                         type="submit"
                         disabled={isLoading || code.join('').length !== 6}
-                        className="w-full bg-gradient-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
+                        className="w-full bg-linear-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
                     >
                         {isLoading ? (
                             <div className="flex items-center justify-center gap-2">
@@ -235,7 +235,7 @@ function LoadingFallback() {
             subtitle="Please wait while we prepare your verification code"
         >
             <div className="text-center space-y-6">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-r from-accent2 to-accent rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto bg-linear-to-r from-accent2 to-accent rounded-full flex items-center justify-center">
                     <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
                 </div>
                 <p className="text-neutral-text">Loading verification details...</p>

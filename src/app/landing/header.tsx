@@ -77,7 +77,7 @@ export default function HeaderUnAuthenticated() {
     };
 
     return (
-        <header className="py-3 md:py-4 bg-white px-4 md:px-8 fixed top-2 md:top-2 left-4 md:left-[7.5rem] right-4 md:right-[7.5rem] z-[20] rounded-2xl shadow-2xl">
+        <header className="py-3 md:py-4 bg-white px-4 md:px-8 fixed top-2 md:top-2 left-4 md:left-30 right-4 md:right-30 z-[20] rounded-2xl shadow-2xl">
             <div className="flex justify-between items-center">
                 {/* Logo */}
                 <div className="flex items-center gap-2" onClick={handleLandingClick}>

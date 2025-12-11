@@ -195,7 +195,7 @@ export default function DashboardHome() {
             {!agencyData.isVerified && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
                     <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center  shrink-0 mt-0.5">
                             <FaExclamationTriangle className="text-white text-xs" />
                         </div>
                         <div>
@@ -282,7 +282,7 @@ export default function DashboardHome() {
                                 <div className="flex items-start gap-4">
                                     {/* Status Indicator */}
                                     <div 
-                                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                        className="w-10 h-10 rounded-full flex items-center justify-center  shrink-0"
                                         style={{ 
                                             backgroundColor: `${statusColors[issue.status as keyof typeof statusColors]}20`,
                                             color: statusColors[issue.status as keyof typeof statusColors]

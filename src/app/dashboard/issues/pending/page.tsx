@@ -271,7 +271,7 @@ export default function PendingIssuesPage() {
                                 }`}
                             >
                                 <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center  shrink-0">
                                         <FaClock className="text-yellow-600" size={16} />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -280,7 +280,7 @@ export default function PendingIssuesPage() {
                                                 {issue.title}
                                             </h3>
                                             <span
-                                                className="px-2 py-1 text-xs font-medium rounded-full flex-shrink-0"
+                                                className="px-2 py-1 text-xs font-medium rounded-full  shrink-0"
                                                 style={{
                                                     backgroundColor: `${priorityColors[issue.priority as keyof typeof priorityColors]}20`,
                                                     color: priorityColors[issue.priority as keyof typeof priorityColors]

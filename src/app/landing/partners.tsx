@@ -10,7 +10,7 @@ const partners = [
 
 export default function Partners() {
     return (
-        <section className="px-4 md:px-8 lg:px-[7.5rem] py-16 md:py-24 lg:py-[8rem] bg-white relative overflow-hidden" id="partners">
+        <section className="px-4 md:px-8 lg:px-30 py-16 md:py-24 lg:py-40 bg-white relative overflow-hidden" id="partners">
             {/* Background Elements - Hidden on mobile */}
             <div className="hidden md:block absolute top-0 left-1/4 w-64 lg:w-96 h-64 lg:h-96 bg-accent2/5 rounded-full blur-3xl"></div>
             <div className="hidden md:block absolute bottom-0 right-1/4 w-48 lg:w-64 h-48 lg:h-64 bg-primary/5 rounded-full blur-2xl"></div>
@@ -25,7 +25,7 @@ export default function Partners() {
                     
                     <h1 className="text-2xl md:text-4xl lg:text-[3.5rem] font-bold text-almost-black leading-tight">
                         Powered by
-                        <span className="block bg-gradient-to-r from-primary to-accent2 bg-clip-text text-transparent">
+                        <span className="block bg-linear-to-r from-primary to-accent2 bg-clip-text text-transparent">
                             Industry Leaders
                         </span>
                     </h1>
@@ -34,7 +34,7 @@ export default function Partners() {
                         We collaborate with the best technology partners to deliver exceptional civic engagement solutions
                     </p>
                     
-                    <div className="w-16 md:w-20 h-1 bg-gradient-to-r from-accent2 to-accent rounded-full mx-auto"></div>
+                    <div className="w-16 md:w-20 h-1 bg-linear-to-r from-accent2 to-accent rounded-full mx-auto"></div>
                 </div>
 
                 {/* Partners Grid */}
@@ -46,7 +46,7 @@ export default function Partners() {
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
                             {/* Hover Gradient Background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-accent2/5 to-primary/5 rounded-xl lg:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 bg-linear-to-br from-accent2/5 to-primary/5 rounded-xl lg:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             
                             <div className="relative z-10 text-center space-y-2 md:space-y-3 lg:space-y-4">
                                 {/* Logo Container */}
@@ -71,14 +71,14 @@ export default function Partners() {
                                 </div>
                                 
                                 {/* Connection Line */}
-                                <div className="w-full h-px bg-gradient-to-r from-transparent via-accent2/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div className="w-full h-px bg-linear-to-r from-transparent via-accent2/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {/* Stats Section */}
-                <div className="bg-gradient-to-r from-primary/5 via-accent2/5 to-accent/5 rounded-2xl lg:rounded-3xl p-4 md:p-6 lg:p-8 border border-accent2/10">
+                <div className="bg-linear-to-r from-primary/5 via-accent2/5 to-accent/5 rounded-2xl lg:rounded-3xl p-4 md:p-6 lg:p-8 border border-accent2/10">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-8 text-center">
                         <div className="space-y-1 md:space-y-2">
                             <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary">50+</div>

@@ -201,7 +201,7 @@ export default function DashboardLayout({
 
                 {/* Sidebar Footer */}
                 <div className="absolute bottom-4 left-4 right-4">
-                    <div className="p-3 bg-gradient-to-r from-accent2/10 to-accent/10 rounded-xl border border-accent2/20">
+                    <div className="p-3 bg-linear-to-r from-accent2/10 to-accent/10 rounded-xl border border-accent2/20">
                         <div className="text-xs text-neutral-text">
                             <p className="font-medium text-almost-black">Need Help?</p>
                             <p>Contact support for assistance</p>
@@ -269,7 +269,7 @@ export default function DashboardLayout({
                         {/* Profile Menu */}
                         <div className="flex items-center gap-2">
                             <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-light-gray/50 transition-colors">
-                                <div className="w-8 h-8 bg-gradient-to-r from-accent2 to-accent rounded-full flex items-center justify-center">
+                                <div className="w-8 h-8 bg-linear-to-r from-accent2 to-accent rounded-full flex items-center justify-center">
                                     <FaUser size={14} className="text-white" />
                                 </div>
                                 <span className="hidden md:block text-sm font-medium text-almost-black">Profile</span>

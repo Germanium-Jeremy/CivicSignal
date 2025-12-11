@@ -171,7 +171,7 @@ export default function SignupPage() {
                 {success && (
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <FaCheck className="text-green-500 mt-0.5 flex-shrink-0" />
+                            <FaCheck className="text-green-500 mt-0.5  shrink-0" />
                             <div className="flex-1">
                                 <p className="text-green-800 text-sm font-medium">Registration successful!</p>
                                 <p className="text-green-700 text-xs mt-1">
@@ -186,7 +186,7 @@ export default function SignupPage() {
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" />
+                            <FaExclamationTriangle className="text-red-500 mt-0.5  shrink-0" />
                             <div className="flex-1">
                                 <p className="text-red-800 text-sm font-medium">{error}</p>
                             </div>
@@ -374,7 +374,7 @@ export default function SignupPage() {
                 <button
                     type="submit"
                     disabled={isLoading || !formData.agreeToTerms}
-                    className="w-full bg-gradient-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
+                    className="w-full bg-linear-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
                 >
                     {isLoading ? (
                         <div className="flex items-center justify-center gap-2">

@@ -224,7 +224,7 @@ export default function AgencyRegistrationPage() {
                 {success && (
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <FaCheck className="text-green-500 mt-0.5 flex-shrink-0" />
+                            <FaCheck className="text-green-500 mt-0.5  shrink-0" />
                             <div className="flex-1">
                                 <p className="text-green-800 text-sm font-medium">Agency registered successfully!</p>
                                 <p className="text-green-700 text-xs mt-1">
@@ -239,7 +239,7 @@ export default function AgencyRegistrationPage() {
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" />
+                            <FaExclamationTriangle className="text-red-500 mt-0.5  shrink-0" />
                             <div className="flex-1">
                                 <p className="text-red-800 text-sm font-medium">{error}</p>
                             </div>
@@ -458,7 +458,7 @@ export default function AgencyRegistrationPage() {
                     <button
                         type="submit"
                         disabled={isSubmitting || formData.serviceDomains.length === 0}
-                        className="w-full bg-gradient-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
+                        className="w-full bg-linear-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
                     >
                         {isSubmitting ? (
                             <div className="flex items-center justify-center gap-2">
@@ -484,7 +484,7 @@ export default function AgencyRegistrationPage() {
                 {/* Help Information */}
                 <div className="bg-accent2/5 border border-accent2/20 rounded-xl p-4">
                     <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 bg-accent2 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-6 h-6 bg-accent2 rounded-full flex items-center justify-center  shrink-0 mt-0.5">
                             <span className="text-white text-xs font-bold">💡</span>
                         </div>
                         <div className="text-sm text-neutral-text">

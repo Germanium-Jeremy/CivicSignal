@@ -71,7 +71,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 }`}
                 title={!sidebarOpen ? item.name : ''}
               >
-                <item.icon className="text-xl flex-shrink-0" />
+                <item.icon className="text-xl  shrink-0" />
                 {sidebarOpen && <span className="font-medium">{item.name}</span>}
               </Link>
             );
@@ -81,7 +81,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* User Info & Logout */}
         <div className="p-4 border-t border-gray-700">
           <div className={`flex items-center gap-3 px-4 py-3 mb-2 ${sidebarOpen ? '' : 'justify-center'}`}>
-            <div className="w-10 h-10 bg-accent2 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-accent2 rounded-full flex items-center justify-center  shrink-0">
               <FaUserShield className="text-lg" />
             </div>
             {sidebarOpen && (
@@ -98,7 +98,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             }`}
             title={!sidebarOpen ? 'Logout' : ''}
           >
-            <FaSignOutAlt className="text-xl flex-shrink-0" />
+            <FaSignOutAlt className="text-xl  shrink-0" />
             {sidebarOpen && <span className="font-medium">Logout</span>}
           </button>
         </div>
