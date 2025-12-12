@@ -292,7 +292,6 @@ const IssueSchema = new Schema<IIssue>({
 
 // Indexes for better query performance
 IssueSchema.index({ location: '2dsphere' }); // Geospatial index for location queries
-IssueSchema.index({ trackingNumber: 1 });
 IssueSchema.index({ reportedBy: 1, status: 1 });
 IssueSchema.index({ assignedAgency: 1, status: 1 });
 IssueSchema.index({ category: 1, status: 1 });
