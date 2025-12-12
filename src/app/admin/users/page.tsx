@@ -105,8 +105,8 @@ const UsersPage = () => {
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admin</option>
-                <option value="agency">Agency</option>
-                <option value="user">User</option>
+                <option value="agency_officer">Agency Officer</option>
+                <option value="citizen">Citizen</option>
               </select>
               <select 
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-32"
@@ -162,7 +162,7 @@ const UsersPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                             user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                            user.role === 'agency' ? 'bg-blue-100 text-blue-800' :
+                            user.role === 'agency_officer' ? 'bg-blue-100 text-blue-800' :
                             'bg-green-100 text-green-800'
                           }`}>
                             {user.role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}

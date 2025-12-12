@@ -4,7 +4,7 @@
 
 export const ADMIN_CONFIG = {
   email: 'admin@civicsignal.rw',
-  password: 'Admin@CivicSignal2024!', // Change this in production
+  password: '123456', // Change this in production
   fullName: 'System Administrator',
   role: 'admin' as const
 };

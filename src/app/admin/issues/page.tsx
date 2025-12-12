@@ -152,16 +152,16 @@ const IssuesPage = () => {
   // Get priority badge
   const getPriorityBadge = (priority: string) => {
     const priorityMap: Record<string, { bg: string; text: string }> = {
-      high: { bg: 'bg-red-100', text: 'text-red-800' },
-      medium: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-      low: { bg: 'bg-green-100', text: 'text-green-800' }
+      High: { bg: 'bg-red-100', text: 'text-red-800' },
+      Medium: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+      Low: { bg: 'bg-green-100', text: 'text-green-800' }
     };
 
     const { bg, text } = priorityMap[priority] || { bg: 'bg-gray-100', text: 'text-gray-800' };
     
     return (
       <span className={`px-2 py-1 text-xs rounded-full ${bg} ${text}`}>
-        {priority.charAt(0).toUpperCase() + priority.slice(1)}
+        {priority}
       </span>
     );
   };

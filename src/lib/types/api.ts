@@ -3,7 +3,7 @@ export interface User {
   fullName: string;
   email: string;
   phone?: string;
-  role: 'user' | 'admin' | 'agency';
+  role: 'citizen' | 'admin' | 'agency_officer';
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   isActive: boolean;
@@ -34,7 +34,7 @@ export interface Issue {
   description: string;
   category: string;
   status: 'submitted' | 'acknowledged' | 'pending' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high';
+  priority: 'High' | 'Medium' | 'Low';
   location: IssueLocation;
   photos: IssuePhoto[];
   reportedBy: {

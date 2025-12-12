@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getCorsHeaders } from '@/config/api';
 
+// Re-export authentication and role functions
+export { requireAuth, requireRole } from './roles';
+export type { AuthResult } from './roles';
+
 /**
  * Middleware to handle API requests with proper CORS headers
  * 
