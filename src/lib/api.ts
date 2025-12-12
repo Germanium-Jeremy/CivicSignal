@@ -1,5 +1,5 @@
 // API utility functions for CivicSignal app
-
+import { User, Issue, PaginatedResponse } from '@/lib/types/api';
 const API_BASE = process.env.NODE_ENV === 'production' ? `${process.env.NEXT_PUBLIC_APP_URL}/api` : 'http://localhost:3000/api';
 
 // Token management
@@ -57,7 +57,7 @@ export const tokenManager = {
 };
 
 // Generic API function with automatic token refresh
-async function apiCall(endpoint: string, options: RequestInit = {}) {
+async function apiCall<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const { accessToken: currentAccessToken } = tokenManager.getTokens();
   
     const headers: Record<string, string> = {
@@ -334,6 +334,41 @@ export const adminAPI = {
             method: 'DELETE',
         });
     },
+    
+    getUsers: (params?: { page?: number; limit?: number; search?: string; status?: string; role?: string }) => apiCall<PaginatedResponse<User>>(`/admin/users?${new URLSearchParams(params as any).toString()}`),
+
+    createUser: (userData: Omit<User, '_id' | 'createdAt' | 'updatedAt'>) => apiCall<User>('/admin/users', { method: 'POST', body: JSON.stringify(userData) }),
+
+    updateUser: (userId: string, updates: Partial<User>) => apiCall<User>(`/admin/users/${userId}`, { method: 'PATCH', body: JSON.stringify(updates) }),
+
+    deleteUser: (userId: string) => apiCall<{ success: boolean }>(`/admin/users/${userId}`, { method: 'DELETE' }),
+
+    toggleUserStatus: (userId: string, isActive: boolean) => apiCall<User>(`/admin/users/${userId}/status`, { 
+        method: 'PATCH', 
+        body: JSON.stringify({ isActive }) 
+    }),
+
+    // Issues
+    getIssues: (params?: { page?: number; limit?: number; status?: string; priority?: string; category?: string }) => apiCall<PaginatedResponse<Issue>>(`/admin/issues?${new URLSearchParams(params as any).toString()}`),
+    
+    getIssue: (issueId: string) => apiCall<Issue>(`/admin/issues/${issueId}`),
+    
+    updateIssue: (issueId: string, updates: Partial<Issue>) => apiCall<Issue>(`/admin/issues/${issueId}`, { 
+        method: 'PATCH', 
+        body: JSON.stringify(updates) 
+    }),
+
+    deleteIssue: (issueId: string) => apiCall<{ success: boolean }>(`/admin/issues/${issueId}`, { method: 'DELETE' }),
+    
+    updateIssueStatus: (issueId: string, status: Issue['status']) => apiCall<Issue>(`/admin/issues/${issueId}/status`, { 
+        method: 'PATCH', 
+        body: JSON.stringify({ status }) 
+    }),
+    
+    assignIssue: (issueId: string, assigneeId: string) => apiCall<Issue>(`/admin/issues/${issueId}/assign`, { 
+        method: 'PATCH', 
+        body: JSON.stringify({ assigneeId }) 
+    }),
 };
 
 // Agency API (for agency officers)

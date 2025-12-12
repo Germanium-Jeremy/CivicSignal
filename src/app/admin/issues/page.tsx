@@ -3,33 +3,51 @@
 import { useState, useEffect } from 'react';
 import { FiSearch, FiFilter, FiAlertTriangle, FiEye, FiEdit2, FiTrash2, FiCheckCircle, FiClock, FiAlertCircle } from 'react-icons/fi';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Issue } from '@/types/api';
+import { Issue } from '@/lib/types/api';
 import { getCategoryById } from '@/config/issueCategories';
+import { adminAPI } from '@/lib/api';
 
 const IssuesPage = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const itemsPerPage = 10;
+  const [statusFilter, setStatusFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const itemsPerpage = 10;
 
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const response = await fetch('/api/admin/issues');
-        const data = await response.json();
-        setIssues(data);        
+        setLoading(true);
+        const response = await adminAPI.getIssues({ 
+          page, 
+          limit: 10,
+          status: statusFilter || undefined,
+          priority: priorityFilter || undefined
+        });
+        setIssues(response.data);
       } catch (error) {
         console.error('Error fetching issues:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchIssues();
-  }, []);
+  }, [page, statusFilter, priorityFilter]);
+
+  const handleStatusUpdate = async (issueId: string, status: Issue['status']) => {
+    try {
+      const updatedIssue = await adminAPI.updateIssueStatus(issueId, status);
+      setIssues(issues.map(issue => 
+        issue._id === issueId ? updatedIssue : issue
+      ));
+    } catch (error) {
+      console.error('Error updating issue status:', error);
+    }
+  };
 
   const filteredIssues = issues.filter(issue => {
     const matchesSearch = 
@@ -44,11 +62,11 @@ const IssuesPage = () => {
   });
 
   const paginatedIssues = filteredIssues.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    (page - 1) * itemsPerpage,
+    page * itemsPerpage
   );
 
-  const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
+  const totalpages = Math.ceil(filteredIssues.length / itemsPerpage);
 
   const handleDelete = async (issueId: string) => {
     if (confirm('Are you sure you want to delete this issue?')) {
@@ -318,22 +336,22 @@ const IssuesPage = () => {
                 </div>
               )}
 
-              {totalPages > 1 && (
+              {totalpages > 1 && (
                 <div className="flex justify-between items-center mt-6">
                   <button 
-                    className={`px-4 py-2 border rounded-lg ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
+                    className={`px-4 py-2 border rounded-lg ${page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
                   >
                     Previous
                   </button>
                   <div className="text-sm text-gray-700">
-                    Page {currentPage} of {totalPages}
+                    page {page} of {totalpages}
                   </div>
                   <button 
-                    className={`px-4 py-2 border rounded-lg ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 border rounded-lg ${page === totalpages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                    onClick={() => setPage(p => Math.min(totalpages, p + 1))}
+                    disabled={page === totalpages}
                   >
                     Next
                   </button>

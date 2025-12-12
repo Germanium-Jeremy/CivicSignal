@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getCorsHeaders } from './config/api';
+import { getCorsHeaders } from '@/config/api';
 
 /**
  * Middleware to handle API requests with proper CORS headers

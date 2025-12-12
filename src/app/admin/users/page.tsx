@@ -3,71 +3,63 @@
 import { useState, useEffect } from 'react';
 import { FiSearch, FiFilter, FiUserPlus, FiEdit2, FiTrash2, FiEye, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { User } from '@/types/api';
-import { getUsers, toggleUserStatus, deleteUser } from '@/services/admin/userService';
+import { User } from '@/lib/types/api';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
+import { adminAPI } from '@/lib/api';
 
 const UsersPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('');
   const itemsPerPage = 10;
 
   // Fetch users from API
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await getUsers({
-        page: currentPage,
-        limit: itemsPerPage,
-        search: searchTerm,
-        status: selectedStatus === 'all' ? undefined : selectedStatus as 'active' | 'inactive',
-        role: selectedRole === 'all' ? undefined : selectedRole as 'user' | 'admin' | 'agency'
-      });
-      
-      setUsers(response.data);
-      setTotalUsers(response.total);
-      setTotalPages(response.totalPages);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to fetch users');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await adminAPI.getUsers({ 
+          page, 
+          limit: 10, 
+          search,
+          status: statusFilter || undefined
+        });
+        setUsers(response.data);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUsers();
-  }, [currentPage, searchTerm, selectedStatus, selectedRole]);
+  }, [page, search, statusFilter]);
 
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedStatus, selectedRole]);
-
-  const handleStatusToggle = async (userId: string, currentStatus: boolean) => {
+  const handleStatusToggle = async (userId: string, isActive: boolean) => {
     try {
-      await toggleUserStatus(userId, !currentStatus);
-      toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
-      fetchUsers(); // Refresh the list
+      await adminAPI.toggleUserStatus(userId, isActive);
+      setUsers(users.map(user => 
+        user._id === userId ? { ...user, isActive } : user
+      ));
     } catch (error) {
       console.error('Error toggling user status:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update user status');
     }
   };
 
   const handleDelete = async (userId: string) => {
     if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       try {
-        await deleteUser(userId);
+        await adminAPI.deleteUser(userId)
         toast.success('User deleted successfully');
-        fetchUsers(); // Refresh the list
+        setUsers(users.map(user => 
+          user._id === userId ? { ...user } : user
+        ));
       } catch (error) {
         console.error('Error deleting user:', error);
         toast.error(error instanceof Error ? error.message : 'Failed to delete user');
@@ -101,8 +93,8 @@ const UsersPage = () => {
                 type="text"
                 placeholder="Search users..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2/50"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
@@ -125,13 +117,6 @@ const UsersPage = () => {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
-              <button 
-                className="border border-gray-200 rounded-lg px-4 py-2 text-sm flex items-center justify-center gap-2 hover:bg-gray-50 w-full sm:w-auto"
-                onClick={fetchUsers}
-              >
-                <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-                Refresh
-              </button>
             </div>
           </div>
 
@@ -234,7 +219,7 @@ const UsersPage = () => {
                   <FiAlertCircle className="mx-auto h-12 w-12 text-gray-400" />
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    {searchTerm || selectedStatus !== 'all' || selectedRole !== 'all' 
+                    {search || selectedStatus !== 'all' || selectedRole !== 'all' 
                       ? 'Try adjusting your search or filter to find what you\'re looking for.'
                       : 'There are currently no users to display.'}
                   </p>
@@ -244,19 +229,19 @@ const UsersPage = () => {
               {totalPages > 1 && (
                 <div className="flex justify-between items-center mt-6">
                   <button 
-                    className={`px-4 py-2 border rounded-lg flex items-center gap-2 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1 || loading}
+                    className={`px-4 py-2 border rounded-lg flex items-center gap-2 ${page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1 || loading}
                   >
                     <span>Previous</span>
                   </button>
                   <div className="text-sm text-gray-700">
-                    Page {currentPage} of {totalPages}
+                    Page {page} of {totalPages}
                   </div>
                   <button 
-                    className={`px-4 py-2 border rounded-lg flex items-center gap-2 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages || loading}
+                    className={`px-4 py-2 border rounded-lg flex items-center gap-2 ${page === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages || loading}
                   >
                     <span>Next</span>
                   </button>

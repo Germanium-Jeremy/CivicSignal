@@ -42,7 +42,7 @@ export interface Issue {
     fullName: string;
     email: string;
   };
-  assignedTo?: string
+  assignedTo?: string;
   trackingNumber: string;
   createdAt: string;
   updatedAt: string;
@@ -50,7 +50,7 @@ export interface Issue {
   notes?: string;
 }
 
-export interface ApiResponse<T> {
+export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   data?: T;
@@ -67,4 +67,25 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+// In src/lib/types/api.ts
+export interface Agency {
+  _id: string;
+  agencyName: string;
+  type: string;
+  registrationNumber: string;
+  website?: string;
+  address: string;
+  district: string;
+  sector: string;
+  description?: string;
+  serviceDomains: string[];
+  status: 'pending' | 'approved' | 'rejected';
+  approvedAt?: string;
+  rejectedAt?: string;
+  approvedBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
