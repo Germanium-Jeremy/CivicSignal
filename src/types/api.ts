@@ -42,11 +42,7 @@ export interface Issue {
     fullName: string;
     email: string;
   };
-  assignedTo?: {
-    _id: string;
-    name: string;
-    email: string;
-  };
+  assignedTo?: string
   trackingNumber: string;
   createdAt: string;
   updatedAt: string;

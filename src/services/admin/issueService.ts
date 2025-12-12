@@ -90,7 +90,7 @@ export async function updateIssue(issueId: string, updates: Partial<Issue>): Pro
   return data.data;
 }
 
-export async function updateIssueStatus(issueId: string, status: string): Promise<Issue> {
+export async function updateIssueStatus(issueId: string, status: 'submitted' | 'acknowledged' | 'pending' | 'resolved'): Promise<Issue> {
   return updateIssue(issueId, { status });
 }
 
@@ -109,8 +109,5 @@ export async function deleteIssue(issueId: string): Promise<void> {
 }
 
 export async function assignIssue(issueId: string, assigneeId: string): Promise<Issue> {
-  return updateIssue(issueId, { 
-    assignedTo: assigneeId,
-    status: 'pending' 
-  });
+  return updateIssue(issueId, { assignedTo: assigneeId, status: 'pending' });
 }
