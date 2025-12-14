@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     // Get issues and total count
     const [issues, total] = await Promise.all([
       Issue.find(query)
-        .populate('reportedBy', 'fullName email')
+        .select('_id title description category status priority location photos assignedTo trackingNumber submittedAt createdAt')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -54,15 +54,23 @@ export async function GET(request: NextRequest) {
       Issue.countDocuments(query)
     ]);
 
+    // Transform data to match React Native structure
+    const transformedIssues = issues.map(issue => ({
+      ...issue,
+      date: issue.submittedAt ? new Date(issue.submittedAt).toISOString() : (issue.createdAt ? new Date(issue.createdAt).toISOString() : new Date().toISOString())
+    }));
+
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
       success: true,
-      data: issues,
-      total,
-      page,
-      limit,
-      totalPages
+      data: {
+        issues: transformedIssues,
+        total,
+        page,
+        limit,
+        totalPages
+      }
     });
 
   } catch (error) {

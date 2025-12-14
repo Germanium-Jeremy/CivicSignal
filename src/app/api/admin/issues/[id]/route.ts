@@ -23,7 +23,7 @@ export async function GET(
     }
 
     const issue = await Issue.findById(params.id)
-      .populate('reportedBy', 'fullName email')
+      .select('_id title description category status priority location photos assignedTo trackingNumber')
       .lean();
     
     if (!issue) {
@@ -72,7 +72,8 @@ export async function PATCH(
       params.id,
       updates,
       { new: true, runValidators: true }
-    ).populate('reportedBy', 'fullName email').lean();
+    ).select('_id title description category status priority location photos assignedTo trackingNumber')
+    .lean();
 
     if (!issue) {
       return NextResponse.json(

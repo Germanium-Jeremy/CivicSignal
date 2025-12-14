@@ -23,9 +23,6 @@ export interface IssueLocation {
   coordinates: [number, number];
   address?: string;
   district?: string;
-  sector?: string;
-  cell?: string;
-  village?: string;
 }
 
 export interface Issue {
@@ -37,17 +34,18 @@ export interface Issue {
   priority: 'High' | 'Medium' | 'Low';
   location: IssueLocation;
   photos: IssuePhoto[];
-  reportedBy: {
-    _id: string;
-    fullName: string;
-    email: string;
-  };
   assignedTo?: string;
   trackingNumber: string;
-  createdAt: string;
-  updatedAt: string;
-  resolvedAt?: string;
-  notes?: string;
+  date: string; // For compatibility with React Native structure
+}
+
+export interface AdminIssuesResponse {
+  issues: Issue[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  data: object
 }
 
 export interface ApiResponse<T = any> {

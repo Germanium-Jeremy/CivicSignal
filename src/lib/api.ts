@@ -1,5 +1,5 @@
 // API utility functions for CivicSignal app
-import { User, Issue, PaginatedResponse } from '@/lib/types/api';
+import { User, Issue, PaginatedResponse, AdminIssuesResponse } from '@/lib/types/api';
 const API_BASE = process.env.NODE_ENV === 'production' ? `${process.env.NEXT_PUBLIC_APP_URL}/api` : 'http://localhost:3000/api';
 
 // Token management
@@ -349,7 +349,7 @@ export const adminAPI = {
     }),
 
     // Issues
-    getIssues: (params?: { page?: number; limit?: number; status?: string; priority?: string; category?: string }) => apiCall<PaginatedResponse<Issue>>(`/admin/issues?${new URLSearchParams(params as any).toString()}`),
+    getIssues: (params?: { page?: number; limit?: number; status?: string; priority?: string; category?: string }) => apiCall<AdminIssuesResponse>(`/admin/issues?${new URLSearchParams(params as any).toString()}`),
     
     getIssue: (issueId: string) => apiCall<Issue>(`/admin/issues/${issueId}`),
     

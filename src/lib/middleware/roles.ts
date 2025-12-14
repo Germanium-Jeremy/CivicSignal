@@ -20,10 +20,28 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult> {
   try {
     const authResult = verifyAuth(request);
     
+    console.log('Auth result:', { 
+      isAuthenticated: authResult.isAuthenticated, 
+      userId: authResult.userId,
+      error: authResult.error 
+    });
+    
     if (!authResult.isAuthenticated) {
+      let errorMessage = 'Authentication required';
+      if (authResult.error) {
+        try {
+          // Try to extract error message from NextResponse
+          const errorResponse = authResult.error as NextResponse;
+          const errorData = await errorResponse.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = 'Authentication failed';
+        }
+      }
+      
       return {
         success: false,
-        error: authResult.error?.json ? authResult.error?.json?.toString() : 'Authentication required',
+        error: errorMessage,
         status: 401
       };
     }
@@ -32,10 +50,17 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult> {
     await connectDB();
     const user = await User.findById(authResult.userId);
     
+    console.log('Found user:', { 
+      userId: user?._id, 
+      email: user?.email, 
+      role: user?.role,
+      isActive: user?.isActive 
+    });
+    
     if (!user || !user.isActive) {
       return {
         success: false,
-        error: authResult.error?.json ? authResult.error?.json.toString() : 'User not found or account deactivated',
+        error: 'User not found or account deactivated',
         status: 401
       };
     }

@@ -28,7 +28,8 @@ const IssuesPage = () => {
           status: statusFilter || undefined,
           priority: priorityFilter || undefined
         });
-        setIssues(response.data);
+        console.log("Response Issues: ", response)
+        setIssues(response.data?.data?.issues || []);
       } catch (error) {
         console.error('Error fetching issues:', error);
       } finally {
@@ -52,8 +53,7 @@ const IssuesPage = () => {
   const filteredIssues = issues.filter(issue => {
     const matchesSearch = 
       issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.reportedBy.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+      issue.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = selectedStatus === 'all' || issue.status === selectedStatus;
     const matchesCategory = selectedCategory === 'all' || issue.category === selectedCategory;
@@ -87,7 +87,7 @@ const IssuesPage = () => {
           ? { 
               ...issue, 
               status: newStatus == 'resolved' ? 'resolved' : newStatus == 'pending' ? 'pending' : newStatus == 'acknowledged' ? 'acknowledged' : 'submitted',
-              resolvedAt: newStatus === 'resolved' || newStatus === 'closed' ? new Date().toISOString() : issue.resolvedAt
+              // resolvedAt: newStatus === 'resolved' || newStatus === 'closed' ? new Date().toISOString() : issue.resolvedAt
             } 
           : issue
       ));
@@ -243,7 +243,6 @@ const IssuesPage = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reported By</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -281,18 +280,13 @@ const IssuesPage = () => {
                               <option value="acknowledged">In Review</option>
                               <option value="pending">In Progress</option>
                               <option value="resolved">Resolved</option>
-                              <option value="closed">Closed</option>
                             </select>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {getPriorityBadge(issue.priority)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{issue.reportedBy.fullName}</div>
-                            <div className="text-xs text-gray-500">{issue.reportedBy.email}</div>
-                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(issue.createdAt).toLocaleDateString()}
+                            {new Date(issue.date).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end space-x-3">
