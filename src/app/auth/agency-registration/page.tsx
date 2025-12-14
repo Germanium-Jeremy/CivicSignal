@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { authAPI, userAPI } from "@/lib/api";
 import { FaBuilding, FaGlobe, FaMapMarkerAlt, FaCheck, FaExclamationTriangle } from "react-icons/fa";
@@ -68,8 +68,21 @@ export default function AgencyRegistrationPage() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
+        // Check for tokens in URL parameters and store them
+        const accessToken = searchParams.get('accessToken');
+        const refreshToken = searchParams.get('refreshToken');
+        
+        if (accessToken && refreshToken) {
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
+            // Clean URL by removing tokens
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, '', cleanUrl);
+        }
+
         // Check if user is authenticated and fetch their data
         const fetchUserData = async () => {
             try {
@@ -126,7 +139,7 @@ export default function AgencyRegistrationPage() {
         };
 
         fetchUserData();
-    }, [router]);
+    }, [router, searchParams]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

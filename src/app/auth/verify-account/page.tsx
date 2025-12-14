@@ -111,13 +111,6 @@ function VerifyAccountContent() {
             
             if (response.success) {
                 setEmailVerified(true);
-                
-                // If both are verified and tokens are returned, store them
-                if (response.tokens) {
-                    localStorage.setItem('accessToken', response.tokens.accessToken);
-                    localStorage.setItem('refreshToken', response.tokens.refreshToken);
-                }
-                
                 checkBothVerified(true, phoneVerified, response.tokens);
             }
         } catch (err: any) {
@@ -140,20 +133,13 @@ function VerifyAccountContent() {
             
             if (response.success) {
                 setPhoneVerified(true);
-                
-                // If both are verified and tokens are returned, store them
-                if (response.tokens) {
-                    localStorage.setItem('accessToken', response.tokens.accessToken);
-                    localStorage.setItem('refreshToken', response.tokens.refreshToken);
-                }
-                
                 checkBothVerified(emailVerified, true, response.tokens);
             }
         } catch (err: any) {
             console.error('Phone verification error:', err);
             setPhoneError(err.message || 'Verification failed. Please try again.');
             // Clear the code inputs on error
-            setPhoneCode(['', '', '', '', '', '']);
+            setPhoneCode(['', '', '', '', '']);
             phoneInputRefs.current[0]?.focus();
         } finally {
             setIsVerifyingPhone(false);
@@ -161,12 +147,13 @@ function VerifyAccountContent() {
     };
 
     const checkBothVerified = (emailStatus: boolean, phoneStatus: boolean, tokens?: any) => {
-        if (emailStatus && phoneStatus) {
-            // Tokens should be stored at this point
-            setTimeout(() => {
-                // Redirect to agency registration page (user is now authenticated)
-                router.push('/auth/agency-registration');
-            }, 1000);
+        if (emailStatus && phoneStatus && tokens) {
+            // Redirect to agency registration page with tokens as URL parameters
+            const params = new URLSearchParams({
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken
+            });
+            router.push(`/auth/agency-registration?${params.toString()}`);
         }
     };
 
