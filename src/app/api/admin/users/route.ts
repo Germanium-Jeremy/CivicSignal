@@ -22,16 +22,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search') || '';
-    const status = searchParams.get('status') || '';
-    const role = searchParams.get('role') || '';
+    const search = searchParams.get('search');
+    const status = searchParams.get('status');
+    const role = searchParams.get('role');
 
     const skip = (page - 1) * limit;
 
     // Build query
     const query: any = {};
     
-    if (search) {
+    if (search && search !== 'undefined' && search.trim() !== '') {
       query.$or = [
         { fullName: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
@@ -39,34 +39,38 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    if (status) {
+    if (status && status !== 'undefined' && status.trim() !== '') {
       query.isActive = status === 'active';
     }
 
-    if (role && role !== 'all') {
+    if (role && role !== 'undefined' && role.trim() !== '' && role !== 'all') {
       query.role = role;
     }
 
-    // Get users and total count
-    const [users, total] = await Promise.all([
-      User.find(query)
-        .select('-password')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      User.countDocuments(query)
-    ]);
+    // Execute query (same approach as working issues API)
+    const users = await User.find(query)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await User.countDocuments(query);
 
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
       success: true,
-      data: users,
-      total,
-      page,
-      limit,
-      totalPages
+      message: 'Users retrieved successfully',
+      data: {
+        users,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
     });
 
   } catch (error) {

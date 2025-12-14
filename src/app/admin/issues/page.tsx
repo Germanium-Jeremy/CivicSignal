@@ -282,7 +282,7 @@ const IssuesPage = () => {
                             <td className="px-6 py-4">
                               <div className="flex items-center">
                                 <div className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${categoryInfo.color}20` }}>
-                                  <span style={{ color: categoryInfo.color }}>#{issue.trackingNumber ? issue.trackingNumber.split('-')[1] : 'N/A'}</span>
+                                  <span style={{ color: categoryInfo.color }}></span>
                                 </div>
                                 <div className="ml-4">
                                   <div className="text-sm font-medium text-gray-900">{issue.title || 'No title'}</div>

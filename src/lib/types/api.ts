@@ -60,7 +60,7 @@ export interface ApiResponse<T = any> {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
+  data: T[] | any;
   total: number;
   page: number;
   limit: number;
