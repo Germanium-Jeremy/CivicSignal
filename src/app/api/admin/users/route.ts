@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/database/connection';
 import User from '@/models/User';
 import { requireAuth, requireRole } from '@/lib/middleware';
+import connectDB from '@/lib/mongodb';
 
 // GET /api/admin/users - Get all users with pagination and filters
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Authentication and authorization
     const authResult = await requireAuth(request);
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/users - Create new user
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Authentication and authorization
     const authResult = await requireAuth(request);

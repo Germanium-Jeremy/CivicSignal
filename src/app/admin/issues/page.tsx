@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { FiSearch, FiFilter, FiAlertTriangle, FiEye, FiEdit2, FiTrash2, FiCheckCircle, FiClock, FiAlertCircle } from 'react-icons/fi';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Issue } from '@/lib/types/api';
-import { getCategoryById } from '@/config/issueCategories';
+import { getCategoryById, ISSUE_CATEGORIES } from '@/config/issueCategories';
 import { adminAPI } from '@/lib/api';
 
 const IssuesPage = () => {
@@ -16,7 +16,13 @@ const IssuesPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
-  const itemsPerpage = 10;
+  const [itemsPerpage, setItemsPerPage] = useState(10);
+  const [paginationData, setPaginationData] = useState({
+    total: 0,
+    totalPages: 0,
+    page: 1,
+    limit: 10
+  });
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -24,15 +30,18 @@ const IssuesPage = () => {
         setLoading(true);
         const response = await adminAPI.getIssues({ 
           page, 
-          limit: 10,
+          limit: itemsPerpage,
           status: statusFilter || undefined,
           priority: priorityFilter || undefined,
           category: selectedCategory !== 'all' ? selectedCategory : undefined
         });
-        console.log("Response Issues: ", response)
-        console.log("Issues data:", response.data?.data?.issues)
-        console.log("Issues length:", response.data?.data?.issues?.length)
-        setIssues(response.data?.data?.issues || []);
+        setIssues(response.data?.issues || []);
+        setPaginationData({
+          total: response.data?.total || 0,
+          totalPages: response.data?.totalPages || 0,
+          page: response.data?.page || 1,
+          limit: response.data?.limit || itemsPerpage
+        });
       } catch (error) {
         console.error('Error fetching issues:', error);
       } finally {
@@ -40,7 +49,12 @@ const IssuesPage = () => {
       }
     };
     fetchIssues();
-  }, [page, statusFilter, priorityFilter]);
+  }, [page, statusFilter, priorityFilter, itemsPerpage]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, priorityFilter, selectedCategory, searchTerm, itemsPerpage]);
 
   const handleStatusUpdate = async (issueId: string, status: Issue['status']) => {
     try {
@@ -53,33 +67,19 @@ const IssuesPage = () => {
     }
   };
 
+  // Since API handles pagination, we don't need client-side filtering for pagination
+  // Only apply client-side search for immediate feedback
   const filteredIssues = issues.filter(issue => {
     const matchesSearch = 
       issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (issue.trackingNumber && issue.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesStatus = selectedStatus === 'all' || issue.status === selectedStatus;
-    const matchesCategory = selectedCategory === 'all' || issue.category === selectedCategory;
-    
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch;
   });
 
-  console.log("Filtered issues:", filteredIssues.length);
-  console.log("Search term:", searchTerm);
-  console.log("Selected status:", selectedStatus);
-  console.log("Selected category:", selectedCategory);
-
-  // Temporarily disable pagination to test
-  const paginatedIssues = filteredIssues; // .slice(
-  //   (page - 1) * itemsPerpage,
-  //   page * itemsPerpage
-  // );
-
-  console.log("Paginated issues:", paginatedIssues.length);
-  console.log("Page:", page, "Items per page:", itemsPerpage);
-  console.log("Sample paginated issue:", paginatedIssues[0]);
-
-  const totalpages = Math.ceil(filteredIssues.length / itemsPerpage);
+  // Use API pagination data instead of client-side calculation
+  const paginatedIssues = filteredIssues;
+  const totalpages = paginationData.totalPages;
 
   const handleDelete = async (issueId: string) => {
     if (confirm('Are you sure you want to delete this issue?')) {
@@ -188,7 +188,7 @@ const IssuesPage = () => {
             <p className="text-sm text-gray-600 mt-1">Track and manage reported issues</p>
           </div>
           <div className="text-sm text-gray-600">
-            {filteredIssues.length} {filteredIssues.length === 1 ? 'issue' : 'issues'} found
+            {paginationData.total} {paginationData.total === 1 ? 'issue' : 'issues'} found
           </div>
         </div>
 
@@ -215,7 +215,6 @@ const IssuesPage = () => {
                 <option value="acknowledged">In Review</option>
                 <option value="pending">In Progress</option>
                 <option value="resolved">Resolved</option>
-                <option value="closed">Closed</option>
               </select>
               <select 
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-40"
@@ -223,11 +222,19 @@ const IssuesPage = () => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <option value="all">All Categories</option>
-                <option value="roads_infrastructure">Roads & Infrastructure</option>
-                <option value="water_supply">Water Supply</option>
-                <option value="electricity">Electricity</option>
-                <option value="public_safety">Public Safety</option>
-                <option value="sanitation_waste">Sanitation & Waste</option>
+                {ISSUE_CATEGORIES.map((data, index) => (
+                  <option key={index} value={data.name}>{data.name}</option>
+                ))}
+              </select>
+              <select 
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-32"
+                value={itemsPerpage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              >
+                <option value={5}>5 per page</option>
+                <option value={10}>10 per page</option>
+                <option value={25}>25 per page</option>
+                <option value={50}>50 per page</option>
               </select>
               <button 
                 className="border border-gray-200 rounded-lg px-4 py-2 text-sm flex items-center justify-center gap-2 hover:bg-gray-50 w-full sm:w-auto"
@@ -235,6 +242,7 @@ const IssuesPage = () => {
                   setSearchTerm('');
                   setSelectedStatus('all');
                   setSelectedCategory('all');
+                  setItemsPerPage(10);
                 }}
               >
                 <FiFilter /> Clear Filters
@@ -338,24 +346,88 @@ const IssuesPage = () => {
               )}
 
               {totalpages > 1 && (
-                <div className="flex justify-between items-center mt-6">
-                  <button 
-                    className={`px-4 py-2 border rounded-lg ${page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    Previous
-                  </button>
+                <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
                   <div className="text-sm text-gray-700">
-                    page {page} of {totalpages}
+                    Showing {((paginationData.page - 1) * paginationData.limit) + 1} to {Math.min(paginationData.page * paginationData.limit, paginationData.total)} of {paginationData.total} issues
                   </div>
-                  <button 
-                    className={`px-4 py-2 border rounded-lg ${page === totalpages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                    onClick={() => setPage(p => Math.min(totalpages, p + 1))}
-                    disabled={page === totalpages}
-                  >
-                    Next
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      className={`px-3 py-2 border rounded-lg ${page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                    >
+                      Previous
+                    </button>
+                    
+                    {/* Page Numbers */}
+                    <div className="flex items-center space-x-1">
+                      {(() => {
+                        const pages = [];
+                        const maxVisiblePages = 5;
+                        let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+                        let endPage = Math.min(totalpages, startPage + maxVisiblePages - 1);
+                        
+                        if (endPage - startPage + 1 < maxVisiblePages) {
+                          startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                        }
+                        
+                        // Show first page if not in range
+                        if (startPage > 1) {
+                          pages.push(
+                            <button
+                              key={1}
+                              className={`px-3 py-2 border rounded ${page === 1 ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}
+                              onClick={() => setPage(1)}
+                            >
+                              1
+                            </button>
+                          );
+                          if (startPage > 2) {
+                            pages.push(<span key="ellipsis-start" className="px-2">...</span>);
+                          }
+                        }
+                        
+                        // Show page range
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(
+                            <button
+                              key={i}
+                              className={`px-3 py-2 border rounded ${page === i ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}
+                              onClick={() => setPage(i)}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+                        
+                        // Show last page if not in range
+                        if (endPage < totalpages) {
+                          if (endPage < totalpages - 1) {
+                            pages.push(<span key="ellipsis-end" className="px-2">...</span>);
+                          }
+                          pages.push(
+                            <button
+                              key={totalpages}
+                              className={`px-3 py-2 border rounded ${page === totalpages ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}
+                              onClick={() => setPage(totalpages)}
+                            >
+                              {totalpages}
+                            </button>
+                          );
+                        }
+                        
+                        return pages;
+                      })()}
+                    </div>
+                    
+                    <button 
+                      className={`px-3 py-2 border rounded-lg ${page === totalpages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                      onClick={() => setPage(p => Math.min(totalpages, p + 1))}
+                      disabled={page === totalpages}
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
               )}
         </div>
