@@ -26,9 +26,12 @@ const IssuesPage = () => {
           page, 
           limit: 10,
           status: statusFilter || undefined,
-          priority: priorityFilter || undefined
+          priority: priorityFilter || undefined,
+          category: selectedCategory !== 'all' ? selectedCategory : undefined
         });
         console.log("Response Issues: ", response)
+        console.log("Issues data:", response.data?.data?.issues)
+        console.log("Issues length:", response.data?.data?.issues?.length)
         setIssues(response.data?.data?.issues || []);
       } catch (error) {
         console.error('Error fetching issues:', error);
@@ -53,7 +56,7 @@ const IssuesPage = () => {
   const filteredIssues = issues.filter(issue => {
     const matchesSearch = 
       issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      (issue.trackingNumber && issue.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = selectedStatus === 'all' || issue.status === selectedStatus;
     const matchesCategory = selectedCategory === 'all' || issue.category === selectedCategory;
@@ -61,10 +64,20 @@ const IssuesPage = () => {
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const paginatedIssues = filteredIssues.slice(
-    (page - 1) * itemsPerpage,
-    page * itemsPerpage
-  );
+  console.log("Filtered issues:", filteredIssues.length);
+  console.log("Search term:", searchTerm);
+  console.log("Selected status:", selectedStatus);
+  console.log("Selected category:", selectedCategory);
+
+  // Temporarily disable pagination to test
+  const paginatedIssues = filteredIssues; // .slice(
+  //   (page - 1) * itemsPerpage,
+  //   page * itemsPerpage
+  // );
+
+  console.log("Paginated issues:", paginatedIssues.length);
+  console.log("Page:", page, "Items per page:", itemsPerpage);
+  console.log("Sample paginated issue:", paginatedIssues[0]);
 
   const totalpages = Math.ceil(filteredIssues.length / itemsPerpage);
 
@@ -229,96 +242,7 @@ const IssuesPage = () => {
             </div>
           </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent2"></div>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {paginatedIssues.map((issue) => {
-                      const categoryInfo = getCategoryById(issue.category) || { name: 'Other', color: '#999' };
-                      
-                      return (
-                        <tr key={issue._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4">
-                            <div className="flex items-center">
-                              <div className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${categoryInfo.color}20` }}>
-                                <span style={{ color: categoryInfo.color }}>#{issue.trackingNumber.split('-')[1]}</span>
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{issue.title}</div>
-                                <div className="text-xs text-gray-500 truncate max-w-xs">{issue.description}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                                  style={{ backgroundColor: `${categoryInfo.color}20`, color: categoryInfo.color }}>
-                              {categoryInfo.name}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <select 
-                              className="text-sm border-0 p-0 bg-transparent focus:ring-2 focus:ring-accent2/50 rounded"
-                              value={issue.status}
-                              onChange={(e) => updateIssueStatus(issue._id, e.target.value)}
-                            >
-                              <option value="submitted">Submitted</option>
-                              <option value="acknowledged">In Review</option>
-                              <option value="pending">In Progress</option>
-                              <option value="resolved">Resolved</option>
-                            </select>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {getPriorityBadge(issue.priority)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(issue.date).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div className="flex justify-end space-x-3">
-                              <button 
-                                className="text-blue-600 hover:text-blue-900"
-                                title="View Details"
-                              >
-                                <FiEye />
-                              </button>
-                              <button 
-                                className="text-yellow-600 hover:text-yellow-900"
-                                title="Edit"
-                              >
-                                <FiEdit2 />
-                              </button>
-                              <button 
-                                className="text-red-600 hover:text-red-900"
-                                onClick={() => handleDelete(issue._id)}
-                                title="Delete"
-                              >
-                                <FiTrash2 />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {filteredIssues.length === 0 && (
+          {!loading && paginatedIssues.length === 0 ? (
                 <div className="text-center py-10 text-gray-500">
                   <FiAlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No issues found</h3>
@@ -327,6 +251,89 @@ const IssuesPage = () => {
                       ? 'Try adjusting your search or filter to find what you\'re looking for.'
                       : 'There are currently no issues to display.'}
                   </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {paginatedIssues.map((issue) => {
+                        const categoryInfo = getCategoryById(issue.category) || { name: 'Other', color: '#999' };
+                        
+                        return (
+                          <tr key={issue._id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center">
+                                <div className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${categoryInfo.color}20` }}>
+                                  <span style={{ color: categoryInfo.color }}>#{issue.trackingNumber ? issue.trackingNumber.split('-')[1] : 'N/A'}</span>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">{issue.title || 'No title'}</div>
+                                  <div className="text-xs text-gray-500 truncate max-w-xs">{issue.description || 'No description'}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
+                                    style={{ backgroundColor: `${categoryInfo.color}20`, color: categoryInfo.color }}>
+                                {categoryInfo.name}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <select 
+                                className="text-sm border-0 p-0 bg-transparent focus:ring-2 focus:ring-accent2/50 rounded"
+                                value={issue.status}
+                                onChange={(e) => updateIssueStatus(issue._id, e.target.value)}
+                              >
+                                <option value="submitted">Submitted</option>
+                                <option value="acknowledged">In Review</option>
+                                <option value="pending">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                              </select>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {getPriorityBadge(issue.priority)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {issue.date ? new Date(issue.date).toLocaleDateString() : 'No date'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex justify-end space-x-3">
+                                <button 
+                                  className="text-blue-600 hover:text-blue-900"
+                                  title="View Details"
+                                >
+                                  <FiEye />
+                                </button>
+                                <button 
+                                  className="text-yellow-600 hover:text-yellow-900"
+                                  title="Edit"
+                                >
+                                  <FiEdit2 />
+                                </button>
+                                <button 
+                                  className="text-red-600 hover:text-red-900"
+                                  onClick={() => handleDelete(issue._id)}
+                                  title="Delete"
+                                >
+                                  <FiTrash2 />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
 
@@ -351,8 +358,6 @@ const IssuesPage = () => {
                   </button>
                 </div>
               )}
-            </>
-          )}
         </div>
       </div>
     </AdminLayout>

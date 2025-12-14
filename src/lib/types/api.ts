@@ -45,7 +45,7 @@ export interface AdminIssuesResponse {
   page: number;
   limit: number;
   totalPages: number;
-  data: object
+  data: any
 }
 
 export interface ApiResponse<T = any> {
