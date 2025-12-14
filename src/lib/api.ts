@@ -377,6 +377,18 @@ export const agencyAPI = {
     getDashboardData: async () => {
         return apiCall('/agency/dashboard');
     },
+
+    // Get issues for agency - using the existing issueAPI.getIssues method
+    getIssues: async (params?: { 
+        status?: string; 
+        page?: number; 
+        limit?: number; 
+        priority?: string; 
+        category?: string; 
+        search?: string;
+    }) => {
+        return issueAPI.getIssues(params);
+    },
 };
 
 // Issue API (for citizens and mobile app)
