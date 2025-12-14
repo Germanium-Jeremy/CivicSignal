@@ -378,7 +378,7 @@ export const agencyAPI = {
         return apiCall('/agency/dashboard');
     },
 
-    // Get issues for agency - using the existing issueAPI.getIssues method
+    // Get issues for agency - using the dedicated agency issues endpoint
     getIssues: async (params?: { 
         status?: string; 
         page?: number; 
@@ -387,7 +387,16 @@ export const agencyAPI = {
         category?: string; 
         search?: string;
     }) => {
-        return issueAPI.getIssues(params);
+        const queryParams = new URLSearchParams();
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    queryParams.append(key, value.toString());
+                }
+            });
+        }
+        const queryString = queryParams.toString();
+        return apiCall(`/agency/issues${queryString ? '?' + queryString : ''}`);
     },
 };
 
