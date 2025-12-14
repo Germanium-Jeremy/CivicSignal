@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Agency from '@/models/Agency';
 import User from '@/models/User';
+import Issue from '@/models/Issue';
 import { verifyAccessToken } from '@/lib/utils/auth';
 
 export async function GET(request: NextRequest) {
@@ -57,17 +58,43 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: Get real issue statistics from Issue model when created
-    // For now, return placeholder values
-    const issueStats = {
-      reported: { count: 0, change: 0, trend: 'up' },
+    // Get real issue statistics from Issue model
+    const issueStats = await Issue.aggregate([
+      {
+        $match: {
+          // Filter by agency's service domains if needed
+          // For now, get all issues
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Convert aggregation results to expected format
+    const statsMap = {
+      submitted: { count: 0, change: 0, trend: 'up' },
       acknowledged: { count: 0, change: 0, trend: 'up' },
       pending: { count: 0, change: 0, trend: 'up' },
       resolved: { count: 0, change: 0, trend: 'up' }
     };
 
-    // TODO: Get real recent issues from Issue model
-    const recentIssues: String[] = [];
+    issueStats.forEach(stat => {
+      const status = stat._id as string;
+      if (status === 'submitted' || status === 'acknowledged' || status === 'pending' || status === 'resolved') {
+        statsMap[status].count = stat.count;
+      }
+    });
+
+    // Get recent issues (last 5)
+    const recentIssues = await Issue.find()
+      .sort({ submittedAt: -1 })
+      .limit(5)
+      .select('title status priority category submittedAt trackingNumber')
+      .lean();
 
     return NextResponse.json({
       success: true,
@@ -85,7 +112,12 @@ export async function GET(request: NextRequest) {
         serviceDomains: agency.serviceDomains,
         createdAt: agency.createdAt
       },
-      stats: issueStats,
+      stats: {
+        reported: statsMap.submitted,
+        acknowledged: statsMap.acknowledged,
+        pending: statsMap.pending,
+        resolved: statsMap.resolved
+      },
       recentIssues: recentIssues,
       user: {
         fullName: user.fullName,

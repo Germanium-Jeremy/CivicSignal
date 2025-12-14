@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
+import { getCategoryById } from "@/config/issueCategories";
 import { FaExclamationTriangle, FaCheckCircle, FaClock, FaCheck, FaArrowUp, FaArrowDown, FaEye, FaCalendarAlt, FaMapMarkerAlt, FaUser} from "react-icons/fa";
 
 interface AgencyData {
@@ -75,6 +76,31 @@ const priorityColors = {
     high: "#EF4444"
 };
 
+const StatCard = ({ title, count, change, trend, color, icon: Icon }: any) => (
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-light-gray hover:shadow-md transition-shadow duration-300">
+        <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}20`, color: color }}>
+                    <Icon size={24} />
+                </div>
+                <div>
+                    <h3 className="text-sm font-medium text-neutral-text">{title}</h3>
+                    <p className="text-2xl font-bold text-almost-black">{count}</p>
+                </div>
+            </div>
+            <div className={`flex items-center gap-1 text-sm ${
+                trend === 'up' ? 'text-green-600' : 'text-red-600'
+            }`}>
+                {trend === 'up' ? <FaArrowUp size={12} /> : <FaArrowDown size={12} />}
+                <span>{Math.abs(change)}</span>
+            </div>
+        </div>
+        <div className="w-full bg-light-gray rounded-full h-2">
+            <div className="h-2 rounded-full transition-all duration-500" style={{ backgroundColor: color, width: `${Math.min((count / 200) * 100, 100)}%` }} />
+        </div>
+    </div>
+);
+
 export default function DashboardHome() {
     const [timeRange, setTimeRange] = useState("7d");
     const [agencyData, setAgencyData] = useState<AgencyData | null>(null);
@@ -125,31 +151,6 @@ export default function DashboardHome() {
             minute: '2-digit'
         });
     };
-
-    const StatCard = ({ title, count, change, trend, color, icon: Icon }: any) => (
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-light-gray hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}20`, color: color }}>
-                        <Icon size={24} />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-medium text-neutral-text">{title}</h3>
-                        <p className="text-2xl font-bold text-almost-black">{count}</p>
-                    </div>
-                </div>
-                <div className={`flex items-center gap-1 text-sm ${
-                    trend === 'up' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                    {trend === 'up' ? <FaArrowUp size={12} /> : <FaArrowDown size={12} />}
-                    <span>{Math.abs(change)}</span>
-                </div>
-            </div>
-            <div className="w-full bg-light-gray rounded-full h-2">
-                <div className="h-2 rounded-full transition-all duration-500" style={{ backgroundColor: color, width: `${Math.min((count / 200) * 100, 100)}%` }} />
-            </div>
-        </div>
-    );
 
     if (isLoading) {
         return (
@@ -277,8 +278,9 @@ export default function DashboardHome() {
                         </div>
                     ) : recentIssues.map((issue) => {
                         const StatusIcon = getStatusIcon(issue.status);
+                        const categoryInfo = getCategoryById(issue.category) || { name: 'Other', color: '#999' };
                         return (
-                            <div key={issue.id} className="p-6 hover:bg-light-gray/30 transition-colors duration-200">
+                            <div key={issue._id} className="p-6 hover:bg-light-gray/30 transition-colors duration-200">
                                 <div className="flex items-start gap-4">
                                     {/* Status Indicator */}
                                     <div 
@@ -297,38 +299,39 @@ export default function DashboardHome() {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <h3 className="font-semibold text-almost-black">{issue.title}</h3>
-                                                    <span className="text-xs text-neutral-text">#{issue.id}</span>
                                                     <span 
-                                                        className="px-2 py-1 text-xs font-medium rounded-full"
-                                                        style={{
-                                                            backgroundColor: `${priorityColors[issue.priority as keyof typeof priorityColors]}20`,
-                                                            color: priorityColors[issue.priority as keyof typeof priorityColors]
-                                                        }}
+                                                        className="px-2 py-1 rounded-full text-xs font-medium"
+                                                        style={{ backgroundColor: `${categoryInfo.color}20`, color: categoryInfo.color }}
                                                     >
-                                                        {issue.priority} priority
+                                                        {categoryInfo.name}
+                                                    </span>
+                                                    <span 
+                                                        className="px-2 py-1 rounded-full text-xs font-medium"
+                                                        style={{ backgroundColor: `${priorityColors[issue.priority as keyof typeof priorityColors]}20`, color: priorityColors[issue.priority as keyof typeof priorityColors] }}
+                                                    >
+                                                        {issue.priority}
                                                     </span>
                                                 </div>
-                                                <p className="text-sm text-neutral-text mb-3 line-clamp-2">
-                                                    {issue.description}
+                                                <p className="text-neutral-text text-sm mb-3 line-clamp-2">
+                                                    {issue.description || 'No description provided'}
                                                 </p>
-                                                <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-text">
+                                                <div className="flex items-center gap-4 text-xs text-gray-500">
                                                     <div className="flex items-center gap-1">
-                                                        <FaMapMarkerAlt size={10} />
-                                                        <span>{issue.location}</span>
+                                                        <FaCalendarAlt size={12} />
+                                                        <span>{formatDate(issue.submittedAt || issue.createdAt)}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <FaUser size={10} />
-                                                        <span>{agencyData.isVerified ? issue.reportedBy : 'Citizen'}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <FaCalendarAlt size={10} />
-                                                        <span>{formatDate(issue.reportedAt)}</span>
+                                                        <FaMapMarkerAlt size={12} />
+                                                        <span>#{issue.trackingNumber ? issue.trackingNumber.split('-')[1] : 'N/A'}</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <button className="text-accent2 hover:text-accent text-sm font-medium whitespace-nowrap">
-                                                View Details
-                                            </button>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <button className="text-accent2 hover:text-accent font-medium text-sm flex items-center gap-1">
+                                                    <FaEye size={14} />
+                                                    View
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -339,68 +342,30 @@ export default function DashboardHome() {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-light-gray">
-                    <h3 className="font-semibold text-almost-black mb-4">Quick Actions</h3>
-                    <div className="space-y-3">
-                        <button className="w-full text-left p-3 rounded-lg hover:bg-accent2/5 hover:text-accent2 transition-colors duration-200">
-                            View All Reported Issues
-                        </button>
-                        <button className="w-full text-left p-3 rounded-lg hover:bg-accent2/5 hover:text-accent2 transition-colors duration-200">
-                            Update Issue Status
-                        </button>
-                        <button className="w-full text-left p-3 rounded-lg hover:bg-accent2/5 hover:text-accent2 transition-colors duration-200">
-                            Generate Reports
-                        </button>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-light-gray">
-                    <h3 className="font-semibold text-almost-black mb-4">Performance</h3>
-                    <div className="space-y-4">
-                        <div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="text-neutral-text">Response Time</span>
-                                <span className="font-medium">2.3 hrs avg</span>
-                            </div>
-                            <div className="w-full bg-light-gray rounded-full h-2">
-                                <div className="bg-green-500 h-2 rounded-full" style={{ width: '75%' }}></div>
-                            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-light-gray p-6">
+                <h2 className="text-xl font-semibold text-almost-black mb-4">Quick Actions</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button className="flex items-center gap-3 p-4 border border-light-gray rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all">
+                        <FaExclamationTriangle className="text-accent2" />
+                        <div className="text-left">
+                            <p className="font-semibold text-almost-black">View All Issues</p>
+                            <p className="text-xs text-neutral-text">See all reported issues</p>
                         </div>
-                        <div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="text-neutral-text">Resolution Rate</span>
-                                <span className="font-medium">87%</span>
-                            </div>
-                            <div className="w-full bg-light-gray rounded-full h-2">
-                                <div className="bg-blue-500 h-2 rounded-full" style={{ width: '87%' }}></div>
-                            </div>
+                    </button>
+                    <button className="flex items-center gap-3 p-4 border border-light-gray rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all">
+                        <FaMapMarkerAlt className="text-accent2" />
+                        <div className="text-left">
+                            <p className="font-semibold text-almost-black">Issue Map</p>
+                            <p className="text-xs text-neutral-text">View issues on map</p>
                         </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-light-gray">
-                    <h3 className="font-semibold text-almost-black mb-4">System Status</h3>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-neutral-text">API Status</span>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <span className="text-sm font-medium text-green-600">Online</span>
-                            </div>
+                    </button>
+                    <button className="flex items-center gap-3 p-4 border border-light-gray rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all">
+                        <FaUser className="text-accent2" />
+                        <div className="text-left">
+                            <p className="font-semibold text-almost-black">Agency Profile</p>
+                            <p className="text-xs text-neutral-text">Update agency information</p>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-neutral-text">Database</span>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <span className="text-sm font-medium text-green-600">Healthy</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-neutral-text">Last Sync</span>
-                            <span className="text-sm font-medium">2 min ago</span>
-                        </div>
-                    </div>
+                    </button>
                 </div>
             </div>
         </div>

@@ -2,10 +2,14 @@
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminAPI } from '@/lib/api';
+import { Issue } from '@/lib/types/api';
+import { getCategoryById, ISSUE_CATEGORIES } from '@/config/issueCategories';
 import { 
   FaBuilding, FaExclamationTriangle, FaUsers, FaCheckCircle,
-  FaClock, FaTimes, FaChartLine, FaTasks
+  FaClock, FaTimes, FaChartLine, FaTasks, FaEye, FaFilter
 } from 'react-icons/fa';
+import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
+import Link from 'next/link';
 
 interface DashboardStats {
   agencies: {
@@ -34,6 +38,7 @@ export default function AdminDashboardPage() {
     issues: { total: 0, open: 0, inProgress: 0, resolved: 0 },
     users: { total: 0, citizens: 0, officers: 0, active: 0 }
   });
+  const [recentIssues, setRecentIssues] = useState<Issue[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -42,10 +47,37 @@ export default function AdminDashboardPage() {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await adminAPI.getDashboardStats();
+      // Fetch real issues data
+      const issuesResponse = await adminAPI.getIssues({ page: 1, limit: 100 });
+      const issues = issuesResponse.data?.issues || [];
       
-      if (response.success) {
-        setStats(response.stats);
+      // Calculate real issues statistics
+      const issuesStats = {
+        total: issues.length,
+        open: issues.filter(issue => issue.status === 'submitted').length,
+        inProgress: issues.filter(issue => ['acknowledged', 'pending'].includes(issue.status)).length,
+        resolved: issues.filter(issue => issue.status === 'resolved').length
+      };
+      
+      // Get recent issues (last 5)
+      const recent = issues.slice(0, 5);
+      setRecentIssues(recent);
+      
+      // Fetch other stats (agencies, users) - keep existing logic for now
+      const dashboardResponse = await adminAPI.getDashboardStats();
+      
+      if (dashboardResponse.success) {
+        setStats({
+          ...dashboardResponse.stats,
+          issues: issuesStats
+        });
+      } else {
+        // Fallback to issues-only stats if dashboard API fails
+        setStats({
+          agencies: { total: 0, pending: 0, approved: 0, rejected: 0 },
+          issues: issuesStats,
+          users: { total: 0, citizens: 0, officers: 0, active: 0 }
+        });
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -202,6 +234,81 @@ export default function AdminDashboardPage() {
               { label: 'Active Users', value: stats.users.active, color: 'text-green-500', icon: FaCheckCircle }
             ]}
           />
+        </div>
+
+        {/* Recent Issues */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-almost-black">Recent Issues</h3>
+            <Link 
+              href="/admin/issues"
+              className="text-accent2 hover:text-accent2/80 text-sm font-medium flex items-center gap-1"
+            >
+              View All <FaEye className="text-xs" />
+            </Link>
+          </div>
+          
+          {recentIssues.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FaExclamationTriangle className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+              <p className="text-sm">No issues reported yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentIssues.map((issue) => {
+                const categoryInfo = getCategoryById(issue.category) || { name: 'Other', color: '#999' };
+                
+                return (
+                  <div key={issue._id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium"
+                        style={{ backgroundColor: `${categoryInfo.color}20`, color: categoryInfo.color }}
+                      >
+                        {issue.trackingNumber ? issue.trackingNumber.split('-')[1] : 'N/A'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-almost-black truncate">
+                          {issue.title || 'Untitled Issue'}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span 
+                            className="px-2 py-1 rounded-full text-xs font-medium"
+                            style={{ backgroundColor: `${categoryInfo.color}20`, color: categoryInfo.color }}
+                          >
+                            {categoryInfo.name}
+                          </span>
+                          <span className="text-gray-400">•</span>
+                          <span>{new Date(issue.submittedAt || issue.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        issue.status === 'submitted' ? 'bg-red-100 text-red-700' :
+                        issue.status === 'acknowledged' ? 'bg-yellow-100 text-yellow-700' :
+                        issue.status === 'pending' ? 'bg-blue-100 text-blue-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {issue.status === 'submitted' ? 'Open' :
+                         issue.status === 'acknowledged' ? 'In Review' :
+                         issue.status === 'pending' ? 'In Progress' :
+                         'Resolved'}
+                      </span>
+                      
+                      <Link 
+                        href={`/admin/issues/${issue._id}`}
+                        className="text-accent2 hover:text-accent2/80 text-sm"
+                      >
+                        <FaEye />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
