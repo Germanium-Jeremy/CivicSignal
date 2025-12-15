@@ -30,7 +30,7 @@ export interface Issue {
   title: string;
   description: string;
   category: string;
-  status: 'submitted' | 'acknowledged' | 'pending' | 'resolved' | 'closed';
+  status: 'submitted' | 'acknowledged' | 'pending' | 'resolved'
   priority: 'High' | 'Medium' | 'Low';
   location: IssueLocation;
   photos: IssuePhoto[];
@@ -39,6 +39,7 @@ export interface Issue {
   date: string; // For compatibility with React Native structure
   submittedAt: string
   createdAt: string
+  success?: boolean
 }
 
 export interface AdminIssuesResponse {

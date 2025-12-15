@@ -25,7 +25,7 @@ export async function PATCH(
     // Await params in Next.js 15+
     const { id } = await params;
 
-    const { status } = await request.json();
+    const { status, comment } = await request.json();
 
     const validStatuses = ['submitted', 'acknowledged', 'pending', 'resolved', 'closed'];
     if (!validStatuses.includes(status)) {
@@ -40,6 +40,17 @@ export async function PATCH(
     // Set resolvedAt when status is resolved or closed
     if (status === 'resolved' || status === 'closed') {
       updates.resolvedAt = new Date();
+    }
+
+    // Add status change comment if provided
+    if (comment && comment.trim()) {
+      updates.statusHistory = updates.statusHistory || [];
+      updates.statusHistory.push({
+        status,
+        comment: comment.trim(),
+        changedAt: new Date(),
+        changedBy: 'admin' // In a real implementation, this would be the admin's ID
+      });
     }
 
     const issue = await Issue.findByIdAndUpdate(

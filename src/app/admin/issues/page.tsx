@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiSearch, FiFilter, FiAlertTriangle, FiEye, FiEdit2, FiTrash2, FiCheckCircle, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { FiSearch, FiFilter, FiAlertTriangle, FiEye, FiEdit2, FiTrash2, FiCheckCircle, FiClock, FiAlertCircle, FiChevronDown } from 'react-icons/fi';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Issue } from '@/lib/types/api';
 import { getCategoryById, ISSUE_CATEGORIES } from '@/config/issueCategories';
@@ -23,6 +23,12 @@ const IssuesPage = () => {
     page: 1,
     limit: 10
   });
+  // State for status change modal
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+  const [newStatus, setNewStatus] = useState<'submitted' | 'acknowledged' | 'pending' | 'resolved'>('submitted');
+  const [statusComment, setStatusComment] = useState('');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -93,19 +99,37 @@ const IssuesPage = () => {
     }
   };
 
-  const updateIssueStatus = async (issueId: string, newStatus: string) => {
+  // Handle status change
+  const handleStatusChange = (issue: Issue) => {
+    setSelectedIssue(issue);
+    setNewStatus(issue.status);
+    setStatusComment('');
+    setStatusModalOpen(true);
+  };
+
+  // Update issue status with comment
+  const updateIssueStatus = async (issue_id?: string, status?: 'submitted' | 'acknowledged' | 'pending' | 'resolved') => {
+    if (!selectedIssue || !newStatus) return;
+
+    setIsUpdatingStatus(true);
     try {
-      setIssues(issues.map(issue => 
-        issue._id === issueId 
-          ? { 
-              ...issue, 
-              status: newStatus == 'resolved' ? 'resolved' : newStatus == 'pending' ? 'pending' : newStatus == 'acknowledged' ? 'acknowledged' : 'submitted',
-              // resolvedAt: newStatus === 'resolved' || newStatus === 'closed' ? new Date().toISOString() : issue.resolvedAt
-            } 
-          : issue
-      ));
+      const response = await adminAPI.updateIssueStatus(selectedIssue._id, newStatus, statusComment);
+      if (response.success) {
+        // Update the issue in the local state
+        setIssues(issues.map(issue => 
+          issue._id === selectedIssue._id 
+            ? { ...issue, status: newStatus }
+            : issue
+        ));
+        setStatusModalOpen(false);
+        setSelectedIssue(null);
+        setStatusComment('');
+        setNewStatus(status ? status : 'acknowledged');
+      }
     } catch (error) {
       console.error('Error updating issue status:', error);
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -300,7 +324,7 @@ const IssuesPage = () => {
                               <select 
                                 className="text-sm border-0 p-0 bg-transparent focus:ring-2 focus:ring-accent2/50 rounded"
                                 value={issue.status}
-                                onChange={(e) => updateIssueStatus(issue._id, e.target.value)}
+                                onChange={(e) => updateIssueStatus(issue._id, e.target.value as 'submitted' | 'acknowledged' | 'pending' | 'resolved')}
                               >
                                 <option value="submitted">Submitted</option>
                                 <option value="acknowledged">In Review</option>
@@ -325,6 +349,7 @@ const IssuesPage = () => {
                                 <button 
                                   className="text-yellow-600 hover:text-yellow-900"
                                   title="Edit"
+                                  onClick={() => handleStatusChange(issue)}
                                 >
                                   <FiEdit2 />
                                 </button>
@@ -432,6 +457,60 @@ const IssuesPage = () => {
               )}
         </div>
       </div>
+      
+      {/* Status Change Modal */}
+      {statusModalOpen && selectedIssue && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Change Issue Status</h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                New Status
+              </label>
+              <select 
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent2/50"
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value as 'submitted' | 'acknowledged' | 'pending' | 'resolved')}
+              >
+                <option value="submitted">Submitted</option>
+                <option value="acknowledged">In Review</option>
+                <option value="pending">In Progress</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Comment (optional)
+              </label>
+              <textarea 
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent2/50"
+                rows={3}
+                placeholder="Add a comment about this status change..."
+                value={statusComment}
+                onChange={(e) => setStatusComment(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button 
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                onClick={() => setStatusModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent2/90 disabled:opacity-50"
+                onClick={() => updateIssueStatus(selectedIssue._id, newStatus)}
+                disabled={isUpdatingStatus || !newStatus}
+              >
+                {isUpdatingStatus ? 'Updating...' : 'Update Status'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

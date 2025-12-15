@@ -90,13 +90,7 @@ const navigationItems = [
     }
 ];
 
-export default function DashboardLayout({ 
-    children, 
-    isVerified = false, 
-    agencyName = "Your Agency",
-    agencyLogo = "/images/pin.png",
-    notificationCount = 0 
-}: DashboardLayoutProps) {
+export default function DashboardLayout({ children, isVerified = false, agencyName = "Agency", agencyLogo = "/images/pin.png", notificationCount = 0 }: DashboardLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
@@ -268,7 +262,7 @@ export default function DashboardLayout({
 
                         {/* Profile Menu */}
                         <div className="flex items-center gap-2">
-                            <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-light-gray/50 transition-colors">
+                            <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-light-gray/50 transition-colors" onClick={() => router.push("/dashboard/profile")}>
                                 <div className="w-8 h-8 bg-linear-to-r from-accent2 to-accent rounded-full flex items-center justify-center">
                                     <FaUser size={14} className="text-white" />
                                 </div>

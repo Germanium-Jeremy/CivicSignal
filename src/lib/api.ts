@@ -360,9 +360,9 @@ export const adminAPI = {
 
     deleteIssue: (issueId: string) => apiCall<{ success: boolean }>(`/admin/issues/${issueId}`, { method: 'DELETE' }),
     
-    updateIssueStatus: (issueId: string, status: Issue['status']) => apiCall<Issue>(`/admin/issues/${issueId}/status`, { 
+    updateIssueStatus: (issueId: string, status: Issue['status'], comment?: string) => apiCall<Issue>(`/admin/issues/${issueId}/status`, { 
         method: 'PATCH', 
-        body: JSON.stringify({ status }) 
+        body: JSON.stringify({ status, comment }) 
     }),
     
     assignIssue: (issueId: string, assigneeId: string) => apiCall<Issue>(`/admin/issues/${issueId}/assign`, { 
