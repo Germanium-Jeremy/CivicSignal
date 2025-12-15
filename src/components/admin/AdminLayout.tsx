@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -7,6 +7,7 @@ import {
   FaChartBar, FaCog, FaSignOutAlt, FaBars, FaTimes,
   FaCheckCircle, FaUserShield
 } from 'react-icons/fa';
+import { adminAPI, userAPI } from '@/lib/api';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -14,16 +15,30 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [adminData, setAdminData] = useState<{ fullName: string; email: string } | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
+  const fetchAdminData = async () => {
+    try {
+      const profileResponse = await userAPI.getProfile();
+      if (profileResponse.success) {
+        setAdminData(profileResponse.user);
+      }
+    } catch (error) {
+      console.error('Error fetching admin data:', error);
+    }
+  };
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: FaHome },
     { name: 'Agency Management', href: '/admin/agencies', icon: FaBuilding },
     { name: 'Issue Management', href: '/admin/issues', icon: FaExclamationTriangle },
     { name: 'User Management', href: '/admin/users', icon: FaUsers },
-    { name: 'Analytics', href: '/admin/analytics', icon: FaChartBar },
-    { name: 'Settings', href: '/admin/settings', icon: FaCog },
   ];
 
   const handleLogout = () => {
@@ -86,8 +101,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">Administrator</p>
-                <p className="text-xs text-gray-400 truncate">admin@civicsignal.rw</p>
+                <p className="text-sm font-semibold text-white truncate">
+                  {adminData?.fullName || 'Administrator'}
+                </p>
+                <p className="text-xs text-gray-400 truncate">
+                  {adminData?.email || 'admin@civicsignal.rw'}
+                </p>
               </div>
             )}
           </div>
