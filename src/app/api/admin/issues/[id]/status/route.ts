@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/database/connection';
 import Issue from '@/models/Issue';
 import { requireAuth, requireRole } from '@/lib/middleware';
+import connectDB from '@/lib/mongodb';
 
 // PATCH /api/admin/issues/[id]/status - Update issue status
 export async function PATCH(
@@ -9,7 +9,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Authentication and authorization
     const authResult = await requireAuth(request);
