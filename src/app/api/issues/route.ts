@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Issue, { IIssuePhoto } from '@/models/Issue';
 import { verifyAuth } from '@/lib/utils/auth';
 import { verifyDevice, checkSubmissionLimit, registerDevice } from '@/lib/utils/deviceVerification';
-import { isValidCategory, getCategoryById, ISSUE_CATEGORIES } from '@/config/issueCategories';
+import { isValidCategory, getCategoryById, CATEGORIES } from '@/config/categories';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Invalid category',
-          availableCategories: ISSUE_CATEGORIES.map(c => c.id),
+          availableCategories: CATEGORIES.map((c: any) => c.id),
         },
         { status: 400 }
       );

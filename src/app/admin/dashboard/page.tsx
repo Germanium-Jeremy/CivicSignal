@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminAPI, userAPI } from '@/lib/api';
 import { Issue } from '@/lib/types/api';
-import { getCategoryById, ISSUE_CATEGORIES } from '@/config/issueCategories';
+import { getCategoryById, CATEGORIES } from '@/config/categories';
 import { 
   FaBuilding, FaExclamationTriangle, FaUsers, FaCheckCircle,
   FaClock, FaTimes, FaChartLine, FaTasks, FaEye, FaFilter

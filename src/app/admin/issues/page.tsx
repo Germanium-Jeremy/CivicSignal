@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { FiSearch, FiFilter, FiAlertTriangle, FiEye, FiEdit2, FiTrash2, FiCheckCircle, FiClock, FiAlertCircle, FiChevronDown } from 'react-icons/fi';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Issue } from '@/lib/types/api';
-import { getCategoryById, ISSUE_CATEGORIES } from '@/config/issueCategories';
+import { getCategoryById, CATEGORIES } from '@/config/categories';
 import { adminAPI } from '@/lib/api';
 
 const IssuesPage = () => {
@@ -245,7 +245,7 @@ const IssuesPage = () => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <option value="all">All Categories</option>
-                {ISSUE_CATEGORIES.map((data, index) => (
+                {CATEGORIES.map((data, index) => (
                   <option key={index} value={data.id}>{data.name}</option>
                 ))}
               </select>

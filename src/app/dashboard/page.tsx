@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
-import { getCategoryById } from "@/config/issueCategories";
+import { getCategoryById, CATEGORIES } from "@/config/categories";
 import { FaExclamationTriangle, FaCheckCircle, FaClock, FaCheck, FaArrowUp, FaArrowDown, FaEye, FaCalendarAlt, FaMapMarkerAlt, FaUser} from "react-icons/fa";
 import Link from "next/link";
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ISSUE_CATEGORIES, getCategoryById, getAllCategoryIds } from '@/config/issueCategories';
+import { CATEGORIES, getCategoryById, getAllCategoryIds } from '@/config/categories';
 
 /**
  * GET /api/issues/categories
@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
       success: true,
       message: 'Issue categories retrieved successfully',
       data: {
-        categories: ISSUE_CATEGORIES,
-        total: ISSUE_CATEGORIES.length
+        categories: CATEGORIES,
+        total: CATEGORIES.length
       }
     });
   } catch (error) {

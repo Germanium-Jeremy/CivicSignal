@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
-import { getCategoryById } from "@/config/issueCategories";
+import { getCategoryById, CATEGORIES } from "@/config/categories";
 import { 
     FaExclamationTriangle, 
     FaMapMarkerAlt, 

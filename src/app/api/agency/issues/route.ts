@@ -5,11 +5,10 @@ import Agency from '@/models/Agency';
 import User from '@/models/User';
 import { verifyAccessToken } from '@/lib/utils/auth';
 import { 
-  getServiceDomainForCategory, 
-  isCategoryInAgencyServiceDomains,
-  getCategoriesForServiceDomain,
-  AgencyServiceDomain 
-} from '@/config/categoryServiceMapping';
+  getCategoriesByServiceDomain,
+  getCategoryById,
+  ServiceDomain 
+} from '@/config/categories';
 
 export async function GET(request: NextRequest) {
     try {
@@ -79,10 +78,10 @@ export async function GET(request: NextRequest) {
         if (agency.serviceDomains && agency.serviceDomains.length > 0) {
             // Get all category IDs that belong to the agency's service domains
             const allowedCategories: string[] = [];
-            agency.serviceDomains.forEach((serviceDomain: AgencyServiceDomain) => {
-                const categories = getCategoriesForServiceDomain(serviceDomain);
-                console.log("Categories allowed: ", categories, " service domains: ", serviceDomain)
-                allowedCategories.push(...categories);
+            agency.serviceDomains.forEach((serviceDomain: ServiceDomain) => {
+                const categories = getCategoriesByServiceDomain(serviceDomain);
+                console.log("Service domain: ", serviceDomain, " Categories: ", categories.map(c => c.id));
+                allowedCategories.push(...categories.map(c => c.id));
             });
             
             // Only show issues that belong to the agency's service domains
@@ -118,7 +117,8 @@ export async function GET(request: NextRequest) {
         // Add category filter if provided (must be within agency's service domains)
         if (category) {
             // Check if this category belongs to the agency's service domains
-            if (isCategoryInAgencyServiceDomains(category, agency.serviceDomains)) {
+            const categoryInfo = getCategoryById(category);
+            if (categoryInfo && agency.serviceDomains.includes(categoryInfo.serviceDomain)) {
                 query.category = category;
             } else {
                 // If category doesn't belong to agency's service domains, return empty result
