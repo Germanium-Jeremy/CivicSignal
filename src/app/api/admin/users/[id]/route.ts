@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/database/connection';
 import User from '@/models/User';
 import { requireAuth, requireRole } from '@/lib/middleware';
+import connectDB from '@/lib/mongodb';
 
 // GET /api/admin/users/[id] - Get single user
 export async function GET(
@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Authentication and authorization
     const authResult = await requireAuth(request);
@@ -51,7 +51,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Authentication and authorization
     const authResult = await requireAuth(request);
@@ -102,7 +102,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Authentication and authorization
     const authResult = await requireAuth(request);
