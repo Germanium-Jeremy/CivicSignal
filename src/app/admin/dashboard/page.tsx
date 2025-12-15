@@ -54,9 +54,9 @@ export default function AdminDashboardPage() {
       // Calculate real issues statistics
       const issuesStats = {
         total: issues.length,
-        open: issues.filter(issue => issue.status === 'submitted').length,
-        inProgress: issues.filter(issue => ['acknowledged', 'pending'].includes(issue.status)).length,
-        resolved: issues.filter(issue => issue.status === 'resolved').length
+        open: issues.filter((issue: any) => issue.status === 'submitted').length,
+        inProgress: issues.filter((issue: any) => ['acknowledged', 'pending'].includes(issue.status)).length,
+        resolved: issues.filter((issue: any) => issue.status === 'resolved').length
       };
       
       // Get recent issues (last 5)

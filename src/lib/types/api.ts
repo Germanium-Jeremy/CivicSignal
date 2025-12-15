@@ -37,6 +37,8 @@ export interface Issue {
   assignedTo?: string;
   trackingNumber: string;
   date: string; // For compatibility with React Native structure
+  submittedAt: string
+  createdAt: string
 }
 
 export interface AdminIssuesResponse {
