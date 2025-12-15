@@ -1,94 +1,105 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FaMap, FaMapMarkerAlt, FaFilter, FaSearch, FaEye, FaExclamationTriangle, FaExclamationCircle, FaClock, FaCheck, FaExpand, FaCompress, FaLayerGroup, FaInfoCircle } from "react-icons/fa";
+import { FaMap, FaMapMarkerAlt, FaFilter, FaSearch, FaEye, FaExclamationTriangle, FaExclamationCircle, FaClock, FaCheck, FaExpand, FaCompress, FaLayerGroup, FaInfoCircle, FaSpinner } from "react-icons/fa";
 import dynamicImport from "next/dynamic";
+import { Issue as IssueType } from "@/lib/types/api";
 
 // Force static generation
 export const dynamic = 'force-static';
 
-// Mock data for map issues
-const mockMapIssues = [
-    {
-        id: "ISS-001",
-        title: "Broken streetlight on Main Street",
-        status: "reported",
-        priority: "medium",
-        location: "Kigali",
-        coordinates: { lat: -1.92935, lng: 30.03485 },
-        reportedAt: "2024-01-20T10:30:00Z",
-        category: "Infrastructure",
-        description: "The streetlight has been flickering and completely went out last night."
-    },
-    {
-        id: "ISS-002",
-        title: "Water leak in residential area",
-        status: "acknowledged",
-        priority: "high",
-        location: "Kigali",
-        coordinates: { lat: -1.90095, lng: 30.33885 },
-        reportedAt: "2024-01-18T09:20:00Z",
-        category: "Utilities",
-        description: "Water main leak causing flooding in the street."
-    },
-    {
-        id: "ISS-003",
-        title: "Road construction blocking traffic",
-        status: "pending",
-        priority: "high",
-        location: "Kigali",
-        coordinates: { lat: -1.90995, lng: 30.04585 },
-        reportedAt: "2024-01-15T08:30:00Z",
-        category: "Roads",
-        description: "Ongoing road construction is causing severe traffic delays."
-    },
-    {
-        id: "ISS-004",
-        title: "Graffiti removal completed",
-        status: "resolved",
-        priority: "low",
-        location: "Kigali",
-        coordinates: { lat: -1.94960, lng: 30.05805 },
-        reportedAt: "2024-01-15T16:45:00Z",
-        category: "Vandalism",
-        description: "Graffiti on public property has been successfully cleaned."
-    },
-    {
-        id: "ISS-005",
-        title: "Pothole on Highway 101",
-        status: "reported",
-        priority: "high",
-        location: "Kigali",
-        coordinates: { lat: -1.94930, lng: 30.05805 },
-        reportedAt: "2024-01-19T14:15:00Z",
-        category: "Roads",
-        description: "Large pothole is causing vehicles to swerve dangerously."
-    }
-];
-
 const statusColors = {
-    reported: "#EB3223",
+    submitted: "#EB3223", // Changed from 'reported' to 'submitted' to match API
     acknowledged: "#F29D38",
     pending: "#FFFD54",
     resolved: "#75F94C"
 };
 
 const statusIcons = {
-    reported: FaExclamationTriangle,
+    submitted: FaExclamationTriangle, // Changed from 'reported' to 'submitted'
     acknowledged: FaExclamationCircle,
     pending: FaClock,
     resolved: FaCheck
 };
 
 export default function PublicMapPage() {
-    const [selectedIssue, setSelectedIssue] = useState<typeof mockMapIssues[0] | null>(null);
+    const [issues, setIssues] = useState<any[]>([]);
+    const [selectedIssue, setSelectedIssue] = useState<any>(null);
     const [filterStatus, setFilterStatus] = useState("all");
     const [filterPriority, setFilterPriority] = useState("all");
     const [filterCategory, setFilterCategory] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showLegend, setShowLegend] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [categories, setCategories] = useState<any[]>([]);
 
-    const filteredIssues = mockMapIssues.filter(issue => {
+    // Fetch categories and issues from API
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                
+                // For now, use hardcoded categories to isolate the issues API issue
+                const hardcodedCategories = [
+                    { id: 'public_safety', name: 'Public Safety' },
+                    { id: 'infrastructure', name: 'Infrastructure' },
+                    { id: 'utilities', name: 'Utilities' },
+                    { id: 'roads', name: 'Roads' },
+                    { id: 'waste_management', name: 'Waste Management' },
+                    { id: 'environment', name: 'Environment' },
+                    { id: 'health', name: 'Health' },
+                    { id: 'education', name: 'Education' }
+                ];
+                setCategories(hardcodedCategories);
+                
+                // Fetch issues using direct fetch
+                console.log('Fetching issues from:', '/api/issues?page=1&limit=100');
+                const issuesResponse = await fetch('/api/issues?page=1&limit=100');
+                
+                if (!issuesResponse.ok) {
+                    console.error('Issues API response status:', issuesResponse.status);
+                    console.error('Issues API response text:', await issuesResponse.text());
+                    setIssues([]);
+                    return;
+                }
+                
+                const issuesData = await issuesResponse.json();
+                console.log('Issues API response:', issuesData);
+                
+                // Transform API response to match map component format
+                const transformedIssues = issuesData.data?.issues?.map((issue: IssueType) => ({
+                    id: issue._id,
+                    title: issue.title,
+                    status: issue.status,
+                    priority: issue.priority.toLowerCase(),
+                    location: issue.location?.address || 'Unknown Location',
+                    coordinates: issue.location?.type === 'Point' 
+                        ? { 
+                            lat: issue.location.coordinates[1], 
+                            lng: issue.location.coordinates[0] 
+                        }
+                        : { lat: -1.94995, lng: 30.05885 }, // Default Kigali coordinates if no location
+                    reportedAt: issue.date || new Date().toISOString(),
+                    category: issue.category,
+                    description: issue.description || '',
+                    trackingNumber: issue.trackingNumber
+                })) || [];
+                
+                setIssues(transformedIssues);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Set empty arrays on error to prevent crashes
+                setIssues([]);
+                setCategories([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const filteredIssues = issues.filter(issue => {
         const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             issue.location.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = filterStatus === "all" || issue.status === filterStatus;
@@ -111,17 +122,17 @@ export default function PublicMapPage() {
         return statusIcons[status as keyof typeof statusIcons] || FaExclamationTriangle;
     };
 
-    const handleIssueClick = (issue: typeof mockMapIssues[0]) => {
+    const handleIssueClick = (issue: any) => {
         setSelectedIssue(issue);
     };
 
     const handleViewDetails = (issueId: string) => {
-        const issue = mockMapIssues.find(i => i.id === issueId);
+        const issue = issues.find(i => i.id === issueId);
         if (issue) {
-            const statusRoute = issue.status === 'reported' ? 'reported' : 
+            const statusRoute = issue.status === 'submitted' ? 'reported' : 
                               issue.status === 'acknowledged' ? 'acknowledged' :
                               issue.status === 'pending' ? 'pending' : 'resolved';
-            window.open(`/dashboard/issues/${statusRoute}`, '_blank');
+            window.open(`/dashboard/issues/${statusRoute}/${issueId}`, '_blank');
         }
     };
 
@@ -187,7 +198,7 @@ export default function PublicMapPage() {
                         className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                     >
                         <option value="all">All Status</option>
-                        <option value="reported">Reported</option>
+                        <option value="submitted">Submitted</option>
                         <option value="acknowledged">Acknowledged</option>
                         <option value="pending">Pending</option>
                         <option value="resolved">Resolved</option>
@@ -210,13 +221,14 @@ export default function PublicMapPage() {
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
                         className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
+                        disabled={loading}
                     >
                         <option value="all">All Categories</option>
-                        <option value="Infrastructure">Infrastructure</option>
-                        <option value="Utilities">Utilities</option>
-                        <option value="Roads">Roads</option>
-                        <option value="Vandalism">Vandalism</option>
-                        <option value="Parks">Parks</option>
+                        {categories.map((category: any) => (
+                            <option key={category.id} value={category.id}>
+                                {category.name}
+                            </option>
+                        ))}
                     </select>
                 </div>
             </div>
@@ -232,7 +244,14 @@ export default function PublicMapPage() {
                                 <FaMap className="text-accent2" size={20} />
                                 <h3 className="font-semibold text-almost-black">Issues Map View</h3>
                                 <span className="px-2 py-1 bg-accent2/10 text-accent2 text-xs font-medium rounded-full">
-                                    {filteredIssues.length} issues
+                                    {loading ? (
+                                        <span className="flex items-center gap-2">
+                                            <FaSpinner className="animate-spin" size={10} />
+                                            Loading...
+                                        </span>
+                                    ) : (
+                                        `${filteredIssues.length} issues`
+                                    )}
                                 </span>
                             </div>
                             {isFullscreen && (
@@ -247,14 +266,23 @@ export default function PublicMapPage() {
 
                         {/* Leaflet Map */}
                         <div className={`relative ${isFullscreen ? 'h-[calc(100vh-120px)]' : 'h-96 lg:h-[500px]'}`}>
-                            <LeafletMap 
-                                issues={filteredIssues} 
-                                statusColors={statusColors} 
-                                statusIcons={statusIcons} 
-                                onIssueClick={handleIssueClick}
-                                center={[-1.94995, 30.05885]} 
-                                zoom={13} 
-                            />
+                            {loading ? (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                    <div className="text-center">
+                                        <FaSpinner className="animate-spin text-accent2 text-4xl mb-4 mx-auto" />
+                                        <p className="text-neutral-text">Loading issues on map...</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <LeafletMap 
+                                    issues={filteredIssues} 
+                                    statusColors={statusColors} 
+                                    statusIcons={statusIcons} 
+                                    onIssueClick={handleIssueClick}
+                                    center={[-1.94995, 30.05885]} 
+                                    zoom={13} 
+                                />
+                            )}
                         </div>
                     </div>
 

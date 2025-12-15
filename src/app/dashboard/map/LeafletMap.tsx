@@ -17,6 +17,7 @@ interface Issue {
     reportedAt: string;
     category: string;
     description: string;
+    trackingNumber?: string;
 }
 
 interface LeafletMapProps {
@@ -37,16 +38,23 @@ export default function LeafletMap({ issues, statusColors, statusIcons, onIssueC
 
     // Create custom icon for each status
     const createCustomIcon = (status: string) => {
-        const StatusIcon = statusIcons[status] || statusIcons.reported;
-        const color = statusColors[status] || statusColors.reported;
+        const StatusIcon = statusIcons[status] || statusIcons.submitted; // Changed from 'reported' to 'submitted'
+        const color = statusColors[status] || statusColors.submitted; // Changed from 'reported' to 'submitted'
 
         return L.divIcon({
             className: "custom-icon",
             html: renderToString(
                 <div
                     style={{
-                        backgroundColor: color,width: "32px", height: "32px", borderRadius: "50%", border: "2px solid white", 
-                        display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        backgroundColor: color,
+                        width: "32px", 
+                        height: "32px", 
+                        borderRadius: "50%", 
+                        border: "2px solid white", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center", 
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
                     }}
                 >
                     <StatusIcon style={{ color: "white", fontSize: "14px" }} />
@@ -55,6 +63,15 @@ export default function LeafletMap({ issues, statusColors, statusIcons, onIssueC
             iconSize: [32, 32],
             iconAnchor: [16, 16],
             popupAnchor: [0, -16],
+        });
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
     };
 
@@ -88,19 +105,53 @@ export default function LeafletMap({ issues, statusColors, statusIcons, onIssueC
                             click: () => onIssueClick(issue),
                         }}
                     >
-                        <Popup>
-                            <div>
-                                <h4 className="font-semibold">{issue.title}</h4>
-                                <p className="text-sm text-gray-600">{issue.location}</p>
-                                <p className="text-xs mt-1 text-gray-500">Status: {issue.status}</p>
+                        <Popup maxWidth={250}>
+                            <div className="p-2">
+                                <h4 className="font-semibold text-sm mb-1">{issue.title}</h4>
+                                <p className="text-xs text-gray-600 mb-1">{issue.location}</p>
+                                {issue.trackingNumber && (
+                                    <p className="text-xs text-gray-500 mb-1">
+                                        <strong>Tracking:</strong> {issue.trackingNumber}
+                                    </p>
+                                )}
+                                <p className="text-xs text-gray-500 mb-1">
+                                    <strong>Status:</strong> 
+                                    <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
+                                        issue.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                                        issue.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                        issue.status === 'acknowledged' ? 'bg-orange-100 text-orange-800' :
+                                        'bg-red-100 text-red-800'
+                                    }`}>
+                                        {issue.status}
+                                    </span>
+                                </p>
+                                <p className="text-xs text-gray-500 mb-1">
+                                    <strong>Priority:</strong> 
+                                    <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
+                                        issue.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                        issue.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                        'bg-blue-100 text-blue-800'
+                                    }`}>
+                                        {issue.priority}
+                                    </span>
+                                </p>
+                                <p className="text-xs text-gray-500 mb-2">
+                                    <strong>Category:</strong> {issue.category}
+                                </p>
+                                <p className="text-xs text-gray-500 mb-2">
+                                    <strong>Reported:</strong> {formatDate(issue.reportedAt)}
+                                </p>
+                                {issue.description && (
+                                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{issue.description}</p>
+                                )}
                                 <button
                                     onClick={() => {
-                                        const statusRoute = issue.status === 'reported' ? 'reported' :
+                                        const statusRoute = issue.status === 'submitted' ? 'reported' :
                                                             issue.status === 'acknowledged' ? 'acknowledged' :
                                                             issue.status === 'pending' ? 'pending' : 'resolved';
-                                        window.open(`/dashboard/issues/${statusRoute}`, '_blank');
+                                        window.open(`/dashboard/issues/${statusRoute}/${issue.id}`, '_blank');
                                     }}
-                                    className="text-accent2 hover:text-accent text-xs font-medium mt-2"
+                                    className="w-full bg-accent2 hover:bg-accent text-white text-xs font-medium py-1.5 px-3 rounded transition-colors duration-200"
                                 >
                                     View Details
                                 </button>

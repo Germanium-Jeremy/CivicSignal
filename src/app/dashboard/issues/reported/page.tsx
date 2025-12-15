@@ -39,17 +39,31 @@ export default function ReportedIssuesPage() {
 
     const fetchReportedIssues = async () => {
         try {
+            // Import tokenManager to check authentication
+            const { tokenManager } = await import('@/lib/api');
+            const { accessToken } = tokenManager.getTokens();
+            
+            if (!accessToken) {
+                console.error('No access token available');
+                setIsLoading(false);
+                return;
+            }
+            
             const response = await agencyAPI.getIssues({ 
                 status: 'submitted',
                 page: 1, 
                 limit: 50 
             });
+            console.log("Response Issue: ", response)
             
             if (response.success) {
                 setIssues(response.data?.issues || []);
+            } else {
+                console.error('API returned error:', response.error);
             }
         } catch (error) {
             console.error('Error fetching reported issues:', error);
+            console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
         } finally {
             setIsLoading(false);
         }
