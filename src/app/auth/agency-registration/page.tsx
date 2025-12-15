@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { authAPI, userAPI } from "@/lib/api";
@@ -50,7 +50,7 @@ const sectors = [
     "Suburban", "Special Economic Zone"
 ];
 
-export default function AgencyRegistrationPage() {
+function AgencyRegistrationContent() {
     const [formData, setFormData] = useState({
         agencyName: "",
         agencyType: "",
@@ -513,5 +513,19 @@ export default function AgencyRegistrationPage() {
                 </div>
             </div>
         </AuthLayout>
+    );
+}
+
+export default function AgencyRegistrationPage() {
+    return (
+        <Suspense fallback={
+            <AuthLayout title="Loading...">
+                <div className="flex items-center justify-center h-full">
+                    <div className="w-12 h-12 border-4 border-accent2/30 border-t-accent2 rounded-full animate-spin"></div>
+                </div>
+            </AuthLayout>
+        }>
+            <AgencyRegistrationContent />
+        </Suspense>
     );
 }
