@@ -44,16 +44,14 @@ export default function ReportedIssuesPage() {
                 page: 1, 
                 limit: 50 
             });
-            console.log("Response Issue: ", response)
             
             if (response.success) {
                 setIssues(response.data?.issues || []);
             } else {
-                console.error('API returned error:', response.error);
+                console.error('Failed to fetch reported issues:', response.error);
             }
         } catch (error) {
             console.error('Error fetching reported issues:', error);
-            console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
         } finally {
             setIsLoading(false);
         }

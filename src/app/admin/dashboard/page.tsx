@@ -334,13 +334,6 @@ export default function AdminDashboardPage() {
                          issue.status === 'pending' ? 'In Progress' :
                          'Resolved'}
                       </span>
-                      
-                      <Link 
-                        href={`/admin/issues/${issue._id}`}
-                        className="text-accent2 hover:text-accent2/80 text-sm"
-                      >
-                        <FaEye />
-                      </Link>
                     </div>
                   </div>
                 );

@@ -48,6 +48,8 @@ export default function AcknowledgedIssuesPage() {
             
             if (response.success) {
                 setIssues(response.data?.issues || []);
+            } else {
+                console.error('Failed to fetch acknowledged issues:', response.error);
             }
         } catch (error) {
             console.error('Error fetching acknowledged issues:', error);

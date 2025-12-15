@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Issue from '@/models/Issue';
 import Agency from '@/models/Agency';
-import { tokenManager } from '@/lib/api';
+import User from '@/models/User';
+import { verifyAccessToken } from '@/lib/utils/auth';
 import { 
   getServiceDomainForCategory, 
   isCategoryInAgencyServiceDomains,
@@ -14,39 +15,50 @@ export async function GET(request: NextRequest) {
     try {
         await connectDB();
 
-        // Get the token from the tokenManager
-        const { accessToken } = tokenManager.getTokens();
-        if (!accessToken) {
+        // Get token from Authorization header (same as dashboard API)
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
+                { error: 'Authentication required' },
                 { status: 401 }
             );
         }
 
-        // Decode the JWT to get user email (simple decode without verification for API usage)
-        const tokenParts = accessToken.split('.');
-        if (tokenParts.length !== 3) {
+        const token = authHeader.split(' ')[1];
+        
+        // Verify token and get user ID (same as dashboard API)
+        const decoded = verifyAccessToken(token);
+        if (!decoded) {
             return NextResponse.json(
-                { success: false, error: 'Invalid token format' },
+                { error: 'Invalid access token' },
                 { status: 401 }
             );
         }
 
-        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-        const userEmail = payload.email;
+        const userId = decoded.userId;
 
-        if (!userEmail) {
+        // Get user details
+        const user = await User.findById(userId);
+        if (!user) {
             return NextResponse.json(
-                { success: false, error: 'User email not found in token' },
-                { status: 401 }
+                { error: 'User not found' },
+                { status: 404 }
             );
         }
 
-        // Find the agency for this user
-        const agency = await Agency.findOne({ email: userEmail });
+        // Check if user is an agency officer
+        if (user.role !== 'agency_officer') {
+            return NextResponse.json(
+                { error: 'Access denied. Agency officer role required.' },
+                { status: 403 }
+            );
+        }
+
+        // Find agency where user is primary officer (same as dashboard API)
+        const agency = await Agency.findOne({ primaryOfficer: userId });
         if (!agency) {
             return NextResponse.json(
-                { success: false, error: 'Agency not found' },
+                { error: 'No agency found for this user' },
                 { status: 404 }
             );
         }
@@ -61,17 +73,18 @@ export async function GET(request: NextRequest) {
         const search = searchParams.get('search');
 
         // Build the query
-        const query: any = {};
-
+        const query: any = {}
+        
         // Filter by agency's service domains
         if (agency.serviceDomains && agency.serviceDomains.length > 0) {
             // Get all category IDs that belong to the agency's service domains
             const allowedCategories: string[] = [];
             agency.serviceDomains.forEach((serviceDomain: AgencyServiceDomain) => {
                 const categories = getCategoriesForServiceDomain(serviceDomain);
+                console.log("Categories allowed: ", categories, " service domains: ", serviceDomain)
                 allowedCategories.push(...categories);
             });
-
+            
             // Only show issues that belong to the agency's service domains
             if (allowedCategories.length > 0) {
                 query.category = { $in: allowedCategories };

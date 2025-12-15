@@ -49,6 +49,8 @@ export default function PendingIssuesPage() {
             
             if (response.success) {
                 setIssues(response.data?.issues || []);
+            } else {
+                console.error('Failed to fetch pending issues:', response.error);
             }
         } catch (error) {
             console.error('Error fetching pending issues:', error);

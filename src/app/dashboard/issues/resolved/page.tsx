@@ -51,6 +51,8 @@ export default function ResolvedIssuesPage() {
             
             if (response.success) {
                 setIssues(response.data?.issues || []);
+            } else {
+                console.error('Failed to fetch resolved issues:', response.error);
             }
         } catch (error) {
             console.error('Error fetching resolved issues:', error);

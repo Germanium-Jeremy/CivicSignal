@@ -37,7 +37,7 @@ const IssuesPage = () => {
         const response = await adminAPI.getIssues({ 
           page, 
           limit: itemsPerpage,
-          status: statusFilter || undefined,
+          status: selectedStatus !== 'all' ? selectedStatus : undefined,
           priority: priorityFilter || undefined,
           category: selectedCategory !== 'all' ? selectedCategory : undefined
         });
@@ -55,12 +55,12 @@ const IssuesPage = () => {
       }
     };
     fetchIssues();
-  }, [page, statusFilter, priorityFilter, itemsPerpage]);
+  }, [page, selectedStatus, priorityFilter, selectedCategory, itemsPerpage]);
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, priorityFilter, selectedCategory, searchTerm, itemsPerpage]);
+  }, [selectedStatus, priorityFilter, selectedCategory, searchTerm, itemsPerpage]);
 
   const handleStatusUpdate = async (issueId: string, status: Issue['status']) => {
     try {
@@ -90,8 +90,7 @@ const IssuesPage = () => {
   const handleDelete = async (issueId: string) => {
     if (confirm('Are you sure you want to delete this issue?')) {
       try {
-        // TODO: Implement delete issue API call
-        await fetch(`/api/admin/issues/${issueId}`, { method: 'DELETE' });
+        await adminAPI.deleteIssue(issueId);
         setIssues(issues.filter(issue => issue?._id !== issueId));
       } catch (error) {
         console.error('Error deleting issue:', error);
@@ -247,7 +246,7 @@ const IssuesPage = () => {
               >
                 <option value="all">All Categories</option>
                 {ISSUE_CATEGORIES.map((data, index) => (
-                  <option key={index} value={data.name}>{data.name}</option>
+                  <option key={index} value={data.id}>{data.name}</option>
                 ))}
               </select>
               <select 

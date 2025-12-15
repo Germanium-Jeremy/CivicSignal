@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
 import { getCategoryById } from "@/config/issueCategories";
 import { FaExclamationTriangle, FaCheckCircle, FaClock, FaCheck, FaArrowUp, FaArrowDown, FaEye, FaCalendarAlt, FaMapMarkerAlt, FaUser} from "react-icons/fa";
+import Link from "next/link";
 
 interface AgencyData {
     name: string;
@@ -345,27 +346,27 @@ export default function DashboardHome() {
             <div className="bg-white rounded-xl shadow-sm border border-light-gray p-6">
                 <h2 className="text-xl font-semibold text-almost-black mb-4">Quick Actions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button className="flex items-center gap-3 p-4 border border-light-gray rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all">
+                    <Link href="/dashboard/issues/reported" className="flex items-center gap-3 p-4 border border-light-gray rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all">
                         <FaExclamationTriangle className="text-accent2" />
                         <div className="text-left">
                             <p className="font-semibold text-almost-black">View All Issues</p>
                             <p className="text-xs text-neutral-text">See all reported issues</p>
                         </div>
-                    </button>
-                    <button className="flex items-center gap-3 p-4 border border-light-gray rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all">
+                    </Link>
+                    <Link href="/dashboard/map" className="flex items-center gap-3 p-4 border border-light-gray rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all">
                         <FaMapMarkerAlt className="text-accent2" />
                         <div className="text-left">
                             <p className="font-semibold text-almost-black">Issue Map</p>
                             <p className="text-xs text-neutral-text">View issues on map</p>
                         </div>
-                    </button>
-                    <button className="flex items-center gap-3 p-4 border border-light-gray rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all">
+                    </Link>
+                    <Link href="/dashboard/profile" className="flex items-center gap-3 p-4 border border-light-gray rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all">
                         <FaUser className="text-accent2" />
                         <div className="text-left">
                             <p className="font-semibold text-almost-black">Agency Profile</p>
                             <p className="text-xs text-neutral-text">Update agency information</p>
                         </div>
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>
