@@ -6,7 +6,7 @@ import connectDB from '@/lib/mongodb';
 // PATCH /api/admin/users/[id]/status - Toggle user status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -22,6 +22,9 @@ export async function PATCH(
       return NextResponse.json({ error: roleCheck.error || 'Authorization failed' }, { status: roleCheck.status || 500 });
     }
 
+    // Await params in Next.js 15+
+    const { id } = await params;
+
     const { isActive } = await request.json();
 
     if (typeof isActive !== 'boolean') {
@@ -32,7 +35,7 @@ export async function PATCH(
     }
 
     const user = await User.findByIdAndUpdate(
-      params.id,
+      id,
       { isActive },
       { new: true, runValidators: true }
     ).select('-password').lean();

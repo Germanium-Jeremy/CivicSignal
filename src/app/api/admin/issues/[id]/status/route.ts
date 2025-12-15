@@ -6,7 +6,7 @@ import connectDB from '@/lib/mongodb';
 // PATCH /api/admin/issues/[id]/status - Update issue status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -21,6 +21,9 @@ export async function PATCH(
     if (!roleCheck.success) {
       return NextResponse.json({ error: roleCheck.error || 'Authorization failed' }, { status: roleCheck.status || 500 });
     }
+
+    // Await params in Next.js 15+
+    const { id } = await params;
 
     const { status } = await request.json();
 
@@ -40,7 +43,7 @@ export async function PATCH(
     }
 
     const issue = await Issue.findByIdAndUpdate(
-      params.id,
+      id,
       updates,
       { new: true, runValidators: true }
     ).populate('reportedBy', 'fullName email').lean();

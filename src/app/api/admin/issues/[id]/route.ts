@@ -6,7 +6,7 @@ import connectDB from '@/lib/mongodb';
 // GET /api/admin/issues/[id] - Get single issue
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -22,7 +22,10 @@ export async function GET(
       return NextResponse.json({ error: roleCheck.error || 'Authorization failed' }, { status: roleCheck.status || 500 });
     }
 
-    const issue = await Issue.findById(params.id)
+    // Await params in Next.js 15+
+    const { id } = await params;
+
+    const issue = await Issue.findById(id)
       .select('_id title description category status priority location photos assignedTo trackingNumber')
       .lean();
     
@@ -50,7 +53,7 @@ export async function GET(
 // PATCH /api/admin/issues/[id] - Update issue
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -68,8 +71,11 @@ export async function PATCH(
 
     const updates = await request.json();
     
+    // Await params in Next.js 15+
+    const { id } = await params;
+    
     const issue = await Issue.findByIdAndUpdate(
-      params.id,
+      id,
       updates,
       { new: true, runValidators: true }
     ).select('_id title description category status priority location photos assignedTo trackingNumber')
@@ -99,7 +105,7 @@ export async function PATCH(
 // DELETE /api/admin/issues/[id] - Delete issue
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -115,7 +121,10 @@ export async function DELETE(
       return NextResponse.json({ error: roleCheck.error || 'Authorization failed' }, { status: roleCheck.status || 500 });
     }
 
-    const issue = await Issue.findByIdAndDelete(params.id);
+    // Await params in Next.js 15+
+    const { id } = await params;
+
+    const issue = await Issue.findByIdAndDelete(id);
     
     if (!issue) {
       return NextResponse.json(

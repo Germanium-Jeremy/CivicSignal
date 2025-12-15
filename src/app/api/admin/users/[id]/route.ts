@@ -6,7 +6,7 @@ import connectDB from '@/lib/mongodb';
 // GET /api/admin/users/[id] - Get single user
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -22,7 +22,10 @@ export async function GET(
       return NextResponse.json({ error: roleCheck.error || 'Authorization failed' }, { status: roleCheck.status || 500 });
     }
 
-    const user = await User.findById(params.id).select('-password').lean();
+    // Await params in Next.js 15+
+    const { id } = await params;
+
+    const user = await User.findById(id).select('-password').lean();
     
     if (!user) {
       return NextResponse.json(
@@ -48,7 +51,7 @@ export async function GET(
 // PATCH /api/admin/users/[id] - Update user
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -69,8 +72,11 @@ export async function PATCH(
     // Don't allow password updates through this endpoint
     delete updates.password;
 
+    // Await params in Next.js 15+
+    const { id } = await params;
+
     const user = await User.findByIdAndUpdate(
-      params.id,
+      id,
       updates,
       { new: true, runValidators: true }
     ).select('-password').lean();
@@ -99,7 +105,7 @@ export async function PATCH(
 // DELETE /api/admin/users/[id] - Delete user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -115,7 +121,10 @@ export async function DELETE(
       return NextResponse.json({ error: roleCheck.error || 'Authorization failed' }, { status: roleCheck.status || 500 });
     }
 
-    const user = await User.findByIdAndDelete(params.id);
+    // Await params in Next.js 15+
+    const { id } = await params;
+
+    const user = await User.findByIdAndDelete(id);
     
     if (!user) {
       return NextResponse.json(
