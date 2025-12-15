@@ -39,16 +39,6 @@ export default function ReportedIssuesPage() {
 
     const fetchReportedIssues = async () => {
         try {
-            // Import tokenManager to check authentication
-            const { tokenManager } = await import('@/lib/api');
-            const { accessToken } = tokenManager.getTokens();
-            
-            if (!accessToken) {
-                console.error('No access token available');
-                setIsLoading(false);
-                return;
-            }
-            
             const response = await agencyAPI.getIssues({ 
                 status: 'submitted',
                 page: 1, 
