@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { FiSearch, FiFilter, FiAlertTriangle, FiEye, FiEdit2, FiTrash2, FiCheckCircle, FiClock, FiAlertCircle, FiChevronDown } from 'react-icons/fi';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Issue } from '@/lib/types/api';
-import { getCategoryById, CATEGORIES } from '@/config/categories';
+import { getCategoryByName, CATEGORIES } from '@/config/categories';
 import { adminAPI } from '@/lib/api';
 
 const IssuesPage = () => {
@@ -246,7 +246,7 @@ const IssuesPage = () => {
               >
                 <option value="all">All Categories</option>
                 {CATEGORIES.map((data, index) => (
-                  <option key={index} value={data.id}>{data.name}</option>
+                  <option key={index} value={data.name}>{data.name}</option>
                 ))}
               </select>
               <select 
@@ -298,7 +298,7 @@ const IssuesPage = () => {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {paginatedIssues.map((issue) => {
-                        const categoryInfo = getCategoryById(issue.category) || { name: 'Other', color: '#999' };
+                        const categoryInfo = getCategoryByName(issue.category) || { name: 'Other', color: '#999' };
                         
                         return (
                           <tr key={issue._id} className="hover:bg-gray-50">

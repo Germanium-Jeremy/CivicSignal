@@ -3,11 +3,8 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminAPI, userAPI } from '@/lib/api';
 import { Issue } from '@/lib/types/api';
-import { getCategoryById, CATEGORIES } from '@/config/categories';
-import { 
-  FaBuilding, FaExclamationTriangle, FaUsers, FaCheckCircle,
-  FaClock, FaTimes, FaChartLine, FaTasks, FaEye, FaFilter
-} from 'react-icons/fa';
+import { getCategoryByName } from '@/config/categories';
+import { FaBuilding, FaExclamationTriangle, FaUsers, FaCheckCircle, FaClock, FaTimes, FaChartLine, FaTasks, FaEye, FaFilter } from 'react-icons/fa';
 import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import Link from 'next/link';
 
@@ -294,7 +291,7 @@ export default function AdminDashboardPage() {
           ) : (
             <div className="space-y-3">
               {recentIssues.map((issue) => {
-                const categoryInfo = getCategoryById(issue.category) || { name: 'Other', color: '#999' };
+                const categoryInfo = getCategoryByName(issue.category) || { name: 'Other', color: '#999' };
                 
                 return (
                   <div key={issue._id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">

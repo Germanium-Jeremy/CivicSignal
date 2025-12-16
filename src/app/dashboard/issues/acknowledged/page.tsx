@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
-import { getCategoryById, CATEGORIES } from "@/config/categories";
+import { getCategoryByName, CATEGORIES } from "@/config/categories";
 import { 
     FaExclamationCircle, 
     FaMapMarkerAlt, 
@@ -162,7 +162,7 @@ export default function AcknowledgedIssuesPage() {
                 </div>
                 <div className="divide-y divide-light-gray">
                     {filteredIssues.map((issue) => {
-                        const categoryInfo = getCategoryById(issue.category) || { name: 'Other', color: '#999' };
+                        const categoryInfo = getCategoryByName(issue.category) || { name: 'Other', color: '#999' };
                         return (
                             <div key={issue._id} className="p-6 hover:bg-light-gray/30 transition-colors">
                                 <div className="flex items-start gap-4">

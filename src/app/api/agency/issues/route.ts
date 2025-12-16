@@ -4,11 +4,7 @@ import Issue from '@/models/Issue';
 import Agency from '@/models/Agency';
 import User from '@/models/User';
 import { verifyAccessToken } from '@/lib/utils/auth';
-import { 
-  getCategoriesByServiceDomain,
-  getCategoryById,
-  ServiceDomain 
-} from '@/config/categories';
+import { getCategoryByName, CATEGORIES } from '@/config/categories';
 
 export async function GET(request: NextRequest) {
     try {
@@ -76,32 +72,8 @@ export async function GET(request: NextRequest) {
         
         // Filter by agency's service domains
         if (agency.serviceDomains && agency.serviceDomains.length > 0) {
-            // Get all category IDs that belong to the agency's service domains
-            const allowedCategories: string[] = [];
-            agency.serviceDomains.forEach((serviceDomain: ServiceDomain) => {
-                const categories = getCategoriesByServiceDomain(serviceDomain);
-                console.log("Service domain: ", serviceDomain, " Categories: ", categories.map(c => c.id));
-                allowedCategories.push(...categories.map(c => c.id));
-            });
-            
             // Only show issues that belong to the agency's service domains
-            if (allowedCategories.length > 0) {
-                query.category = { $in: allowedCategories };
-            } else {
-                // If no categories match the service domains, return empty result
-                return NextResponse.json({
-                    success: true,
-                    data: {
-                        issues: [],
-                        pagination: {
-                            page,
-                            limit,
-                            total: 0,
-                            pages: 0
-                        }
-                    }
-                });
-            }
+            query.category = { $in: agency.serviceDomains };
         }
 
         // Add status filter if provided
@@ -117,8 +89,7 @@ export async function GET(request: NextRequest) {
         // Add category filter if provided (must be within agency's service domains)
         if (category) {
             // Check if this category belongs to the agency's service domains
-            const categoryInfo = getCategoryById(category);
-            if (categoryInfo && agency.serviceDomains.includes(categoryInfo.serviceDomain)) {
+            if (agency.serviceDomains.includes(category)) {
                 query.category = category;
             } else {
                 // If category doesn't belong to agency's service domains, return empty result

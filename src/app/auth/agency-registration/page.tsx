@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { authAPI, userAPI } from "@/lib/api";
 import { FaBuilding, FaGlobe, FaMapMarkerAlt, FaCheck, FaExclamationTriangle } from "react-icons/fa";
+import { CATEGORIES } from "@/config/categories";
 
 const agencyTypes = [
     { value: "government", label: "Government Agency" },
@@ -22,23 +23,6 @@ const agencyTypes = [
     { value: "other", label: "Other" }
 ];
 
-const serviceDomains = [
-    { value: "infrastructure", label: "Infrastructure & Roads" },
-    { value: "utilities", label: "Water & Utilities" },
-    { value: "waste", label: "Waste Management" },
-    { value: "transport", label: "Public Transportation" },
-    { value: "safety", label: "Public Safety & Security" },
-    { value: "health", label: "Public Health" },
-    { value: "environment", label: "Environmental Issues" },
-    { value: "housing", label: "Housing & Development" },
-    { value: "education", label: "Education Services" },
-    { value: "social", label: "Social Services" },
-    { value: "permits", label: "Permits & Licensing" },
-    { value: "taxation", label: "Taxation & Revenue" },
-    { value: "emergency", label: "Emergency Services" },
-    { value: "parks", label: "Parks & Recreation" },
-    { value: "other", label: "Other Services" }
-];
 
 const districts = [
     "Central District", "Northern District", "Southern District", "Eastern District", 
@@ -443,22 +427,22 @@ function AgencyRegistrationContent() {
                             Service Domains (Select all that apply) *
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
-                            {serviceDomains.map((domain) => (
+                            {CATEGORIES.map((category) => (
                                 <label
-                                    key={domain.value}
+                                    key={category.name}
                                     className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
-                                        formData.serviceDomains.includes(domain.value)
+                                        formData.serviceDomains.includes(category.name)
                                             ? 'border-accent2 bg-accent2/5 text-accent2'
                                             : 'border-light-gray hover:border-accent2/50'
                                     }`}
                                 >
                                     <input
                                         type="checkbox"
-                                        checked={formData.serviceDomains.includes(domain.value)}
-                                        onChange={() => handleServiceDomainChange(domain.value)}
+                                        checked={formData.serviceDomains.includes(category.name)}
+                                        onChange={() => handleServiceDomainChange(category.name)}
                                         className="w-4 h-4 text-accent2 border-light-gray rounded focus:ring-accent2 focus:ring-2"
                                     />
-                                    <span className="text-sm font-medium">{domain.label}</span>
+                                    <span className="text-sm font-medium">{category.name}</span>
                                 </label>
                             ))}
                         </div>

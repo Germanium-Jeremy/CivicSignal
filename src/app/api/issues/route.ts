@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Issue, { IIssuePhoto } from '@/models/Issue';
 import { verifyAuth } from '@/lib/utils/auth';
 import { verifyDevice, checkSubmissionLimit, registerDevice } from '@/lib/utils/deviceVerification';
-import { isValidCategory, getCategoryById, CATEGORIES } from '@/config/categories';
+import { isValidCategory, getCategoryByName, CATEGORIES } from '@/config/categories';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get category details for priority suggestion
-    const categoryDetails = getCategoryById(category);
+    const categoryDetails = getCategoryByName(category);
     const normalizePriority = (p?: string) => {
       const v = String(p || '').toLowerCase();
       if (v === 'high') return 'High';

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
-import { getCategoryById, CATEGORIES } from "@/config/categories";
+import { getCategoryByName, CATEGORIES } from "@/config/categories";
 import { FaExclamationTriangle, FaCheckCircle, FaClock, FaCheck, FaArrowUp, FaArrowDown, FaEye, FaCalendarAlt, FaMapMarkerAlt, FaUser} from "react-icons/fa";
 import Link from "next/link";
 
@@ -279,7 +279,7 @@ export default function DashboardHome() {
                         </div>
                     ) : recentIssues.map((issue) => {
                         const StatusIcon = getStatusIcon(issue.status);
-                        const categoryInfo = getCategoryById(issue.category) || { name: 'Other', color: '#999' };
+                        const categoryInfo = getCategoryByName(issue.category) || { name: 'Other', color: '#999' };
                         return (
                             <div key={issue._id} className="p-6 hover:bg-light-gray/30 transition-colors duration-200">
                                 <div className="flex items-start gap-4">

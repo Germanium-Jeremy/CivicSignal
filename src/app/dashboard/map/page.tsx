@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { FaMap, FaMapMarkerAlt, FaFilter, FaSearch, FaEye, FaExclamationTriangle, FaExclamationCircle, FaClock, FaCheck, FaExpand, FaCompress, FaLayerGroup, FaInfoCircle, FaSpinner } from "react-icons/fa";
 import dynamicImport from "next/dynamic";
 import { Issue as IssueType } from "@/lib/types/api";
+import { CATEGORIES } from "@/config/categories";
 
 // Force static generation
 export const dynamic = 'force-static';
@@ -39,18 +40,8 @@ export default function PublicMapPage() {
             try {
                 setLoading(true);
                 
-                // For now, use hardcoded categories to isolate the issues API issue
-                const hardcodedCategories = [
-                    { id: 'public_safety', name: 'Public Safety' },
-                    { id: 'infrastructure', name: 'Infrastructure' },
-                    { id: 'utilities', name: 'Utilities' },
-                    { id: 'roads', name: 'Roads' },
-                    { id: 'waste_management', name: 'Waste Management' },
-                    { id: 'environment', name: 'Environment' },
-                    { id: 'health', name: 'Health' },
-                    { id: 'education', name: 'Education' }
-                ];
-                setCategories(hardcodedCategories);
+                // Use the unified categories from the config
+                setCategories(CATEGORIES.map(cat => ({ id: cat.name, name: cat.name })));
                 
                 // Fetch issues using direct fetch
                 console.log('Fetching issues from:', '/api/issues?page=1&limit=100');

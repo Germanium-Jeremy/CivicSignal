@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
-import { getCategoryById, CATEGORIES } from "@/config/categories";
+import { getCategoryByName, CATEGORIES } from "@/config/categories";
 import { 
     FaExclamationTriangle, 
     FaMapMarkerAlt, 
@@ -146,10 +146,11 @@ export default function ReportedIssuesPage() {
                         className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                     >
                         <option value="all">All Categories</option>
-                        <option value="Infrastructure">Infrastructure</option>
-                        <option value="Roads">Roads</option>
-                        <option value="Vandalism">Vandalism</option>
-                        <option value="Utilities">Utilities</option>
+                        {CATEGORIES.map((category) => (
+                            <option key={category.name} value={category.name}>
+                                {category.name}
+                            </option>
+                        ))}
                     </select>
                 </div>
             </div>
@@ -161,7 +162,7 @@ export default function ReportedIssuesPage() {
                     <h2 className="text-lg font-semibold text-almost-black">Issues List</h2>
                     <div className="space-y-3 max-h-[600px] overflow-y-auto">
                         {filteredIssues.map((issue) => {
-                            const categoryInfo = getCategoryById(issue.category) || { name: 'Other', color: '#999' };
+                            const categoryInfo = getCategoryByName(issue.category) || { name: 'Other', color: '#999' };
                             return (
                                 <div
                                     key={issue._id}
@@ -262,7 +263,7 @@ export default function ReportedIssuesPage() {
                                     <div>
                                         <h4 className="font-semibold text-almost-black mb-2">Category</h4>
                                         <p className="text-neutral-text text-sm">
-                                            {getCategoryById(filteredIssues[0].category)?.name || 'Other'}
+                                            {getCategoryByName(filteredIssues[0].category)?.name || 'Other'}
                                         </p>
                                     </div>
                                 </div>

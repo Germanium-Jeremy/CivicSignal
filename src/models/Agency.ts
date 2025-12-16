@@ -1,3 +1,4 @@
+import { CATEGORIES } from '@/config/categories';
 import mongoose, { Document, Schema } from 'mongoose';
 
 // Interface for Agency document
@@ -73,12 +74,7 @@ const AgencySchema = new Schema<IAgency>({
     },
     serviceDomains: [{
         type: String,
-        enum: [
-            'infrastructure', 'utilities', 'waste', 'transport', 
-            'safety', 'health', 'environment', 'housing', 
-            'education', 'social', 'permits', 'taxation', 
-            'emergency', 'parks', 'other'
-        ]
+        enum: CATEGORIES.map(cat => cat.name)
     }],
     primaryOfficer: {
         type: Schema.Types.ObjectId,
