@@ -59,7 +59,7 @@ export const comparePassword = async (password: string, hashedPassword: string):
 
 // Generate tokens
 export const generateTokens = (payload: any) => {
-    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
     const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: '7d' });
     return { accessToken, refreshToken };
 };

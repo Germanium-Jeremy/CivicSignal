@@ -199,6 +199,7 @@ export async function POST(request: NextRequest) {
 
     // Store refresh token
     user.refreshTokens.push(refreshToken);
+    console.log("Refresh token stored for user: ", user.email, "access token: ", accessToken);
     
     // Keep only last 5 refresh tokens per user
     if (user.refreshTokens.length > 5) {

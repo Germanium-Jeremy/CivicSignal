@@ -179,7 +179,7 @@ export async function checkSubmissionLimit(userId: string): Promise<{ allowed: b
     try {
         await connectDB();
     
-        const MAX_DAILY_SUBMISSIONS = 20; // Maximum issues per day per user
+        const MAX_DAILY_SUBMISSIONS = 200; // Maximum issues per day per user
         
         const today = new Date();
         today.setHours(0, 0, 0, 0);
