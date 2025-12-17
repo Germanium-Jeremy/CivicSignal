@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CATEGORIES, getCategoryByName, getAllCategoryIds } from '@/config/categories';
+import { CATEGORIES, getCategoryByName } from '@/config/categories';
 
 /**
  * GET /api/issues/categories
