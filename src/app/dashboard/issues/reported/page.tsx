@@ -28,10 +28,18 @@ interface Issue {
 
 export default function ReportedIssuesPage() {
     const [issues, setIssues] = useState<Issue[]>([]);
+    const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedPriority, setSelectedPriority] = useState('all');
+
+    // State for status change modal
+    const [statusModalOpen, setStatusModalOpen] = useState(false);
+    const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+    const [newStatus, setNewStatus] = useState<'submitted' | 'acknowledged' | 'pending' | 'resolved'>('submitted');
+    const [statusComment, setStatusComment] = useState('');
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
     useEffect(() => {
         fetchReportedIssues();
@@ -54,6 +62,40 @@ export default function ReportedIssuesPage() {
             console.error('Error fetching reported issues:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Handle status change
+    const handleStatusChange = (issue: Issue) => {
+        setSelectedIssue(issue);
+        setNewStatus(issue.status as 'submitted' | 'acknowledged' | 'pending' | 'resolved');
+        setStatusComment('');
+        setStatusModalOpen(true);
+    };
+
+    // Update issue status with comment
+    const updateIssueStatus = async () => {
+        if (!selectedIssue || !newStatus) return;
+
+        setIsUpdatingStatus(true);
+        try {
+            const response = await agencyAPI.updateIssueStatus(selectedIssue._id, newStatus, statusComment);
+            if (response.success) {
+                // Update the issue in the local state
+                setIssues(issues.map(issue => 
+                    issue._id === selectedIssue._id 
+                        ? { ...issue, status: newStatus }
+                        : issue
+                ));
+                setStatusModalOpen(false);
+                setSelectedIssue(null);
+                setStatusComment('');
+                setNewStatus('submitted');
+            }
+        } catch (error) {
+            console.error('Error updating issue status:', error);
+        } finally {
+            setIsUpdatingStatus(false);
         }
     };
 
@@ -90,20 +132,13 @@ export default function ReportedIssuesPage() {
         );
     }
 
-    const handleAcknowledge = (issueId: string) => {
-        console.log("Acknowledging issue:", issueId);
-        // Here you would update the issue status to "acknowledged"
-    };
-
     return (
         <div className="space-y-6">
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-almost-black">Reported Issues</h1>
-                    <p className="text-neutral-text mt-1">
-                        New issues reported by citizens that require acknowledgment
-                    </p>
+                    <p className="text-neutral-text mt-1">New issues reported by citizens that require acknowledgment</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
@@ -118,7 +153,7 @@ export default function ReportedIssuesPage() {
                     {/* Search */}
                     <div className="flex-1 relative">
                         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-text" size={16} />
-                        <input
+                        <input 
                             type="text"
                             placeholder="Search issues..."
                             value={searchTerm}
@@ -166,7 +201,8 @@ export default function ReportedIssuesPage() {
                             return (
                                 <div
                                     key={issue._id}
-                                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 border-light-gray hover:border-red-300 bg-white`}
+                                    onClick={() => setActiveIssue(issue)}
+                                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${activeIssue?._id === issue._id ? 'border-accent2' : 'border-light-gray hover:border-red-300'} bg-white`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1">
@@ -213,33 +249,32 @@ export default function ReportedIssuesPage() {
                 {/* Issue Details */}
                 <div className="lg:col-span-2">
                     <h2 className="text-lg font-semibold text-almost-black mb-4">Issue Details</h2>
-                    {filteredIssues.length > 0 ? (
+                    {activeIssue ? (
                         <div className="bg-white rounded-xl p-6 shadow-sm border border-light-gray">
                             <div className="space-y-6">
                                 {/* Issue Header */}
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <h3 className="text-xl font-bold text-almost-black mb-2">
-                                            {filteredIssues[0].title}
-                                        </h3>
+                                        <h3 className="text-xl font-bold text-almost-black mb-2">{activeIssue.title}</h3>
                                         <div className="flex items-center gap-3">
                                             <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
-                                                #{filteredIssues[0].trackingNumber ? filteredIssues[0].trackingNumber.split('-')[1] : 'N/A'}
+                                                #{activeIssue.trackingNumber ? activeIssue.trackingNumber.split('-')[1] : 'N/A'}
                                             </span>
                                             <span 
                                                 className="px-3 py-1 rounded-full text-sm font-medium"
-                                                style={{ backgroundColor: `${priorityColors[filteredIssues[0].priority.toLowerCase() as keyof typeof priorityColors]}20`, color: priorityColors[filteredIssues[0].priority.toLowerCase() as keyof typeof priorityColors] }}
+                                                style={{ backgroundColor: `${priorityColors[activeIssue.priority.toLowerCase() as keyof typeof priorityColors]}20`, color: priorityColors[activeIssue.priority.toLowerCase() as keyof typeof priorityColors] }}
                                             >
-                                                {filteredIssues[0].priority} Priority
+                                                {activeIssue.priority} Priority
                                             </span>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => handleAcknowledge(filteredIssues[0]._id)}
-                                            className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent2/90 transition-colors"
+                                            onClick={() => handleStatusChange(activeIssue)}
+                                            className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent2/90 transition-colors flex items-center gap-2"
                                         >
-                                            Acknowledge Issue
+                                            <FaEdit size={14} />
+                                            Change Status
                                         </button>
                                     </div>
                                 </div>
@@ -248,7 +283,7 @@ export default function ReportedIssuesPage() {
                                 <div>
                                     <h4 className="font-semibold text-almost-black mb-2">Description</h4>
                                     <p className="text-neutral-text">
-                                        {filteredIssues[0].description || 'No description provided'}
+                                        {activeIssue.description || 'No description provided'}
                                     </p>
                                 </div>
 
@@ -257,13 +292,13 @@ export default function ReportedIssuesPage() {
                                     <div>
                                         <h4 className="font-semibold text-almost-black mb-2">Submitted</h4>
                                         <p className="text-neutral-text text-sm">
-                                            {formatDate(filteredIssues[0].submittedAt || filteredIssues[0].createdAt)}
+                                            {formatDate(activeIssue.submittedAt || activeIssue.createdAt)}
                                         </p>
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-almost-black mb-2">Category</h4>
                                         <p className="text-neutral-text text-sm">
-                                            {getCategoryByName(filteredIssues[0].category)?.name || 'Other'}
+                                            {getCategoryByName(activeIssue.category)?.name || 'Other'}
                                         </p>
                                     </div>
                                 </div>
@@ -277,6 +312,67 @@ export default function ReportedIssuesPage() {
                     )}
                 </div>
             </div>
+
+            {/* Status Change Modal */}
+            {statusModalOpen && selectedIssue && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+                        <h3 className="text-xl font-bold text-almost-black mb-4">Change Issue Status</h3>
+                        
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-600 mb-2">
+                                Issue: <span className="font-medium">{selectedIssue.title}</span>
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                Current Status: <span className="font-medium capitalize">{selectedIssue.status}</span>
+                            </p>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-almost-black mb-2">New Status</label>
+                            <select
+                                value={newStatus}
+                                onChange={(e) => setNewStatus(e.target.value as any)}
+                                className="w-full px-3 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
+                            >
+                                <option value="submitted">Submitted</option>
+                                <option value="acknowledged">Acknowledged</option>
+                                <option value="pending">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-almost-black mb-2">
+                                Comment (optional)
+                            </label>
+                            <textarea
+                                value={statusComment}
+                                onChange={(e) => setStatusComment(e.target.value)}
+                                placeholder="Add a comment about this status change..."
+                                className="w-full px-3 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2 resize-none"
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setStatusModalOpen(false)}
+                                className="flex-1 px-4 py-2 border border-light-gray text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={updateIssueStatus}
+                                disabled={isUpdatingStatus || newStatus === selectedIssue.status}
+                                className="flex-1 px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent2/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isUpdatingStatus ? 'Updating...' : 'Update Status'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

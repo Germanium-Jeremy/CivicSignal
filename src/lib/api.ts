@@ -398,6 +398,14 @@ export const agencyAPI = {
         const queryString = queryParams.toString();
         return apiCall(`/agency/issues${queryString ? '?' + queryString : ''}`);
     },
+
+    // Update issue status
+    updateIssueStatus: async (issueId: string, status: string, comment?: string) => {
+        return apiCall(`/agency/issues/${issueId}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status, comment })
+        });
+    },
 };
 
 // Issue API (for citizens and mobile app)

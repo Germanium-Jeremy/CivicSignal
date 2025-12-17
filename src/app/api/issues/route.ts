@@ -118,26 +118,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate required fields (location is now optional)
-    const {
-      title,
-      description,
-      category,
-      location, // optional: { latitude, longitude, address?, district?, sector? }
-      photos, // Array of photo URLs (already uploaded)
-      deviceInfo, // { deviceId, deviceModel?, osVersion?, appVersion? }
-    } = body;
+    const { title, description, category, location, photos, deviceInfo } = body;
 
     if (!category || !deviceInfo) {
       return NextResponse.json(
         {
           success: false,
           error: 'Missing required fields',
-          details: {
-            title: false,
-            category: !category,
-            location: false,
-            deviceInfo: !deviceInfo,
-          },
+          details: { title: false, category: !category, location: false, deviceInfo: !deviceInfo, },
         },
         { status: 400 }
       );
@@ -318,7 +306,7 @@ export async function POST(request: NextRequest) {
             reportedBy: issue.reportedBy,
           },
           trackingNumber: issue.trackingNumber,
-          estimatedResponseTime: categoryDetails?.estimatedResponseTime || '3-7 days',
+          estimatedResponseTime: categoryDetails?.estimatedResponseTime || '3-5 days',
         },
       },
       { status: 201 }
@@ -329,21 +317,13 @@ export async function POST(request: NextRequest) {
     // Handle validation errors
     if (error instanceof Error && error.name === 'ValidationError') {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Validation error',
-          details: error.message,
-        },
+        { success: false, error: 'Validation error', details: error.message },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to create issue',
-        message: 'An error occurred while reporting the issue. Please try again.',
-      },
+      { success: false, error: 'Failed to create issue', message: 'An error occurred while reporting the issue. Please try again.', },
       { status: 500 }
     );
   }

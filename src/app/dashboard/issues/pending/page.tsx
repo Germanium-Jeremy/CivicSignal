@@ -35,6 +35,13 @@ export default function PendingIssuesPage() {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedPriority, setSelectedPriority] = useState('all');
 
+    // State for status change modal
+    const [statusModalOpen, setStatusModalOpen] = useState(false);
+    const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+    const [newStatus, setNewStatus] = useState<'submitted' | 'acknowledged' | 'pending' | 'resolved'>('submitted');
+    const [statusComment, setStatusComment] = useState('');
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
     useEffect(() => {
         fetchPendingIssues();
     }, []);
@@ -56,6 +63,18 @@ export default function PendingIssuesPage() {
             console.error('Error fetching pending issues:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Quick mark as resolved
+    const markAsResolved = async (issue: Issue) => {
+        try {
+            const response = await agencyAPI.updateIssueStatus(issue._id, 'resolved', 'Resolved by agency');
+            if (response.success) {
+                setIssues(issues.map(it => it._id === issue._id ? { ...it, status: 'resolved' } : it));
+            }
+        } catch (err) {
+            console.error('Mark as resolved failed', err);
         }
     };
 
@@ -84,9 +103,15 @@ export default function PendingIssuesPage() {
         high: "#EF4444"
     };
 
-    const handleMarkResolved = (issueId: string) => {
-        console.log("Marking issue as resolved:", issueId);
-        // Here you would update the issue status to "resolved"
+    const handleMarkResolved = async (issueId: string) => {
+        try {
+            const response = await agencyAPI.updateIssueStatus(issueId, 'resolved', 'Moved to resolved by agency');
+            if (response.success) {
+                setIssues(issues.map(it => it._id === issueId ? { ...it, status: 'resolved' } : it));
+            }
+        } catch (err) {
+            console.error('Mark as resolved failed', err);
+        }
     };
 
     if (isLoading) {

@@ -34,6 +34,13 @@ export default function AcknowledgedIssuesPage() {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedPriority, setSelectedPriority] = useState('all');
 
+    // State for status change modal
+    const [statusModalOpen, setStatusModalOpen] = useState(false);
+    const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+    const [newStatus, setNewStatus] = useState<'submitted' | 'acknowledged' | 'pending' | 'resolved'>('submitted');
+    const [statusComment, setStatusComment] = useState('');
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
     useEffect(() => {
         fetchAcknowledgedIssues();
     }, []);
@@ -55,6 +62,18 @@ export default function AcknowledgedIssuesPage() {
             console.error('Error fetching acknowledged issues:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Quick mark as pending
+    const markAsPending = async (issue: Issue) => {
+        try {
+            const response = await agencyAPI.updateIssueStatus(issue._id, 'pending', 'Moved to pending by agency');
+            if (response.success) {
+                setIssues(issues.map(it => it._id === issue._id ? { ...it, status: 'pending' } : it));
+            }
+        } catch (err) {
+            console.error('Mark as pending failed', err);
         }
     };
 
@@ -210,7 +229,7 @@ export default function AcknowledgedIssuesPage() {
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
                                                 <button
-                                                    onClick={() => handleMarkPending(issue._id)}
+                                                    onClick={() => markAsPending(issue)}
                                                     className="px-3 py-1 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
                                                 >
                                                     Mark Pending
