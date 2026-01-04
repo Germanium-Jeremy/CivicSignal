@@ -11,11 +11,12 @@ export interface User {
   updatedAt: string;
 }
 
-export interface IssuePhoto {
+export interface IssueMedia {
   url: string;
   key: string;
   description?: string;
   uploadedAt: string;
+  mediaType: 'image' | 'audio' | 'video';
 }
 
 export interface IssueLocation {
@@ -30,10 +31,16 @@ export interface Issue {
   title: string;
   description: string;
   category: string;
-  status: 'submitted' | 'acknowledged' | 'pending' | 'resolved'
+  status: 'submitted' | 'acknowledged' | 'pending' | 'resolved' | 'closed';
   priority: 'High' | 'Medium' | 'Low';
   location: IssueLocation;
-  photos: IssuePhoto[];
+  media: IssueMedia[];
+  photos?: IssueMedia[];
+  customFields: Record<string, any>;
+  categoryTemplateId?: string;
+  categoryTemplateVersion?: number;
+  slaDeadline?: string;
+  slaStatus: 'within_sla' | 'at_risk' | 'breached';
   assignedTo?: string;
   trackingNumber: string;
   date: string; // For compatibility with React Native structure
