@@ -41,6 +41,7 @@ export const tokenManager = {
 
         const response = await fetch(`${API_BASE}/auth/refresh`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refreshToken: currentRefreshToken }),
         });
@@ -79,6 +80,7 @@ async function apiCall<T = any>(endpoint: string, options: RequestInit = {}): Pr
 
     let response = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
+        credentials: 'include',
         headers,
     });
 
@@ -90,6 +92,7 @@ async function apiCall<T = any>(endpoint: string, options: RequestInit = {}): Pr
             
             response = await fetch(`${API_BASE}${endpoint}`, {
                 ...options,
+                credentials: 'include',
                 headers,
             });
         } catch (error) {
@@ -334,6 +337,15 @@ export const adminAPI = {
             method: 'DELETE',
         });
     },
+
+    // Category templates (dynamic form/workflow builder)
+    getCategoryTemplates: () => apiCall('/admin/categories'),
+
+    updateCategoryTemplates: (categories: unknown[]) =>
+        apiCall('/admin/categories', {
+            method: 'PUT',
+            body: JSON.stringify({ categories }),
+        }),
     
     getUsers: (params?: { page?: number; limit?: number; search?: string; status?: string; role?: string }) => apiCall<PaginatedResponse<User>>(`/admin/users?${new URLSearchParams(params as any).toString()}`),
 
@@ -420,9 +432,9 @@ export const issueAPI = {
         title: string;
         description?: string;
         category: string;
-        location: {
-            latitude: number;
-            longitude: number;
+        location?: {
+            latitude?: number;
+            longitude?: number;
             address?: string;
             district?: string;
             sector?: string;
@@ -433,6 +445,14 @@ export const issueAPI = {
             size?: number;
             mimeType?: string;
         }>;
+        media?: Array<{
+            url: string;
+            mediaType: 'image' | 'audio' | 'video';
+            thumbnailUrl?: string;
+            size?: number;
+            mimeType?: string;
+        }>;
+        customFields?: Record<string, any>;
         deviceInfo: {
             deviceId: string;
             deviceModel?: string;
@@ -440,6 +460,7 @@ export const issueAPI = {
             appVersion?: string;
         };
         priority?: 'low' | 'medium' | 'high' | 'urgent';
+        source?: 'web' | 'mobile' | 'ios' | 'android' | 'api';
     }) => {
         return apiCall('/issues', {
             method: 'POST',
