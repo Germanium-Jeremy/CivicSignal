@@ -5,10 +5,7 @@ import { verifyAuth } from '@/lib/utils/auth';
 import mongoose from 'mongoose';
 
 // GET /api/issues/[id] - Get single issue (public)
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
     const { id } = await params;
