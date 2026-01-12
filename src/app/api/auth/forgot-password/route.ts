@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     
     await user.save();
-
+    
     let sent = false;
 
     // Send reset code via chosen method
