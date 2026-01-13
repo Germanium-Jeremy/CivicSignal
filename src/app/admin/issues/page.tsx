@@ -86,161 +86,86 @@ const IssuesPage = () => {
           setStatusModalOpen(true);
      };
 
-  // Update issue status with comment
-  const updateIssueStatus = async (
-    issue_id?: string,
-    status?: "submitted" | "acknowledged" | "pending" | "resolved"
-  ) => {
-    if (!selectedIssue || !newStatus) return;
+     // Update issue status with comment
+     const updateIssueStatus = async (issue_id?: string, status?: "submitted" | "acknowledged" | "pending" | "resolved") => {
+          if (!selectedIssue || !newStatus) return;
 
-    setIsUpdatingStatus(true);
-    try {
-      const response = await adminAPI.updateIssueStatus(
-        selectedIssue._id,
-        newStatus,
-        statusComment
-      );
-      if (response.success) {
-        // Update the issue in the local state
-        setIssues(
-          issues.map((issue) =>
-            issue._id === selectedIssue._id
-              ? { ...issue, status: newStatus }
-              : issue
-          )
-        );
-        setStatusModalOpen(false);
-        setSelectedIssue(null);
-        setStatusComment("");
-        setNewStatus(status ? status : "acknowledged");
-      }
-    } catch (error) {
-      console.error("Error updating issue status:", error);
-    } finally {
-      setIsUpdatingStatus(false);
-    }
-  };
+          setIsUpdatingStatus(true);
+          try {
+               const response = await adminAPI.updateIssueStatus(selectedIssue._id, newStatus, statusComment);
+               if (response.success) {
+                    // Update the issue in the local state
+                    setIssues(issues.map((issue) => issue._id === selectedIssue._id ? { ...issue, status: newStatus } : issue));
+                    setStatusModalOpen(false);
+                    setSelectedIssue(null);
+                    setStatusComment("");
+                    setNewStatus(status ? status : "acknowledged");
+               }
+          } catch (error) {
+               console.error("Error updating issue status:", error);
+          } finally {
+               setIsUpdatingStatus(false);
+          }
+     };
 
-  // Format date to relative time (e.g., "2 days ago")
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+     // Format date to relative time (e.g., "2 days ago")
+     const formatRelativeTime = (dateString: string) => {
+          const date = new Date(dateString);
+          const now = new Date();
+          const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return "Just now";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800)
-      return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    return date.toLocaleDateString();
-  };
+          if (diffInSeconds < 60) return "Just now";
+          if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+          if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+          if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+          return date.toLocaleDateString();
+     };
 
-  // Get status color and icon
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<
-      string,
-      { bg: string; text: string; icon: React.ReactNode }
-    > = {
-      submitted: {
-        bg: "bg-blue-100",
-        text: "text-blue-800",
-        icon: <FiAlertTriangle className="mr-1" />,
-      },
-      acknowledged: {
-        bg: "bg-yellow-100",
-        text: "text-yellow-800",
-        icon: <FiClock className="mr-1" />,
-      },
-      pending: {
-        bg: "bg-purple-100",
-        text: "text-purple-800",
-        icon: <FiClock className="mr-1" />,
-      },
-      resolved: {
-        bg: "bg-green-100",
-        text: "text-green-800",
-        icon: <FiCheckCircle className="mr-1" />,
-      },
-      closed: {
-        bg: "bg-gray-100",
-        text: "text-gray-800",
-        icon: <FiCheckCircle className="mr-1" />,
-      },
-    };
+     // Get priority badge
+     const getPriorityBadge = (priority: string) => {
+          const priorityMap: Record<string, { bg: string; text: string }> = {
+               High: { bg: "bg-red-100", text: "text-red-800" },
+               Medium: { bg: "bg-yellow-100", text: "text-yellow-800" },
+               Low: { bg: "bg-green-100", text: "text-green-800" },
+          };
 
-    const statusInfo = statusMap[status] || {
-      bg: "bg-gray-100",
-      text: "text-gray-800",
-      icon: <FiAlertCircle className="mr-1" />,
-    };
+          const { bg, text } = priorityMap[priority] || {
+               bg: "bg-gray-100",
+               text: "text-gray-800",
+          };
 
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.bg} ${statusInfo.text}`}
-      >
-        {statusInfo.icon}
-        {status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ")}
-      </span>
-    );
-  };
+          return (
+               <span className={`px-2 py-1 text-xs rounded-full ${bg} ${text}`}> {priority} </span>
+          );
+     };
 
-  // Get priority badge
-  const getPriorityBadge = (priority: string) => {
-    const priorityMap: Record<string, { bg: string; text: string }> = {
-      High: { bg: "bg-red-100", text: "text-red-800" },
-      Medium: { bg: "bg-yellow-100", text: "text-yellow-800" },
-      Low: { bg: "bg-green-100", text: "text-green-800" },
-    };
+     return (
+          <AdminLayout>
+               <div className="p-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                         <div>
+                              <h1 className="text-2xl font-bold text-gray-800">Issue Management</h1>
+                              <p className="text-sm text-gray-600 mt-1">Track and manage reported issues</p>
+                         </div>
+                         <div className="text-sm text-gray-600">
+                              {paginationData.total}{" "}
+                              {paginationData.total === 1 ? "issue" : "issues"} found
+                         </div>
+                    </div>
 
-    const { bg, text } = priorityMap[priority] || {
-      bg: "bg-gray-100",
-      text: "text-gray-800",
-    };
-
-    return (
-      <span className={`px-2 py-1 text-xs rounded-full ${bg} ${text}`}>
-        {priority}
-      </span>
-    );
-  };
-
-  return (
-    <AdminLayout>
-      <div className="p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Issue Management
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Track and manage reported issues
-            </p>
-          </div>
-          <div className="text-sm text-gray-600">
-            {paginationData.total}{" "}
-            {paginationData.total === 1 ? "issue" : "issues"} found
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-            <div className="relative w-full md:w-80">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by title, tracking #, or reporter..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2/50"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              <select
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-40"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-              >
+                    <div className="bg-white rounded-xl shadow-sm p-6">
+                         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                              <div className="relative w-full md:w-80">
+                                   <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                   <input type="text" placeholder="Search by title, tracking #, or reporter..."
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2/50"
+                                        value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                                   />
+                              </div>
+                              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                                   <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}
+                                        className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-40"
+                                   >
                 <option value="all">All Status</option>
                 <option value="submitted">Submitted</option>
                 <option value="acknowledged">In Review</option>
