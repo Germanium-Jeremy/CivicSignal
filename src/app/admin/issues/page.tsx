@@ -166,87 +166,72 @@ const IssuesPage = () => {
                                    <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}
                                         className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-40"
                                    >
-                <option value="all">All Status</option>
-                <option value="submitted">Submitted</option>
-                <option value="acknowledged">In Review</option>
-                <option value="pending">In Progress</option>
-                <option value="resolved">Resolved</option>
-              </select>
-              <select
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-40"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">All Categories</option>
-                {CATEGORIES.map((data, index) => (
-                  <option key={index} value={data.name}>
-                    {data.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-32"
-                value={itemsPerpage}
-                onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              >
-                <option value={5}>5 per page</option>
-                <option value={10}>10 per page</option>
-                <option value={25}>25 per page</option>
-                <option value={50}>50 per page</option>
-              </select>
-              <button
-                className="border border-gray-200 rounded-lg px-4 py-2 text-sm flex items-center justify-center gap-2 hover:bg-gray-50 w-full sm:w-auto"
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedStatus("all");
-                  setSelectedCategory("all");
-                  setItemsPerPage(10);
-                }}
-              >
-                <FiFilter /> Clear Filters
-              </button>
-            </div>
-          </div>
+                                        <option value="all">All Status</option>
+                                        <option value="submitted">Submitted</option>
+                                        <option value="acknowledged">In Review</option>
+                                        <option value="pending">In Progress</option>
+                                        <option value="resolved">Resolved</option>
+                                   </select>
+                                   <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-40"
+                                   >
+                                        <option value="all">All Categories</option>
+                                        {CATEGORIES.map((data, index) => (
+                                             <option key={index} value={data.name}>
+                                                  {data.name}
+                                             </option>
+                                        ))}
+                                   </select>
+                                   <select value={itemsPerpage} onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                        className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent2/50 w-full sm:w-32"
+                                   >
+                                        <option value={5}>5 per page</option>
+                                        <option value={10}>10 per page</option>
+                                        <option value={25}>25 per page</option>
+                                        <option value={50}>50 per page</option>
+                                   </select>
+              
+                                   <button
+                                        className="border border-gray-200 rounded-lg px-4 py-2 text-sm flex items-center justify-center gap-2 hover:bg-gray-50 w-full sm:w-auto"
+                                        onClick={() => {
+                                             setSearchTerm("");
+                                             setSelectedStatus("all");
+                                             setSelectedCategory("all");
+                                             setItemsPerPage(10);
+                                        }}
+                                   >
+                                        <FiFilter /> Clear Filters
+                                   </button>
+                              </div>
+                         </div>
 
-          {!loading && paginatedIssues.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">
-              <FiAlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
-                No issues found
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {searchTerm ||
-                selectedStatus !== "all" ||
-                selectedCategory !== "all"
-                  ? "Try adjusting your search or filter to find what you're looking for."
-                  : "There are currently no issues to display."}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Issue
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Priority
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
+                         {!loading && paginatedIssues.length === 0 ? (
+                              <div className="text-center py-10 text-gray-500">
+                                   <FiAlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
+                                   <h3 className="mt-2 text-sm font-medium text-gray-900">No issues found</h3>
+                                   <p className="mt-1 text-sm text-gray-500">
+                                        {searchTerm || selectedStatus !== "all" || selectedCategory !== "all"
+                                        ? "Try adjusting your search or filter to find what you're looking for."
+                                        : "There are currently no issues to display."}
+                                   </p>
+                              </div>
+                         ) : (
+                              <div className="overflow-x-auto">
+                                   <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                             <tr>
+                                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue</th>
+                                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                  Date
+                                                  </th>
+                                                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                  Actions
+                                                  </th>
+                                             </tr>
+                                        </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {paginatedIssues.map((issue) => {
                     const categoryInfo = getCategoryByName(issue.category) || {
