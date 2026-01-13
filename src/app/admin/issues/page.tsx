@@ -224,140 +224,86 @@ const IssuesPage = () => {
                                                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                                                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                  Date
-                                                  </th>
-                                                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                  Actions
-                                                  </th>
+                                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                              </tr>
                                         </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {paginatedIssues.map((issue) => {
-                    const categoryInfo = getCategoryByName(issue.category) || {
-                      name: "Other",
-                      color: "#999",
-                    };
+                                        
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                             {paginatedIssues.map((issue) => {
+                                                  const categoryInfo = getCategoryByName(issue.category) || { name: "Other", color: "#999", };
 
-                    return (
-                      <tr key={issue._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            <div
-                              className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center"
-                              style={{
-                                backgroundColor: `${categoryInfo.color}20`,
-                              }}
-                            >
-                              <span
-                                style={{ color: categoryInfo.color }}
-                              ></span>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {issue.title || "No title"}
+                                                  return (
+                                                       <tr key={issue._id} className="hover:bg-gray-50">
+                                                            <td className="px-6 py-4">
+                                                                 <div className="flex items-center">
+                                                                      <div className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center"
+                                                                           style={{ backgroundColor: `${categoryInfo.color}20` }}
+                                                                      >
+                                                                           <span style={{ color: categoryInfo.color }}></span>
+                                                                      </div>
+                                                                      <div className="ml-4">
+                                                                           <div className="text-sm font-medium text-gray-900">{issue.title || "No title"}</div>
+                                                                           <div className="text-xs text-gray-500 truncate max-w-xs">{issue.description || "No description"}</div>
+                                                                      </div>
+                                                                 </div>
+                                                            </td>
+                                             
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                                                      style={{ backgroundColor: `${categoryInfo.color}20`, color: categoryInfo.color }}>
+                                                                      {categoryInfo.name}
+                                                                 </span>
+                                                            </td>
+                                            
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                 <select className="text-sm border-0 p-0 bg-transparent focus:ring-2 focus:ring-accent2/50 rounded"
+                                                                      value={issue.status} onChange={(e) => updateIssueStatus(issue._id, e.target.value as | "submitted" | "acknowledged" | "pending" | "resolved")}
+                                                                 >
+                                                                      <option value="submitted">Submitted</option>
+                                                                      <option value="acknowledged">In Review</option>
+                                                                      <option value="pending">In Progress</option>
+                                                                      <option value="resolved">Resolved</option>
+                                                                 </select>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                 {getPriorityBadge(issue.priority)}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                 {issue.date ? new Date(issue.date).toLocaleDateString() : "No date"}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                                 <div className="flex justify-end space-x-3">
+                                                                      <button className="text-blue-600 hover:text-blue-900" title="View Details">
+                                                                           <FiEye />
+                                                                      </button>
+                                                                      <button className="text-yellow-600 hover:text-yellow-900" title="Edit" onClick={() => handleStatusChange(issue)}>
+                                                                           <FiEdit2 />
+                                                                      </button>
+                                                                      <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(issue._id)} title="Delete">
+                                                                           <FiTrash2 />
+                                                                      </button>
+                                                                 </div>
+                                                            </td>
+                                                       </tr>
+                                                  );
+                                             })}
+                                        </tbody>
+                                   </table>
                               </div>
-                              <div className="text-xs text-gray-500 truncate max-w-xs">
-                                {issue.description || "No description"}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                            style={{
-                              backgroundColor: `${categoryInfo.color}20`,
-                              color: categoryInfo.color,
-                            }}
-                          >
-                            {categoryInfo.name}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <select
-                            className="text-sm border-0 p-0 bg-transparent focus:ring-2 focus:ring-accent2/50 rounded"
-                            value={issue.status}
-                            onChange={(e) =>
-                              updateIssueStatus(
-                                issue._id,
-                                e.target.value as
-                                  | "submitted"
-                                  | "acknowledged"
-                                  | "pending"
-                                  | "resolved"
-                              )
-                            }
-                          >
-                            <option value="submitted">Submitted</option>
-                            <option value="acknowledged">In Review</option>
-                            <option value="pending">In Progress</option>
-                            <option value="resolved">Resolved</option>
-                          </select>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {getPriorityBadge(issue.priority)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {issue.date
-                            ? new Date(issue.date).toLocaleDateString()
-                            : "No date"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-3">
-                            <button
-                              className="text-blue-600 hover:text-blue-900"
-                              title="View Details"
-                            >
-                              <FiEye />
-                            </button>
-                            <button
-                              className="text-yellow-600 hover:text-yellow-900"
-                              title="Edit"
-                              onClick={() => handleStatusChange(issue)}
-                            >
-                              <FiEdit2 />
-                            </button>
-                            <button
-                              className="text-red-600 hover:text-red-900"
-                              onClick={() => handleDelete(issue._id)}
-                              title="Delete"
-                            >
-                              <FiTrash2 />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {totalpages > 1 && (
-            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
-              <div className="text-sm text-gray-700">
-                Showing {(paginationData.page - 1) * paginationData.limit + 1}{" "}
-                to{" "}
-                {Math.min(
-                  paginationData.page * paginationData.limit,
-                  paginationData.total
-                )}{" "}
-                of {paginationData.total} issues
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  className={`px-3 py-2 border rounded-lg ${
-                    page === 1
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </button>
+                         )}
+     
+                         {totalpages > 1 && (
+                              <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
+                                   <div className="text-sm text-gray-700">
+                                        Showing {(paginationData.page - 1) * paginationData.limit + 1}{" "} to{" "} {Math.min(paginationData.page * paginationData.limit, paginationData.total)}{" "} of {paginationData.total} issues
+                                   </div>
+                                   <div className="flex items-center space-x-2">
+                                        <button className={`px-3 py-2 border rounded-lg ${page === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
+                                             onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
+                                        >
+                                             Previous
+                                        </button>
 
                 {/* Page Numbers */}
                 <div className="flex items-center space-x-1">
