@@ -153,181 +153,143 @@ const UsersPage = () => {
                               </div>
                          ) : (
                               <>
-                                   <div className="overflow-x-auto">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                             <thead className="bg-gray-50">
-                                                  <tr>
-                                                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                                                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verified</th>
-                                                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                                  </tr>
-                                             </thead>
+                                        <div className="overflow-x-auto">
+                                             <table className="min-w-full divide-y divide-gray-200">
+                                                  <thead className="bg-gray-50">
+                                                       <tr>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verified</th>
+                                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                       </tr>
+                                                  </thead>
                  
-                                             <tbody className="bg-white divide-y divide-gray-200">
-                                                  {users.map((user) => (
-                                                       <tr key={user._id} className="hover:bg-gray-50">
-                                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                                 <div className="flex items-center">
-                                                                      <div className="shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                                                           <span className="text-gray-600">{user.fullName.charAt(0)}</span>
+                                                  <tbody className="bg-white divide-y divide-gray-200">
+                                                       {users.map((user) => (
+                                                            <tr key={user._id} className="hover:bg-gray-50">
+                                                                 <td className="px-6 py-4 whitespace-nowrap">
+                                                                      <div className="flex items-center">
+                                                                           <div className="shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                                                <span className="text-gray-600">{user.fullName.charAt(0)}</span>
+                                                                           </div>
+                                                                           <div className="ml-4">
+                                                                                <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
+                                                                           </div>
                                                                       </div>
-                                                                      <div className="ml-4">
-                                                                           <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
+                                                                 </td>
+                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.phone || 'N/A'}</td>
+                                                                 <td className="px-6 py-4 whitespace-nowrap">
+                                                                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                                           user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                                                                           user.role === 'agency_officer' ? 'bg-blue-100 text-blue-800' :
+                                                                           'bg-green-100 text-green-800'
+                                                                      }`}>
+                                                                           {user.role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                                                      </span>
+                                                                 </td>
+                                                                 <td className="px-6 py-4 whitespace-nowrap">
+                                                                      <span onClick={() => handleStatusToggle(user._id, user.isActive)}
+                                                                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
+                                                                                user.isActive ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                                                           }`}
+                                                                      >
+                                                                           {user.isActive ? 'Active' : 'Inactive'}
+                                                                      </span>
+                                                                 </td>
+                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(user.createdAt).toLocaleDateString()}</td>
+                                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                                      <div className="flex justify-end space-x-3">
+                                                                           <Link href={`/admin/users/${user._id}`} className="text-blue-600 hover:text-blue-900" title="View"> <FiEye /> </Link>
+                                                                           <Link href={`/admin/users/${user._id}/edit`} className="text-yellow-600 hover:text-yellow-900" title="Edit"> <FiEdit2 /> </Link>
+                                                                           <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(user._id)} title="Delete"> <FiTrash2 /> </button>
                                                                       </div>
-                                                                 </div>
-                                                            </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.phone || 'N/A'}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                                      user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                                                                      user.role === 'agency_officer' ? 'bg-blue-100 text-blue-800' :
-                                                                      'bg-green-100 text-green-800'
-                                                                 }`}>
-                                                                      {user.role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                                                                 </span>
-                                                            </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span 
-                            onClick={() => handleStatusToggle(user._id, user.isActive)}
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
-                              user.isActive 
-                                ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                                : 'bg-red-100 text-red-800 hover:bg-red-200'
-                            }`}
-                          >
-                            {user.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-3">
-                            <Link 
-                              href={`/admin/users/${user._id}`}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="View"
-                            >
-                              <FiEye />
-                            </Link>
-                            <Link
-                              href={`/admin/users/${user._id}/edit`}
-                              className="text-yellow-600 hover:text-yellow-900"
-                              title="Edit"
-                            >
-                              <FiEdit2 />
-                            </Link>
-                            <button 
-                              className="text-red-600 hover:text-red-900"
-                              onClick={() => handleDelete(user._id)}
-                              title="Delete"
-                            >
-                              <FiTrash2 />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                                                                 </td>
+                                                            </tr>
+                                                       ))}
+                                                  </tbody>
+                                             </table>
+                                        </div>
 
-              {paginationData.totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
-                  <div className="text-sm text-gray-700">
-                    Showing {((paginationData.page - 1) * paginationData.limit) + 1} to {Math.min(paginationData.page * paginationData.limit, paginationData.total)} of {paginationData.total} users
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button 
-                      className={`px-3 py-2 border rounded-lg ${page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                    >
-                      Previous
-                    </button>
+                                        {paginationData.totalPages > 1 && (
+                                             <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
+                                                  <div className="text-sm text-gray-700">
+                                                       Showing {((paginationData.page - 1) * paginationData.limit) + 1} to {Math.min(paginationData.page * paginationData.limit, paginationData.total)} of {paginationData.total} users
+                                                  </div>
+                                                  <div className="flex items-center space-x-2">
+                                                       <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                                                            className={`px-3 py-2 border rounded-lg ${page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                                                       >
+                                                            Previous
+                                                       </button>
+                                                  
+                                                  {/* Page Numbers */}
+                                                  <div className="flex items-center space-x-1">
+                                                       {(() => {
+                                                            const pages = [];
+                                                            const maxVisiblePages = 5;
+                                                            let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+                                                            let endPage = Math.min(paginationData.totalPages, startPage + maxVisiblePages - 1);
+                                                            
+                                                            if (endPage - startPage + 1 < maxVisiblePages) {
+                                                                 startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                                                            }
+                              
+                                                            // Show first page if not in range
+                                                            if (startPage > 1) {
+                                                                 pages.push(
+                                                                      <button key={1} onClick={() => setPage(1)}
+                                                                           className={`px-3 py-2 border rounded ${page === 1 ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}
+                                                                      >
+                                                                           1
+                                                                      </button>
+                                                                 );
+                                                                 if (startPage > 2) {
+                                                                      pages.push(<span key="ellipsis-start" className="px-2">...</span>);
+                                                                 }
+                                                            }
+                         
+                                                            // Show page range
+                                                            for (let i = startPage; i <= endPage; i++) {
+                                                                 pages.push(
+                                                                      <button key={i} onClick={() => setPage(i)} className={`px-3 py-2 border rounded ${page === i ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}>{i}</button>
+                                                                 );
+                                                            }
+                         
+                                                            // Show last page if not in range
+                                                            if (endPage < paginationData.totalPages) {
+                                                                 if (endPage < paginationData.totalPages - 1) {
+                                                                      pages.push(<span key="ellipsis-end" className="px-2">...</span>);
+                                                                 }
+                                                                 pages.push(
+                                                                      <button key={paginationData.totalPages} className={`px-3 py-2 border rounded ${page === paginationData.totalPages ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`} onClick={() => setPage(paginationData.totalPages)}>
+                                                                           {paginationData.totalPages}
+                                                                      </button>
+                                                                 );
+                                                            }
+                                                            
+                                                            return pages;
+                                                       })()}
+                                                  </div>
                     
-                    {/* Page Numbers */}
-                    <div className="flex items-center space-x-1">
-                      {(() => {
-                        const pages = [];
-                        const maxVisiblePages = 5;
-                        let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
-                        let endPage = Math.min(paginationData.totalPages, startPage + maxVisiblePages - 1);
-                        
-                        if (endPage - startPage + 1 < maxVisiblePages) {
-                          startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                        }
-                        
-                        // Show first page if not in range
-                        if (startPage > 1) {
-                          pages.push(
-                            <button
-                              key={1}
-                              className={`px-3 py-2 border rounded ${page === 1 ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}
-                              onClick={() => setPage(1)}
-                            >
-                              1
-                            </button>
-                          );
-                          if (startPage > 2) {
-                            pages.push(<span key="ellipsis-start" className="px-2">...</span>);
-                          }
-                        }
-                        
-                        // Show page range
-                        for (let i = startPage; i <= endPage; i++) {
-                          pages.push(
-                            <button
-                              key={i}
-                              className={`px-3 py-2 border rounded ${page === i ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}
-                              onClick={() => setPage(i)}
-                            >
-                              {i}
-                            </button>
-                          );
-                        }
-                        
-                        // Show last page if not in range
-                        if (endPage < paginationData.totalPages) {
-                          if (endPage < paginationData.totalPages - 1) {
-                            pages.push(<span key="ellipsis-end" className="px-2">...</span>);
-                          }
-                          pages.push(
-                            <button
-                              key={paginationData.totalPages}
-                              className={`px-3 py-2 border rounded ${page === paginationData.totalPages ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}
-                              onClick={() => setPage(paginationData.totalPages)}
-                            >
-                              {paginationData.totalPages}
-                            </button>
-                          );
-                        }
-                        
-                        return pages;
-                      })()}
+                                                  <button 
+                                                  className={`px-3 py-2 border rounded-lg ${page === paginationData.totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                                                  onClick={() => setPage(p => Math.min(paginationData.totalPages, p + 1))} disabled={page === paginationData.totalPages}
+                                                  >
+                                                       Next
+                                                  </button>
+                                             </div>
+                                        </div>
+                                   )}
+                              </>
+                         )}
                     </div>
-                    
-                    <button 
-                      className={`px-3 py-2 border rounded-lg ${page === paginationData.totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                      onClick={() => setPage(p => Math.min(paginationData.totalPages, p + 1))}
-                      disabled={page === paginationData.totalPages}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    </AdminLayout>
-  );
+               </div>
+          </AdminLayout>
+     );
 };
 
 export default UsersPage;
