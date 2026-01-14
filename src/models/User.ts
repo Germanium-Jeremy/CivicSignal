@@ -6,6 +6,7 @@ export interface IUser extends Document {
     email: string;
     phone: string;
     password: string;
+    profileImage?: string;
     isEmailVerified: boolean;
     isPhoneVerified: boolean;
     emailVerificationCode?: string;
@@ -61,6 +62,11 @@ const UserSchema = new Schema<IUser>({
         unique: true,
         trim: true,
         match: [/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number']
+    },
+    profileImage: {
+        type: String,
+        default: null,
+        trim: true,
     },
     password: {
         type: String,

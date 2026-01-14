@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
         fullName: user.fullName,
         email: user.email,
         phone: user.phone,
+        profileImage: user.profileImage,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
@@ -115,7 +116,7 @@ export async function PATCH(request: NextRequest) {
     const updateData = await request.json();
     
     // Fields that can be updated
-    const allowedFields = ['fullName', 'phone'];
+    const allowedFields = ['fullName', 'phone', 'profileImage'];
     const updates: any = {};
     
     allowedFields.forEach(field => {
@@ -153,6 +154,7 @@ export async function PATCH(request: NextRequest) {
         fullName: user.fullName,
         email: user.email,
         phone: user.phone,
+        profileImage: user.profileImage,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
