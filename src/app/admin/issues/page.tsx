@@ -305,173 +305,111 @@ const IssuesPage = () => {
                                              Previous
                                         </button>
 
-                {/* Page Numbers */}
-                <div className="flex items-center space-x-1">
-                  {(() => {
-                    const pages = [];
-                    const maxVisiblePages = 5;
-                    let startPage = Math.max(
-                      1,
-                      page - Math.floor(maxVisiblePages / 2)
-                    );
-                    let endPage = Math.min(
-                      totalpages,
-                      startPage + maxVisiblePages - 1
-                    );
+                                        {/* Page Numbers */}
+                                        <div className="flex items-center space-x-1">
+                                             {(() => {
+                                                  const pages = [];
+                                                  const maxVisiblePages = 5;
+                                                  let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+                                                  let endPage = Math.min(totalpages, startPage + maxVisiblePages - 1);
 
-                    if (endPage - startPage + 1 < maxVisiblePages) {
-                      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                    }
+                                                  if (endPage - startPage + 1 < maxVisiblePages) {
+                                                       startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                                                  }
 
-                    // Show first page if not in range
-                    if (startPage > 1) {
-                      pages.push(
-                        <button
-                          key={1}
-                          className={`px-3 py-2 border rounded ${
-                            page === 1
-                              ? "bg-blue-50 border-blue-500 text-blue-600"
-                              : "hover:bg-gray-50"
-                          }`}
-                          onClick={() => setPage(1)}
-                        >
-                          1
-                        </button>
-                      );
-                      if (startPage > 2) {
-                        pages.push(
-                          <span key="ellipsis-start" className="px-2">
-                            ...
-                          </span>
-                        );
-                      }
-                    }
+                                                  // Show first page if not in range
+                                                  if (startPage > 1) {
+                                                       pages.push(
+                                                            <button key={1} className={`px-3 py-2 border rounded ${page === 1 ? "bg-blue-50 border-blue-500 text-blue-600" : "hover:bg-gray-50" }`} onClick={() => setPage(1)}>1</button>
+                                                       );
 
-                    // Show page range
-                    for (let i = startPage; i <= endPage; i++) {
-                      pages.push(
-                        <button
-                          key={i}
-                          className={`px-3 py-2 border rounded ${
-                            page === i
-                              ? "bg-blue-50 border-blue-500 text-blue-600"
-                              : "hover:bg-gray-50"
-                          }`}
-                          onClick={() => setPage(i)}
-                        >
-                          {i}
-                        </button>
-                      );
-                    }
+                                                       if (startPage > 2) {
+                                                            pages.push(
+                                                                 <span key="ellipsis-start" className="px-2">...</span>
+                                                            );
+                                                       }
+                                                  }
 
-                    // Show last page if not in range
-                    if (endPage < totalpages) {
-                      if (endPage < totalpages - 1) {
-                        pages.push(
-                          <span key="ellipsis-end" className="px-2">
-                            ...
-                          </span>
-                        );
-                      }
-                      pages.push(
-                        <button
-                          key={totalpages}
-                          className={`px-3 py-2 border rounded ${
-                            page === totalpages
-                              ? "bg-blue-50 border-blue-500 text-blue-600"
-                              : "hover:bg-gray-50"
-                          }`}
-                          onClick={() => setPage(totalpages)}
-                        >
-                          {totalpages}
-                        </button>
-                      );
-                    }
+                                                  // Show page range
+                                                  for (let i = startPage; i <= endPage; i++) {
+                                                       pages.push(
+                                                            <button key={i} className={`px-3 py-2 border rounded ${page === i ? "bg-blue-50 border-blue-500 text-blue-600" : "hover:bg-gray-50" }`} onClick={() => setPage(i)}>{i}</button>
+                                                       );
+                                                  }
 
-                    return pages;
-                  })()}
-                </div>
+                                                  // Show last page if not in range
+                                                  if (endPage < totalpages) {
+                                                       if (endPage < totalpages - 1) {
+                                                            pages.push(
+                                                                 <span key="ellipsis-end" className="px-2">...</span>
+                                                            );
+                                                       }
+                                                       pages.push(
+                                                            <button key={totalpages} className={`px-3 py-2 border rounded ${page === totalpages ? "bg-blue-50 border-blue-500 text-blue-600" : "hover:bg-gray-50"}`} onClick={() => setPage(totalpages)}>{totalpages}</button>
+                                                       );
+                                                  }
 
-                <button
-                  className={`px-3 py-2 border rounded-lg ${
-                    page === totalpages
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => setPage((p) => Math.min(totalpages, p + 1))}
-                  disabled={page === totalpages}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+                                                  return pages;
+                                             })()}
+                                        </div>
 
-      {/* Status Change Modal */}
-      {statusModalOpen && selectedIssue && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold mb-4">Change Issue Status</h3>
+                                        <button className={`px-3 py-2 border rounded-lg ${page === totalpages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`} onClick={() => setPage((p) => Math.min(totalpages, p + 1))}
+                                             disabled={page === totalpages}
+                                        >
+                                             Next
+                                        </button>
+                                   </div>
+                              </div>
+                         )}
+                    </div>
+               </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                New Status
-              </label>
-              <select
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent2/50"
-                value={newStatus}
-                onChange={(e) =>
-                  setNewStatus(
-                    e.target.value as
-                      | "submitted"
-                      | "acknowledged"
-                      | "pending"
-                      | "resolved"
-                  )
-                }
-              >
-                <option value="submitted">Submitted</option>
-                <option value="acknowledged">In Review</option>
-                <option value="pending">In Progress</option>
-                <option value="resolved">Resolved</option>
-              </select>
-            </div>
+               {/* Status Change Modal */}
+               {statusModalOpen && selectedIssue && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                         <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                              <h3 className="text-lg font-semibold mb-4">Change Issue Status</h3>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Comment (optional)
-              </label>
-              <textarea
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent2/50"
-                rows={3}
-                placeholder="Add a comment about this status change..."
-                value={statusComment}
-                onChange={(e) => setStatusComment(e.target.value)}
-              />
-            </div>
+                              <div className="mb-4">
+                                   <label className="block text-sm font-medium text-gray-700 mb-2">New Status</label>
+                                   <select
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent2/50"
+                                        value={newStatus} onChange={(e) => setNewStatus(e.target.value as | "submitted" | "acknowledged" | "pending" | "resolved")}
+                                   >
+                                        <option value="submitted">Submitted</option>
+                                        <option value="acknowledged">In Review</option>
+                                        <option value="pending">In Progress</option>
+                                        <option value="resolved">Resolved</option>
+                                   </select>
+                              </div>
 
-            <div className="flex justify-end space-x-3">
-              <button
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                onClick={() => setStatusModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent2/90 disabled:opacity-50"
-                onClick={() => updateIssueStatus(selectedIssue._id, newStatus)}
-                disabled={isUpdatingStatus || !newStatus}
-              >
-                {isUpdatingStatus ? "Updating..." : "Update Status"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </AdminLayout>
-  );
+                              <div className="mb-4">
+                                   <label className="block text-sm font-medium text-gray-700 mb-2">Comment (optional)</label>
+                                   <textarea
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent2/50"
+                                        rows={3} placeholder="Add a comment about this status change..." value={statusComment} onChange={(e) => setStatusComment(e.target.value)}
+                                   />
+                              </div>
+
+                              <div className="flex justify-end space-x-3">
+                                   <button
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                        onClick={() => setStatusModalOpen(false)}
+                                   >
+                                        Cancel
+                                   </button>
+                                   <button
+                                        className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent2/90 disabled:opacity-50"
+                                        onClick={() => updateIssueStatus(selectedIssue._id, newStatus)} disabled={isUpdatingStatus || !newStatus}
+                                   >
+                                        {isUpdatingStatus ? "Updating..." : "Update Status"}
+                                   </button>
+                              </div>
+                         </div>
+                    </div>
+               )}
+          </AdminLayout>
+     );
 };
 
 export default IssuesPage;
