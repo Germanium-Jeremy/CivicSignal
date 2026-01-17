@@ -50,10 +50,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                success: true,
                message: "Agency approved successfully",
                agency: {
-               _id: agency._id,
-               name: agency.name,
-               verificationStatus: agency.verificationStatus,
-               isVerified: agency.isVerified,
+                    _id: agency._id,
+                    name: agency.name,
+                    verificationStatus: agency.verificationStatus,
+                    isVerified: agency.isVerified,
                },
           });
      } catch (error) {
