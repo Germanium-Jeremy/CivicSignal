@@ -1,62 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server';
-import User from '@/models/User';
-import { requireAuth, requireRole } from '@/lib/middleware';
-import connectDB from '@/lib/mongodb';
+import { NextRequest, NextResponse } from "next/server";
+import User from "@/models/User";
+import { requireAuth, requireRole } from "@/lib/middleware";
+import connectDB from "@/lib/mongodb";
 
 // PATCH /api/admin/users/[id]/status - Toggle user status
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    await connectDB();
-    
-    // Authentication and authorization
-    const authResult = await requireAuth(request);
-    if (!authResult.success) {
-      return NextResponse.json({ error: authResult.error || 'Authentication failed' }, { status: authResult.status || 500 });
-    }
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+     try {
+          await connectDB();
 
-    const roleCheck = await requireRole(request, ['admin']);
-    if (!roleCheck.success) {
-      return NextResponse.json({ error: roleCheck.error || 'Authorization failed' }, { status: roleCheck.status || 500 });
-    }
+          // Authentication and authorization
+          const authResult = await requireAuth(request);
+          if (!authResult.success) {
+               return NextResponse.json({ error: authResult.error || "Authentication failed" }, { status: authResult.status || 500 });
+          }
 
-    // Await params in Next.js 15+
-    const { id } = await params;
+          const roleCheck = await requireRole(request, ["admin"]);
+          if (!roleCheck.success) {
+               return NextResponse.json({ error: roleCheck.error || "Authorization failed" }, { status: roleCheck.status || 500 });
+          }
 
-    const { isActive } = await request.json();
+          // Await params in Next.js 15+
+          const { id } = await params;
 
-    if (typeof isActive !== 'boolean') {
-      return NextResponse.json(
-        { error: 'isActive must be a boolean value' },
-        { status: 400 }
-      );
-    }
+          const { isActive } = await request.json();
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      { isActive },
-      { new: true, runValidators: true }
-    ).select('-password').lean();
+          if (typeof isActive !== "boolean") {
+               return NextResponse.json({ error: "isActive must be a boolean value" }, { status: 400 });
+          }
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
+          const user = await User.findByIdAndUpdate(id, { isActive }, { new: true, runValidators: true }).select("-password").lean();
 
-    return NextResponse.json({
-      success: true,
-      data: user
-    });
+          if (!user) {
+               return NextResponse.json({ error: "User not found" }, { status: 404 });
+          }
 
-  } catch (error) {
-    console.error('Error updating user status:', error);
-    return NextResponse.json(
-      { error: 'Failed to update user status' },
-      { status: 500 }
-    );
-  }
+          return NextResponse.json({ success: true, data: user });
+     } catch (error) {
+          console.error("Error updating user status:", error);
+          return NextResponse.json({ error: "Failed to update user status" }, { status: 500 });
+     }
 }
