@@ -1,138 +1,111 @@
-import { NextRequest, NextResponse } from 'next/server';
-import User from '@/models/User';
-import { requireAuth, requireRole } from '@/lib/middleware';
-import connectDB from '@/lib/mongodb';
+import { NextRequest, NextResponse } from "next/server";
+import User from "@/models/User";
+import { requireAuth, requireRole } from "@/lib/middleware";
+import connectDB from "@/lib/mongodb";
 
 // GET /api/admin/users - Get all users with pagination and filters
 export async function GET(request: NextRequest) {
-  try {
-    await connectDB();
-    
-    // Authentication and authorization
-    const authResult = await requireAuth(request);
-    if (!authResult.success) {
-      return NextResponse.json({ error: authResult.error || 'Authentication failed' }, { status: authResult.status || 500 });
-    }
+     try {
+          await connectDB();
 
-    const roleCheck = await requireRole(request, ['admin']);
-    if (!roleCheck.success) {
-      return NextResponse.json({ error: roleCheck.error || 'Authorization failed' }, { status: roleCheck.status || 500 });
-    }
+          // Authentication and authorization
+          const authResult = await requireAuth(request);
+          if (!authResult.success) {
+               return NextResponse.json({ error: authResult.error || "Authentication failed" }, { status: authResult.status || 500 });
+          }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search');
-    const status = searchParams.get('status');
-    const role = searchParams.get('role');
+          const roleCheck = await requireRole(request, ["admin"]);
+          if (!roleCheck.success) {
+               return NextResponse.json({ error: roleCheck.error || "Authorization failed" }, { status: roleCheck.status || 500 });
+          }
 
-    const skip = (page - 1) * limit;
+          const { searchParams } = new URL(request.url);
+          const page = parseInt(searchParams.get("page") || "1");
+          const limit = parseInt(searchParams.get("limit") || "10");
+          const search = searchParams.get("search");
+          const status = searchParams.get("status");
+          const role = searchParams.get("role");
 
-    // Build query
-    const query: any = {};
-    
-    if (search && search !== 'undefined' && search.trim() !== '') {
-      query.$or = [
-        { fullName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } }
-      ];
-    }
+          const skip = (page - 1) * limit;
 
-    if (status && status !== 'undefined' && status.trim() !== '') {
-      query.isActive = status === 'active';
-    }
+          // Build query
+          const query: any = {};
 
-    if (role && role !== 'undefined' && role.trim() !== '' && role !== 'all') {
-      query.role = role;
-    }
+          if (search && search !== "undefined" && search.trim() !== "") {
+               query.$or = [
+                    { fullName: { $regex: search, $options: "i" } },
+                    { email: { $regex: search, $options: "i" } },
+                    { phone: { $regex: search, $options: "i" } },
+               ];
+          }
 
-    // Execute query (same approach as working issues API)
-    const users = await User.find(query)
-      .select('-password')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+          if (status && status !== "undefined" && status.trim() !== "") {
+               query.isActive = status === "active";
+          }
 
-    const total = await User.countDocuments(query);
+          if (role && role !== "undefined" && role.trim() !== "" && role !== "all") {
+               query.role = role;
+          }
 
-    const totalPages = Math.ceil(total / limit);
+          // Execute query (same approach as working issues API)
+          const users = await User.find(query).select("-password").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
 
-    return NextResponse.json({
-      success: true,
-      message: 'Users retrieved successfully',
-      data: {
-        users,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
-      },
-    });
+          const total = await User.countDocuments(query);
 
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
-    );
-  }
+          const totalPages = Math.ceil(total / limit);
+
+          return NextResponse.json({
+               success: true,
+               message: "Users retrieved successfully",
+               data: {
+                    users,
+                    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+               },
+          });
+     } catch (error) {
+          console.error("Error fetching users:", error);
+          return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+     }
 }
 
 // POST /api/admin/users - Create new user
 export async function POST(request: NextRequest) {
-  try {
-    await connectDB();
-    
-    // Authentication and authorization
-    const authResult = await requireAuth(request);
-    if (!authResult.success) {
-      return NextResponse.json({ error: authResult.error || 'Authentication failed' }, { status: authResult.status || 500 });
-    }
+     try {
+          await connectDB();
 
-    const roleCheck = await requireRole(request, ['admin']);
-    if (!roleCheck.success) {
-      return NextResponse.json({ error: roleCheck.error || 'Authorization failed' }, { status: roleCheck.status || 500 });
-    }
+          // Authentication and authorization
+          const authResult = await requireAuth(request);
+          if (!authResult.success) {
+               return NextResponse.json({ error: authResult.error || "Authentication failed" }, { status: authResult.status || 500 });
+          }
 
-    const userData = await request.json();
+          const roleCheck = await requireRole(request, ["admin"]);
+          if (!roleCheck.success) {
+               return NextResponse.json({ error: roleCheck.error || "Authorization failed" }, { status: roleCheck.status || 500 });
+          }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [
-        { email: userData.email },
-        { phone: userData.phone }
-      ]
-    });
+          const userData = await request.json();
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'User with this email or phone already exists' },
-        { status: 400 }
-      );
-    }
+          // Check if user already exists
+          const existingUser = await User.findOne({
+               $or: [{ email: userData.email }, { phone: userData.phone }],
+          });
 
-    // Create new user
-    const user = new User(userData);
-    await user.save();
+          if (existingUser) {
+               return NextResponse.json({ error: "User with this email or phone already exists" }, { status: 400 });
+          }
 
-    // Remove password from response
-    const userResponse = user.toObject();
-    delete userResponse.password;
+          // Create new user
+          const user = new User(userData);
+          await user.save();
 
-    return NextResponse.json({
-      success: true,
-      data: userResponse
-    });
+          // Remove password from response
+          const userResponse = user.toObject();
+          delete userResponse.password;
 
-  } catch (error) {
-    console.error('Error creating user:', error);
-    return NextResponse.json(
-      { error: 'Failed to create user' },
-      { status: 500 }
-    );
-  }
+          return NextResponse.json({ success: true, data: userResponse });
+     } catch (error) {
+          console.error("Error creating user:", error);
+          return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+     }
 }
