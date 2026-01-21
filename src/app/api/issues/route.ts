@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields (location is now optional)
     const { title, description, category, location, photos, deviceInfo } = body;
 
-    if (!category || !deviceInfo) {
+    if (!category) {
       return NextResponse.json(
         {
           success: false,
