@@ -15,6 +15,8 @@ import sharp from 'sharp';
 
 export const runtime = 'nodejs';
 
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
@@ -96,6 +98,18 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
         continue;
       }
 
+      // Validate MIME type
+      if (!ALLOWED_MIME_TYPES.includes(image.mimeType.toLowerCase())) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Invalid file type',
+            message: 'Only JPEG, JPG, and PNG images are allowed',
+          },
+          { status: 400 }
+        );
+      }
+
       // Remove data URL prefix if present (data:image/jpeg;base64,...)
       const base64Data = image.data.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
@@ -168,9 +182,16 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
         continue;
       }
 
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        continue;
+      // Validate MIME type
+      if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Invalid file type',
+            message: `File ${file.name} is not a valid image type. Only JPEG, JPG, and PNG images are allowed`,
+          },
+          { status: 400 }
+        );
       }
 
       // Check file size (max 10MB)
@@ -216,9 +237,9 @@ async function processAndSaveImage(buffer: Buffer, userId: string, mimeType: str
     const filename = `${userId}-${timestamp}-${random}`;
     const extension = mimeType.split('/')[1] || 'jpg';
 
-    // Directories under Next public: /public/media/issues
-    const uploadDir = join(process.cwd(), 'public', 'media', 'issues');
-    const thumbnailDir = join(process.cwd(), 'public', 'media', 'issues', 'thumbnails');
+    // Directories under Next public: /public/media/supportive_evidence
+    const uploadDir = join(process.cwd(), 'public', 'media', 'supportive_evidence');
+    const thumbnailDir = join(process.cwd(), 'public', 'media', 'supportive_evidence', 'thumbnails');
 
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
@@ -256,10 +277,10 @@ async function processAndSaveImage(buffer: Buffer, userId: string, mimeType: str
     console.log('Saved image:', imagePath);
     console.log('Saved thumbnail:', thumbnailPath);
 
-    // URLs relative to Next public (serve as https://<host>/media/issues/...)
+    // URLs relative to Next public (serve as https://<host>/media/supportive_evidence/...)
     return {
-      url: `/media/issues/${filename}.jpg`,
-      thumbnailUrl: `/media/issues/thumbnails/${filename}.jpg`,
+      url: `/media/supportive_evidence/${filename}.jpg`,
+      thumbnailUrl: `/media/supportive_evidence/thumbnails/${filename}.jpg`,
       size: compressedImage.length,
       mimeType: 'image/jpeg',
     };
