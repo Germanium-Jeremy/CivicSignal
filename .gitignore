@@ -43,3 +43,5 @@ next-env.d.ts
 
 /civic-signal
 /CivicSignal
+public/media/user_profiles/*
+public/media/supportive_evidence/*
