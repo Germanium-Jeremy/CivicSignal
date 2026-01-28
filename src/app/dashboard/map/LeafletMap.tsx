@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import * as L from "leaflet";
 import { useEffect } from "react";
-import "leaflet/dist/leaflet.css";
+// import "leaflet/dist/leaflet.css";
 import { IconType } from "react-icons";
 import { renderToString } from "react-dom/server";
 
