@@ -13,7 +13,17 @@ export default function Download() {
     downloadmobile.target = "_black";
   };
 
-  const handleDownloadIOS = () => {};
+  const handleDownloadIOS = () => {
+    alert("iOS app is coming soon!");
+  };
+
+  const handleDownloadIOSAppleStore = () => {
+    alert("iOS app is coming soon on Apple Store!");
+  };
+
+  const handleDownloadAndroidStore = () => {
+    alert("Android app is coming soon on Play Store!");
+  };
 
   return (
     <section className="px-4 md:px-8 lg:px-30 py-12 md:py-16 flex flex-col lg:flex-row gap-8 lg:gap-20 items-center bg-white">
