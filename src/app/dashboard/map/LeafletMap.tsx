@@ -169,7 +169,7 @@ export default function LeafletMap({
                 <button
                   onClick={() => {
                     window.open(
-                      `/dashboard/issues/details/${issue.id}`,
+                      `/dashboard/issues/details?issue_id=${issue.id}`,
                       "_blank",
                     );
                   }}
