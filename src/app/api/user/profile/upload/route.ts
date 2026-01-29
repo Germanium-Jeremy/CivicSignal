@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/utils/auth';
-import { writeFile, mkdir, unlink } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
-import sharp from 'sharp';
-import connectDB from '@/lib/mongodb';
-import User from '@/models/User';
+import { NextRequest, NextResponse } from "next/server";
+import { verifyAuth } from "@/lib/utils/auth";
+import { put } from "@vercel/blob";
+import sharp from "sharp";
+import connectDB from "@/lib/mongodb";
+import User from "@/models/User";
+import { join } from "path";
+import { existsSync } from "fs";
+import { unlink } from "fs/promises";
 
 /**
  * POST /api/user/profile/upload
@@ -15,9 +16,9 @@ import User from '@/models/User';
  * Only accepts jpeg, jpg, png formats
  */
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function POST(request: NextRequest) {
@@ -25,49 +26,52 @@ export async function POST(request: NextRequest) {
     // Verify authentication
     const authResult = verifyAuth(request);
     if (!authResult.isAuthenticated) {
-      return authResult.error || NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
+      return (
+        authResult.error ||
+        NextResponse.json(
+          { success: false, error: "Authentication required" },
+          { status: 401 },
+        )
       );
     }
 
     const userId = authResult.userId;
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'User ID not found' },
-        { status: 401 }
+        { success: false, error: "User ID not found" },
+        { status: 401 },
       );
     }
 
     await connectDB();
 
-    const contentType = request.headers.get('content-type');
-    
-    if (contentType?.includes('application/json')) {
+    const contentType = request.headers.get("content-type");
+
+    if (contentType?.includes("application/json")) {
       // Handle base64 image upload (from mobile apps)
       return handleBase64Upload(request, userId);
-    } else if (contentType?.includes('multipart/form-data')) {
+    } else if (contentType?.includes("multipart/form-data")) {
       // Handle form data upload (from web)
       return handleFormDataUpload(request, userId);
     } else {
       return NextResponse.json(
         {
           success: false,
-          error: 'Unsupported content type',
-          message: 'Please send images as base64 JSON or multipart/form-data',
+          error: "Unsupported content type",
+          message: "Please send images as base64 JSON or multipart/form-data",
         },
-        { status: 415 }
+        { status: 415 },
       );
     }
   } catch (error) {
-    console.error('Profile image upload error:', error);
+    console.error("Profile image upload error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to upload image',
-        message: 'An error occurred while uploading the image',
+        error: "Failed to upload image",
+        message: "An error occurred while uploading the image",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -84,10 +88,10 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
       return NextResponse.json(
         {
           success: false,
-          error: 'No image provided',
-          message: 'Please provide an image with data and mimeType',
+          error: "No image provided",
+          message: "Please provide an image with data and mimeType",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -96,26 +100,26 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Invalid file type',
-          message: 'Only JPEG, JPG, and PNG images are allowed',
+          error: "Invalid file type",
+          message: "Only JPEG, JPG, and PNG images are allowed",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Remove data URL prefix if present (data:image/jpeg;base64,...)
-    const base64Data = image.data.replace(/^data:image\/\w+;base64,/, '');
-    const buffer = Buffer.from(base64Data, 'base64');
+    const base64Data = image.data.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
 
     // Check file size
     if (buffer.length > MAX_FILE_SIZE) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Image too large',
-          message: 'Maximum image size is 10MB',
+          error: "Image too large",
+          message: "Maximum image size is 10MB",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -127,12 +131,12 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
     if (user && user.profileImage) {
       // Delete old profile image if it exists
       try {
-        const oldImagePath = join(process.cwd(), 'public', user.profileImage);
+        const oldImagePath = join(process.cwd(), "public", user.profileImage);
         if (existsSync(oldImagePath)) {
           await unlink(oldImagePath);
         }
       } catch (err) {
-        console.warn('Failed to delete old profile image:', err);
+        console.warn("Failed to delete old profile image:", err);
       }
     }
 
@@ -141,7 +145,7 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
 
     return NextResponse.json({
       success: true,
-      message: 'Profile image uploaded successfully',
+      message: "Profile image uploaded successfully",
       data: {
         url: result.url,
         size: result.size,
@@ -149,7 +153,7 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
       },
     });
   } catch (error) {
-    console.error('Base64 upload error:', error);
+    console.error("Base64 upload error:", error);
     throw error;
   }
 }
@@ -160,16 +164,16 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
 async function handleFormDataUpload(request: NextRequest, userId: string) {
   try {
     const formData = await request.formData();
-    const file = formData.get('image');
+    const file = formData.get("image");
 
     if (!file || !(file instanceof File)) {
       return NextResponse.json(
         {
           success: false,
-          error: 'No file provided',
-          message: 'Please select an image',
+          error: "No file provided",
+          message: "Please select an image",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -178,10 +182,10 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Invalid file type',
-          message: 'Only JPEG, JPG, and PNG images are allowed',
+          error: "Invalid file type",
+          message: "Only JPEG, JPG, and PNG images are allowed",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -190,10 +194,10 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
       return NextResponse.json(
         {
           success: false,
-          error: 'File too large',
+          error: "File too large",
           message: `${file.name} is too large. Maximum size is 10MB`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -205,12 +209,12 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
     if (user && user.profileImage) {
       // Delete old profile image if it exists
       try {
-        const oldImagePath = join(process.cwd(), 'public', user.profileImage);
+        const oldImagePath = join(process.cwd(), "public", user.profileImage);
         if (existsSync(oldImagePath)) {
           await unlink(oldImagePath);
         }
       } catch (err) {
-        console.warn('Failed to delete old profile image:', err);
+        console.warn("Failed to delete old profile image:", err);
       }
     }
 
@@ -219,7 +223,7 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
 
     return NextResponse.json({
       success: true,
-      message: 'Profile image uploaded successfully',
+      message: "Profile image uploaded successfully",
       data: {
         url: result.url,
         size: result.size,
@@ -227,71 +231,50 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
       },
     });
   } catch (error) {
-    console.error('Form data upload error:', error);
+    console.error("Form data upload error:", error);
     throw error;
   }
 }
 
 /**
- * Process, compress, and save profile image
+ * Process, compress, and save profile image to Vercel Blob Storage
  */
-async function processAndSaveImage(buffer: Buffer, userId: string, mimeType: string) {
+async function processAndSaveImage(
+  buffer: Buffer,
+  userId: string,
+  mimeType: string,
+) {
   try {
     // Generate unique filename
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(7);
-    const filename = `${userId}-${timestamp}-${random}`;
-    
-    // Determine extension based on mime type
-    let extension = 'jpg';
-    if (mimeType.includes('png')) {
-      extension = 'png';
-    } else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
-      extension = 'jpg';
-    }
-
-    // Directory: /public/media/user_profiles
-    const uploadDir = join(process.cwd(), 'public', 'media', 'user_profiles');
-
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-      console.log('Created dir:', uploadDir);
-    }
+    const filename = `${userId}-${timestamp}-${random}.jpg`;
 
     // Process image with sharp
     let processedImage: Buffer;
     try {
-      if (extension === 'png') {
-        // For PNG, preserve transparency but compress
-        processedImage = await sharp(buffer)
-          .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-          .png({ quality: 85, compressionLevel: 9 })
-          .toBuffer();
-      } else {
-        // For JPEG, convert and compress
-        processedImage = await sharp(buffer)
-          .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-          .jpeg({ quality: 85 })
-          .toBuffer();
-        extension = 'jpg'; // Always save as jpg for JPEG
-      }
+      processedImage = await sharp(buffer)
+        .resize(800, 800, { fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 85 })
+        .toBuffer();
     } catch (e) {
-      console.warn('sharp failed, storing original buffer as-is:', e);
+      console.warn("sharp failed, storing original buffer as-is:", e);
       processedImage = buffer;
     }
 
-    const imagePath = join(uploadDir, `${filename}.${extension}`);
-    await writeFile(imagePath, processedImage);
-    console.log('Saved profile image:', imagePath);
+    // Upload to Vercel Blob Storage
+    const { url } = await put(`user_profiles/${filename}`, processedImage, {
+      contentType: mimeType,
+      access: "public",
+    });
 
-    // URL relative to Next public (serve as https://<host>/media/user_profiles/...)
     return {
-      url: `/media/user_profiles/${filename}.${extension}`,
+      url,
       size: processedImage.length,
-      mimeType: extension === 'png' ? 'image/png' : 'image/jpeg',
+      mimeType: "image/jpeg",
     };
   } catch (error) {
-    console.error('Image processing error:', error);
-    throw new Error('Failed to process image');
+    console.error("Image processing error:", error);
+    throw new Error("Failed to process image");
   }
 }

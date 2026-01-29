@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/utils/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
-import sharp from 'sharp';
+import { NextRequest, NextResponse } from "next/server";
+import { verifyAuth } from "@/lib/utils/auth";
+import { put } from "@vercel/blob";
+import { unlink } from "fs/promises";
+import sharp from "sharp";
 
 /**
  * POST /api/issues/upload
@@ -13,48 +12,57 @@ import sharp from 'sharp';
  * Generates thumbnails
  */
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
     const authResult = verifyAuth(request);
     if (!authResult.isAuthenticated) {
-      return authResult.error || NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
+      return (
+        authResult.error ||
+        NextResponse.json(
+          { success: false, error: "Authentication required" },
+          { status: 401 },
+        )
       );
     }
 
-    const contentType = request.headers.get('content-type');
-    
-    if (contentType?.includes('application/json')) {
+    const contentType = request.headers.get("content-type");
+
+    if (contentType?.includes("application/json")) {
       // Handle base64 image upload (from mobile apps)
-      return handleBase64Upload(request, authResult.userId ? authResult.userId : '');
-    } else if (contentType?.includes('multipart/form-data')) {
+      return handleBase64Upload(
+        request,
+        authResult.userId ? authResult.userId : "",
+      );
+    } else if (contentType?.includes("multipart/form-data")) {
       // Handle form data upload (from web)
-      return handleFormDataUpload(request, authResult.userId ? authResult.userId : '');
+      return handleFormDataUpload(
+        request,
+        authResult.userId ? authResult.userId : "",
+      );
     } else {
       return NextResponse.json(
         {
           success: false,
-          error: 'Unsupported content type',
-          message: 'Please send images as base64 JSON or multipart/form-data',
+          error: "Unsupported content type",
+          message: "Please send images as base64 JSON or multipart/form-data",
         },
-        { status: 415 }
+        { status: 415 },
       );
     }
   } catch (error) {
-    console.error('Image upload error:', error);
+    console.error("Image upload error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to upload image',
-        message: 'An error occurred while uploading the image',
+        error: "Failed to upload image",
+        message: "An error occurred while uploading the image",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -63,7 +71,7 @@ export async function POST(request: NextRequest) {
  * Handle base64 image upload (typical from mobile apps)
  */
 async function handleBase64Upload(request: NextRequest, userId: string) {
-  console.log("Image is recieved 2")
+  console.log("Image is recieved 2");
   try {
     const body = await request.json();
     const { images } = body; // Array of {data: base64String, mimeType: string}
@@ -72,10 +80,10 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
       return NextResponse.json(
         {
           success: false,
-          error: 'No images provided',
-          message: 'Please provide at least one image',
+          error: "No images provided",
+          message: "Please provide at least one image",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -84,10 +92,10 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Too many images',
-          message: 'Maximum 5 images allowed per upload',
+          error: "Too many images",
+          message: "Maximum 5 images allowed per upload",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -103,26 +111,26 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Invalid file type',
-            message: 'Only JPEG, JPG, and PNG images are allowed',
+            error: "Invalid file type",
+            message: "Only JPEG, JPG, and PNG images are allowed",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       // Remove data URL prefix if present (data:image/jpeg;base64,...)
-      const base64Data = image.data.replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(base64Data, 'base64');
+      const base64Data = image.data.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
 
       // Check file size (max 10MB)
       if (buffer.length > 10 * 1024 * 1024) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Image too large',
-            message: 'Maximum image size is 10MB',
+            error: "Image too large",
+            message: "Maximum image size is 10MB",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -133,13 +141,13 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
 
     return NextResponse.json({
       success: true,
-      message: 'Images uploaded successfully',
+      message: "Images uploaded successfully",
       data: {
         images: uploadedImages,
       },
     });
   } catch (error) {
-    console.error('Base64 upload error:', error);
+    console.error("Base64 upload error:", error);
     throw error;
   }
 }
@@ -150,16 +158,16 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
 async function handleFormDataUpload(request: NextRequest, userId: string) {
   try {
     const formData = await request.formData();
-    const files = formData.getAll('images');
+    const files = formData.getAll("images");
 
     if (!files || files.length === 0) {
       return NextResponse.json(
         {
           success: false,
-          error: 'No files provided',
-          message: 'Please select at least one image',
+          error: "No files provided",
+          message: "Please select at least one image",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -168,10 +176,10 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Too many files',
-          message: 'Maximum 5 images allowed per upload',
+          error: "Too many files",
+          message: "Maximum 5 images allowed per upload",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -187,10 +195,10 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Invalid file type',
+            error: "Invalid file type",
             message: `File ${file.name} is not a valid image type. Only JPEG, JPG, and PNG images are allowed`,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -199,10 +207,10 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
         return NextResponse.json(
           {
             success: false,
-            error: 'File too large',
+            error: "File too large",
             message: `${file.name} is too large. Maximum size is 10MB`,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -213,111 +221,56 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
 
     return NextResponse.json({
       success: true,
-      message: 'Images uploaded successfully',
+      message: "Images uploaded successfully",
       data: {
         images: uploadedImages,
       },
     });
   } catch (error) {
-    console.error('Form data upload error:', error);
+    console.error("Form data upload error:", error);
     throw error;
   }
 }
 
 /**
- * Process, compress, and save image
- * Creates both full-size (compressed) and thumbnail versions
+ * Process, compress, and save image to Vercel Blob Storage
  */
-async function processAndSaveImage(buffer: Buffer, userId: string, mimeType: string) {
-  console.log("Image is recieved")
+async function processAndSaveImage(
+  buffer: Buffer,
+  userId: string,
+  mimeType: string,
+) {
   try {
     // Generate unique filename
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(7);
-    const filename = `${userId}-${timestamp}-${random}`;
-    const extension = mimeType.split('/')[1] || 'jpg';
+    const filename = `${userId}-${timestamp}-${random}.jpg`;
 
-    // Directories under Next public: /public/media/supportive_evidence
-    const uploadDir = join(process.cwd(), 'public', 'media', 'supportive_evidence');
-    const thumbnailDir = join(process.cwd(), 'public', 'media', 'supportive_evidence', 'thumbnails');
-
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-      console.log('Created dir:', uploadDir);
-    }
-    if (!existsSync(thumbnailDir)) {
-      await mkdir(thumbnailDir, { recursive: true });
-      console.log('Created dir:', thumbnailDir);
-    }
-
-    // Try sharp first, fallback to original buffer if it fails
-    let compressedImage: Buffer;
-    let thumbnail: Buffer;
+    // Process image with sharp
+    let processedImage: Buffer;
     try {
-      compressedImage = await sharp(buffer)
-        .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+      processedImage = await sharp(buffer)
+        .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
         .jpeg({ quality: 80 })
         .toBuffer();
-
-      thumbnail = await sharp(buffer)
-        .resize(300, 300, { fit: 'cover' })
-        .jpeg({ quality: 70 })
-        .toBuffer();
     } catch (e) {
-      console.warn('sharp failed, storing original buffer as-is:', e);
-      compressedImage = buffer;
-      thumbnail = buffer;
+      console.warn("sharp failed, storing original buffer as-is:", e);
+      processedImage = buffer;
     }
 
-    const imagePath = join(uploadDir, `${filename}.jpg`);
-    const thumbnailPath = join(thumbnailDir, `${filename}.jpg`);
+    // Upload to Vercel Blob Storage
+    const { url } = await put(`issues/${filename}`, processedImage, {
+      contentType: mimeType,
+      access: "public",
+    });
 
-    await writeFile(imagePath, compressedImage);
-    await writeFile(thumbnailPath, thumbnail);
-    console.log('Saved image:', imagePath);
-    console.log('Saved thumbnail:', thumbnailPath);
-
-    // URLs relative to Next public (serve as https://<host>/media/supportive_evidence/...)
     return {
-      url: `/media/supportive_evidence/${filename}.jpg`,
-      thumbnailUrl: `/media/supportive_evidence/thumbnails/${filename}.jpg`,
-      size: compressedImage.length,
-      mimeType: 'image/jpeg',
+      url,
+      size: processedImage.length,
+      mimeType: "image/jpeg",
     };
   } catch (error) {
-    console.error('Image processing error:', error);
-    throw new Error('Failed to process image');
+    console.error("Image processing error:", error);
+    throw new Error("Failed to process image");
   }
 }
-
-/**
- * Configuration for cloud storage (S3, Cloudinary, etc.)
- * Uncomment and configure when moving to production
- */
-/*
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
-async function uploadToS3(buffer: Buffer, filename: string, mimeType: string) {
-  const command = new PutObjectCommand({
-    Bucket: process.env.AWS_BUCKET,
-    Key: `issues/${filename}`,
-    Body: buffer,
-    ContentType: mimeType,
-    ACL: 'public-read',
-  });
-
-  await s3Client.send(command);
-  
-  return {
-    url: `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/issues/${filename}`,
-  };
-}
-*/

@@ -66,7 +66,6 @@ const UserSchema = new Schema<IUser>({
     profileImage: {
         type: String,
         default: null,
-        trim: true,
     },
     password: {
         type: String,
