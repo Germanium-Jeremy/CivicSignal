@@ -8,9 +8,12 @@ export default function Download() {
 
   const handleDownloadAndroid = () => {
     const downloadmobile = document.createElement("a");
-    downloadmobile.href =
-      "https://expo.dev/artifacts/eas/hfrhZpRv6EitzNEg8AvSnE.apk";
-    downloadmobile.target = "_black";
+    downloadmobile.href = "https://expo.dev/artifacts/eas/hfrhZpRv6EitzNEg8AvSnE.apk";
+    downloadmobile.target = "_blank";
+    downloadmobile.download = "CivicSignal.apk"; // Optional: Set a default filename
+    document.body.appendChild(downloadmobile);
+    downloadmobile.click();
+    document.body.removeChild(downloadmobile);
   };
 
   const handleDownloadIOS = () => {
@@ -50,7 +53,7 @@ export default function Download() {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto">
           <button
-            onClick={handleDownloadAndroid}
+            onClick={handleDownloadAndroidStore}
             className="rounded-lg px-4 md:px-6 py-2 md:py-3 bg-light-gray hover:bg-accent2 text-primary font-semibold transition-all flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base"
           >
             <Image
@@ -63,7 +66,7 @@ export default function Download() {
             Google Play
           </button>
           <button
-            onClick={handleDownloadIOS}
+            onClick={handleDownloadIOSAppleStore}
             className="rounded-lg px-4 md:px-6 py-2 md:py-3 bg-light-gray hover:bg-accent2 text-primary font-semibold transition-all flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base"
           >
             <Image
