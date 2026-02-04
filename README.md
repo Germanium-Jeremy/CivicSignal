@@ -26,3 +26,17 @@ We are seeking support through this competition to launch our pilot program and 
 
 
 # What to try it out? Web Platform <a href="https://civic-signal.vercel.app" target="_black">Web Platform</a> or download our mobile application <a href="https://expo.dev/accounts/djeremiah/projects/civic-signal/builds/2bdc2779-08eb-4d1b-a361-45eb315268d5" target="_blank">Mobile App</a>
+
+## Enterprise Runtime Configuration
+
+Add these environment variables for production-grade sessions and cache:
+
+```env
+REDIS_URL=redis://<username>:<password>@<host>:<port>
+SESSION_TTL_SECONDS=604800
+JWT_SECRET=<strong-random-secret>
+JWT_REFRESH_SECRET=<strong-random-secret>
+```
+
+- `REDIS_URL`: shared Redis instance used for API response caching and server-side sessions.
+- `SESSION_TTL_SECONDS`: server session lifetime (defaults to 7 days).
