@@ -1,26 +1,26 @@
-import mongoose, { Document, Schema, Model } from 'mongoose';
+﻿import mongoose, { Document, Schema, Model } from 'mongoose';
 
-// Interface for Location
+export type IssueStatus = 'submitted' | 'acknowledged' | 'pending' | 'resolved' | 'closed';
+
 export interface ILocation {
     type: 'Point';
-    coordinates: [number, number]; // [longitude, latitude]
+    coordinates: [number, number];
     address?: string;
     district?: string;
     sector?: string;
 }
 
-// Interface for Issue Photo
-export interface IIssuePhoto {
+export interface IIssueMedia {
     url: string;
     thumbnailUrl?: string;
     uploadedAt: Date;
     size: number;
     mimeType: string;
+    mediaType: 'image' | 'audio' | 'video';
 }
 
-// Interface for Issue Update/Activity
 export interface IIssueActivity {
-    action: 'submitted' | 'acknowledged' | 'pending' | 'resolved';
+    action: IssueStatus | 'status_changed' | 'sla_breached' | 'assigned' | 'submitted';
     description: string;
     performedBy: mongoose.Types.ObjectId;
     performedByModel: 'User' | 'Agency';
@@ -28,7 +28,15 @@ export interface IIssueActivity {
     metadata?: Record<string, any>;
 }
 
-// Interface for Device Info (for verification)
+export interface IWorkflowTransition {
+    fromStatus?: IssueStatus;
+    toStatus: IssueStatus;
+    changedAt: Date;
+    changedBy: mongoose.Types.ObjectId;
+    changedByModel: 'User' | 'Agency';
+    comment?: string;
+}
+
 export interface IDeviceInfo {
     deviceId: string;
     deviceModel?: string;
@@ -37,274 +45,328 @@ export interface IDeviceInfo {
     registeredAt: Date;
 }
 
-// Main Issue Interface
 export interface IIssue extends Document {
-    // Tracking Information
+    tenantId: string;
+    tenantSlug?: string;
+
     trackingNumber: string;
-    
-    // Basic Information
     title: string;
     description?: string;
     category: string;
+    categoryTemplateId?: string;
+    categoryTemplateVersion?: number;
+
     priority: 'High' | 'Medium' | 'Low';
-    status: 'submitted' | 'acknowledged' | 'pending' | 'resolved';
-    
-    // Location Information (optional)
+    status: IssueStatus;
+
     location?: ILocation;
-    
-    // Media
-    photos: IIssuePhoto[];
-    
-    // Reporter Information
-    reportedBy: mongoose.Types.ObjectId; // Reference to User
+    media: IIssueMedia[];
+    customFields: Record<string, any>;
+    reportMarkdown?: string;
+
+    slaDeadline?: Date;
+    slaStatus: 'within_sla' | 'at_risk' | 'breached';
+
+    reportedBy: mongoose.Types.ObjectId;
     reporterDevice: IDeviceInfo;
     isVerifiedReporter: boolean;
-    
-    // Assignment Information
-    assignedAgency?: mongoose.Types.ObjectId; // Reference to Agency
-    assignedOfficer?: mongoose.Types.ObjectId; // Reference to User
+
+    assignedAgency?: mongoose.Types.ObjectId;
+    assignedOfficer?: mongoose.Types.ObjectId;
     assignedAt?: Date;
-    
-    // Timestamps
+
     submittedAt: Date;
     acknowledgedAt?: Date;
     resolvedAt?: Date;
     closedAt?: Date;
-  
-    // Activity Log
+
     activities: IIssueActivity[];
-    
-    // Public visibility
+    workflowHistory: IWorkflowTransition[];
+
     isPublic: boolean;
     showOnMap: boolean;
-    
-    // Statistics
+
     viewCount: number;
     upvoteCount: number;
     upvotedBy: mongoose.Types.ObjectId[];
-    
-    // Resolution
+
     resolutionNotes?: string;
-    resolutionPhotos: IIssuePhoto[];
-    
-    // Metadata
+    resolutionMedia: IIssueMedia[];
+
+    source: 'web' | 'mobile' | 'ios' | 'android' | 'api';
     tags?: string[];
     metadata?: Record<string, any>;
-    
+
     createdAt: Date;
     updatedAt: Date;
+
+    addActivity: (
+        action: IIssueActivity['action'],
+        description: string,
+        performedBy: mongoose.Types.ObjectId,
+        performedByModel?: 'User' | 'Agency',
+        metadata?: Record<string, any>
+    ) => void;
+
+    changeStatus: (
+        newStatus: IssueStatus,
+        performedBy: mongoose.Types.ObjectId,
+        performedByModel?: 'User' | 'Agency',
+        notes?: string
+    ) => Promise<void>;
 }
 
-// Issue Schema
-const IssueSchema = new Schema<IIssue>({
-    trackingNumber: {
-        type: String,
-        required: true,
-        unique: true,
-        index: true,
-    },
-    title: {
-        type: String,
-        required: true,
-        trim: true,
-        maxlength: 200,
-    },
-    description: {
-        type: String,
-        trim: true,
-        maxlength: 2000,
-    },
-    category: {
-        type: String,
-        required: true,
-        index: true,
-    },
-    priority: {
-        type: String,
-        enum: ['High', 'Medium', 'Low'],
-        default: 'Medium',
-        index: true,
-    },   
-    status: {
-        type: String,
-        enum: ['submitted', 'acknowledged', 'pending', 'resolved'],
-        default: 'submitted',
-        index: true,
-    },
-    location: {
-        type: {
-            type: String,
-            enum: ['Point'],
-            required: false,
-        },
-        coordinates: {
-            type: [Number], // [longitude, latitude]
-            required: false,
-            validate: {
-                validator: function(this: any, coords: number[]) {
-                    if (!coords || coords.length === 0) return true; // allow missing
-                    return coords.length === 2 &&
-                        coords[0] >= -180 && coords[0] <= 180 &&
-                        coords[1] >= -90 && coords[1] <= 90;
-                },
-                message: 'Invalid coordinates format',
-            },
-        },
-        address: String,
-        district: String,
-        sector: String,
-    },
-    photos: [{
-        url: {
-            type: String,
-            required: true,
-        },
+const MediaSchema = new Schema(
+    {
+        url: { type: String, required: true },
         thumbnailUrl: String,
-        uploadedAt: {
-            type: Date,
-            default: Date.now,
-        },
-        size: Number,
+        uploadedAt: { type: Date, default: Date.now },
+        size: { type: Number, default: 0 },
         mimeType: String,
-    }],
-    
-    reportedBy: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-        index: true,
-    },
-    
-    reporterDevice: {
-        deviceId: {
+        mediaType: {
             type: String,
-            required: true,
-        },
-        deviceModel: String,
-        osVersion: String,
-        appVersion: String,
-        registeredAt: {
-            type: Date,
-            default: Date.now,
+            enum: ['image', 'audio', 'video'],
+            default: 'image',
         },
     },
-    
-    isVerifiedReporter: {
-        type: Boolean,
-        default: false,
-    },
-    
-    assignedAgency: {
-        type: Schema.Types.ObjectId,
-        ref: 'Agency',
-        index: true,
-    },
-    
-    assignedOfficer: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-    },
-    
-    assignedAt: Date,
-    
-    submittedAt: {
-        type: Date,
-        default: Date.now,
-        index: true,
-    },
-    
-    acknowledgedAt: Date,
-    resolvedAt: Date,
-    closedAt: Date,
-    
-    activities: [{
-        action: {
+    { _id: false }
+);
+
+const IssueSchema = new Schema<IIssue>(
+    {
+        tenantId: {
             type: String,
-            enum: ['submitted', 'acknowledged', 'pending', 'resolved'],
+            default: 'public',
+            index: true,
+            trim: true,
+        },
+        tenantSlug: {
+            type: String,
+            trim: true,
+        },
+        trackingNumber: {
+            type: String,
             required: true,
+            unique: true,
+            index: true,
+        },
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 200,
         },
         description: {
             type: String,
-            required: true,
+            trim: true,
+            maxlength: 5000,
         },
-        performedBy: {
+        category: {
+            type: String,
+            required: true,
+            index: true,
+        },
+        categoryTemplateId: String,
+        categoryTemplateVersion: Number,
+        priority: {
+            type: String,
+            enum: ['High', 'Medium', 'Low'],
+            default: 'Medium',
+            index: true,
+        },
+        status: {
+            type: String,
+            enum: ['submitted', 'acknowledged', 'pending', 'resolved', 'closed'],
+            default: 'submitted',
+            index: true,
+        },
+        location: {
+            type: {
+                type: String,
+                enum: ['Point'],
+                required: false,
+            },
+            coordinates: {
+                type: [Number],
+                required: false,
+                validate: {
+                    validator: function (this: any, coords: number[]) {
+                        if (!coords || coords.length === 0) return true;
+                        return (
+                            coords.length === 2 &&
+                            coords[0] >= -180 &&
+                            coords[0] <= 180 &&
+                            coords[1] >= -90 &&
+                            coords[1] <= 90
+                        );
+                    },
+                    message: 'Invalid coordinates format',
+                },
+            },
+            address: String,
+            district: String,
+            sector: String,
+        },
+        media: {
+            type: [MediaSchema],
+            default: [],
+        },
+        customFields: {
+            type: Schema.Types.Mixed,
+            default: {},
+        },
+        reportMarkdown: {
+            type: String,
+            maxlength: 20000,
+        },
+        slaDeadline: Date,
+        slaStatus: {
+            type: String,
+            enum: ['within_sla', 'at_risk', 'breached'],
+            default: 'within_sla',
+            index: true,
+        },
+        reportedBy: {
             type: Schema.Types.ObjectId,
+            ref: 'User',
             required: true,
+            index: true,
         },
-        performedByModel: {
-            type: String,
-            enum: ['User', 'Agency'],
-            required: true,
+        reporterDevice: {
+            deviceId: { type: String, required: true },
+            deviceModel: String,
+            osVersion: String,
+            appVersion: String,
+            registeredAt: { type: Date, default: Date.now },
         },
-        timestamp: {
+        isVerifiedReporter: {
+            type: Boolean,
+            default: false,
+        },
+        assignedAgency: {
+            type: Schema.Types.ObjectId,
+            ref: 'Agency',
+            index: true,
+        },
+        assignedOfficer: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        assignedAt: Date,
+        submittedAt: {
             type: Date,
             default: Date.now,
+            index: true,
         },
+        acknowledgedAt: Date,
+        resolvedAt: Date,
+        closedAt: Date,
+        activities: [
+            {
+                action: {
+                    type: String,
+                    enum: ['submitted', 'acknowledged', 'pending', 'resolved', 'closed', 'status_changed', 'sla_breached', 'assigned'],
+                    required: true,
+                },
+                description: {
+                    type: String,
+                    required: true,
+                },
+                performedBy: {
+                    type: Schema.Types.ObjectId,
+                    required: true,
+                },
+                performedByModel: {
+                    type: String,
+                    enum: ['User', 'Agency'],
+                    required: true,
+                },
+                timestamp: {
+                    type: Date,
+                    default: Date.now,
+                },
+                metadata: Schema.Types.Mixed,
+            },
+        ],
+        workflowHistory: [
+            {
+                fromStatus: {
+                    type: String,
+                    enum: ['submitted', 'acknowledged', 'pending', 'resolved', 'closed'],
+                },
+                toStatus: {
+                    type: String,
+                    enum: ['submitted', 'acknowledged', 'pending', 'resolved', 'closed'],
+                    required: true,
+                },
+                changedAt: {
+                    type: Date,
+                    default: Date.now,
+                },
+                changedBy: {
+                    type: Schema.Types.ObjectId,
+                    required: true,
+                },
+                changedByModel: {
+                    type: String,
+                    enum: ['User', 'Agency'],
+                    required: true,
+                },
+                comment: String,
+            },
+        ],
+        isPublic: {
+            type: Boolean,
+            default: true,
+        },
+        showOnMap: {
+            type: Boolean,
+            default: true,
+        },
+        viewCount: {
+            type: Number,
+            default: 0,
+        },
+        upvoteCount: {
+            type: Number,
+            default: 0,
+        },
+        upvotedBy: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: 'User',
+            },
+        ],
+        resolutionNotes: String,
+        resolutionMedia: {
+            type: [MediaSchema],
+            default: [],
+        },
+        source: {
+            type: String,
+            enum: ['web', 'mobile', 'ios', 'android', 'api'],
+            default: 'web',
+        },
+        tags: [String],
         metadata: Schema.Types.Mixed,
-    }],
-    
-    isPublic: {
-        type: Boolean,
-        default: true,
     },
-    
-    showOnMap: {
-        type: Boolean,
-        default: true,
-    },
-    
-    viewCount: {
-        type: Number,
-        default: 0,
-    },
-    
-    upvoteCount: {
-        type: Number,
-        default: 0,
-    },
-    
-    upvotedBy: [{
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-    }],
-    
-    resolutionNotes: String,
-    
-    resolutionPhotos: [{
-        url: {
-            type: String,
-            required: true,
-        },
-        thumbnailUrl: String,
-        uploadedAt: {
-            type: Date,
-            default: Date.now,
-        },
-        size: Number,
-        mimeType: String,
-    }],
-    
-    tags: [String],
-    metadata: Schema.Types.Mixed,
-}, {
-    timestamps: true,
-});
+    {
+        timestamps: true,
+    }
+);
 
-// Indexes for better query performance
-IssueSchema.index({ location: '2dsphere' }); // Geospatial index for location queries
-IssueSchema.index({ reportedBy: 1, status: 1 });
-IssueSchema.index({ assignedAgency: 1, status: 1 });
-IssueSchema.index({ category: 1, status: 1 });
-IssueSchema.index({ submittedAt: -1 });
+IssueSchema.index({ tenantId: 1, location: '2dsphere' });
+IssueSchema.index({ tenantId: 1, reportedBy: 1, status: 1 });
+IssueSchema.index({ tenantId: 1, assignedAgency: 1, status: 1 });
+IssueSchema.index({ tenantId: 1, category: 1, status: 1 });
+IssueSchema.index({ tenantId: 1, submittedAt: -1 });
 IssueSchema.index({ 'reporterDevice.deviceId': 1 });
 
-// Virtual for formatted tracking number
-IssueSchema.virtual('formattedTrackingNumber').get(function() {
+IssueSchema.virtual('formattedTrackingNumber').get(function () {
     return this.trackingNumber;
 });
 
-// Method to add activity
-IssueSchema.methods.addActivity = function(
+IssueSchema.methods.addActivity = function (
     action: IIssueActivity['action'],
     description: string,
     performedBy: mongoose.Types.ObjectId,
@@ -321,54 +383,52 @@ IssueSchema.methods.addActivity = function(
     });
 };
 
-// Method to change status
-IssueSchema.methods.changeStatus = async function(
-    newStatus: IIssue['status'],
+IssueSchema.methods.changeStatus = async function (
+    newStatus: IssueStatus,
     performedBy: mongoose.Types.ObjectId,
+    performedByModel: 'User' | 'Agency' = 'User',
     notes?: string
 ) {
     const oldStatus = this.status;
     this.status = newStatus;
-  
-    // Update relevant timestamp
-    switch (newStatus) {
-    case 'acknowledged':
-        this.acknowledgedAt = new Date();
-        break;
-    case 'resolved':
-        this.resolvedAt = new Date();
-        break;
-    case 'pending':
-        this.pendingAt = new Date();
-        break;
-    case 'submitted':
-        this.submittedAt = new Date();
-        break;
-    }
-  
-    // Add activity
+
+    const now = new Date();
+    if (newStatus === 'acknowledged') this.acknowledgedAt = now;
+    if (newStatus === 'resolved') this.resolvedAt = now;
+    if (newStatus === 'closed') this.closedAt = now;
+
+    this.workflowHistory.push({
+        fromStatus: oldStatus,
+        toStatus: newStatus,
+        changedAt: now,
+        changedBy: performedBy,
+        changedByModel: performedByModel,
+        comment: notes,
+    });
+
     this.addActivity(
         'status_changed',
-        `Status changed from ${oldStatus} to ${newStatus}${notes ? ': ' + notes : ''}`,
+        `Status changed from ${oldStatus} to ${newStatus}${notes ? `: ${notes}` : ''}`,
         performedBy,
-        'User'
+        performedByModel,
+        { oldStatus, newStatus }
     );
-  
+
     await this.save();
 };
 
-// Static method to generate tracking number
-IssueSchema.statics.generateTrackingNumber = async function(): Promise<string> {
+IssueSchema.statics.generateTrackingNumber = async function (): Promise<string> {
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
     const prefix = `CS-Issue-${yyyy}-${mm}-${dd}`;
 
-    // Find the last for the same day
     const lastIssue = await this.findOne({
         trackingNumber: new RegExp(`^${prefix}-`),
-    }).sort({ trackingNumber: -1 }).lean();
+    })
+        .sort({ trackingNumber: -1 })
+        .lean();
 
     let sequenceNumber = 1;
     if (lastIssue && typeof lastIssue.trackingNumber === 'string') {
@@ -377,17 +437,17 @@ IssueSchema.statics.generateTrackingNumber = async function(): Promise<string> {
         if (!isNaN(lastSeq)) sequenceNumber = lastSeq + 1;
     }
 
-    // Format: CS-Issue-YYYY-MM-DD-0001
     return `${prefix}-${String(sequenceNumber).padStart(4, '0')}`;
 };
 
-// Static method to find nearby issues
-IssueSchema.statics.findNearby = function(
+IssueSchema.statics.findNearby = function (
     longitude: number,
     latitude: number,
-    maxDistanceInMeters: number = 1000
+    maxDistanceInMeters: number = 1000,
+    tenantId: string = 'public'
 ) {
     return this.find({
+        tenantId,
         location: {
             $near: {
                 $geometry: {
@@ -400,15 +460,13 @@ IssueSchema.statics.findNearby = function(
     });
 };
 
-// Ensure tracking number exists BEFORE validation
-IssueSchema.pre('validate', async function(next) {
+IssueSchema.pre('validate', async function (next) {
     if (this.isNew && !this.trackingNumber) {
         this.trackingNumber = await (this.constructor as any).generateTrackingNumber();
     }
     next();
 });
 
-// Export the model
 const Issue: Model<IIssue> = mongoose.models.Issue || mongoose.model<IIssue>('Issue', IssueSchema);
 
 export default Issue;
