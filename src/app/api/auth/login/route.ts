@@ -1,232 +1,179 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import {
-  comparePassword,
-  generateTokens,
-  isRwandanIP,
-  generateDeviceId,
-  getDeviceName,
-  getLocationFromIP,
-  generateVerificationCode,
-} from "@/lib/utils/auth";
+import { comparePassword, generateTokens, isRwandanIP, generateDeviceId, getDeviceName, getLocationFromIP, generateVerificationCode } from "@/lib/utils/auth";
 import { sendEmail, sendPhoneVerification } from "@/lib/services/notification";
 
 export async function POST(request: NextRequest) {
-  try {
-    await connectDB();
+     try {
+          await connectDB();
 
-    const { email, password, deviceInfo } = await request.json();
+          const { email, password, deviceInfo } = await request.json();
 
-    // Get client IP and check if it's from Rwanda
-    const clientIP =
-      request.headers.get("x-forwarded-for") ||
-      request.headers.get("x-real-ip") ||
-      "127.0.0.1";
+          // Get client IP and check if it's from Rwanda
+          const clientIP = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1";
 
-    if (!isRwandanIP(clientIP)) {
-      return NextResponse.json(
-        { error: "Access denied. Service is only available in Rwanda." },
-        { status: 403 },
-      );
-    }
-
-    // Validate input
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 },
-      );
-    }
-
-    // Find user and include password for comparison
-    const user = await User.findOne({ email }).select(
-      "+password +refreshTokens",
-    );
-    if (!user) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 },
-      );
-    }
-
-    // Check if user is active
-    if (!user.isActive) {
-      return NextResponse.json(
-        { error: "Account is deactivated. Please contact support." },
-        { status: 401 },
-      );
-    }
-
-    // Check password
-    const isValidPassword = await comparePassword(password, user.password);
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 },
-      );
-    }
-
-    // Check if both email and phone are verified
-    if (!user.isEmailVerified || !user.isPhoneVerified) {
-      // Generate new codes if existing ones are expired
-      let codesSent = { email: false, phone: false };
-
-      if (!user.isEmailVerified) {
-        const emailCodeExpired =
-          !user.emailVerificationExpires ||
-          user.emailVerificationExpires < new Date();
-        if (emailCodeExpired) {
-          const newEmailCode = generateVerificationCode();
-          user.emailVerificationCode = newEmailCode;
-          user.emailVerificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-          // Send new email verification code
-          try {
-            await sendEmail(user.email, "email-verification", {
-              fullName: user.fullName,
-              verificationCode: newEmailCode,
-            });
-            codesSent.email = true;
-          } catch (error) {
-            console.error("Failed to send email verification:", error);
+          if (!isRwandanIP(clientIP)) {
+               return NextResponse.json({ error: "Access denied. Service is only available in Rwanda." }, { status: 403 });
           }
-        }
-      }
 
-      if (!user.isPhoneVerified) {
-        const phoneCodeExpired =
-          !user.phoneVerificationExpires ||
-          user.phoneVerificationExpires < new Date();
-        if (phoneCodeExpired) {
-          const newPhoneCode = generateVerificationCode();
-          user.phoneVerificationCode = newPhoneCode;
-          user.phoneVerificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-          // Send new phone verification code
-          try {
-            await sendPhoneVerification(
-              user.phone,
-              newPhoneCode,
-              user.fullName,
-            );
-            codesSent.phone = true;
-          } catch (error) {
-            console.error("Failed to send phone verification:", error);
+          // Validate input
+          if (!email || !password) {
+               return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
           }
-        }
-      }
 
-      await user.save();
+          // Find user and include password for comparison
+          const user = await User.findOne({ email }).select("+password +refreshTokens");
+          if (!user) {
+               return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+          }
 
-      return NextResponse.json(
-        {
-          error: "Account not fully verified",
-          requiresVerification: true,
-          emailVerified: user.isEmailVerified,
-          phoneVerified: user.isPhoneVerified,
-          email: user.email,
-          phone: user.phone,
-          codesSent: codesSent,
-          message:
-            codesSent.email || codesSent.phone
-              ? "New verification codes have been sent to your email/phone"
-              : "Please verify your account to continue",
-        },
-        { status: 403 },
-      );
-    }
+          // Check if user is active
+          if (!user.isActive) {
+               return NextResponse.json({ error: "Account is deactivated. Please contact support." }, { status: 401 });
+          }
 
-    // Generate device info
-    const userAgent = request.headers.get("user-agent") || "";
-    const deviceId = generateDeviceId(userAgent, clientIP);
-    const deviceName = getDeviceName(userAgent);
-    const location = getLocationFromIP(clientIP);
+          // Check password
+          const isValidPassword = await comparePassword(password, user.password);
+          if (!isValidPassword) {
+               return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+          }
 
-    // Check if this is a new device
-    const existingDevice = user.loginDevices.find(
-      (device: any) => device.deviceId === deviceId,
-    );
-    const isNewDevice = !existingDevice;
+          // Check if both email and phone are verified
+          if (!user.isEmailVerified || !user.isPhoneVerified) {
+               // Generate new codes if existing ones are expired
+               let codesSent = { email: false, phone: false };
 
-    // Update or add device info
-    if (existingDevice) {
-      existingDevice.lastLogin = new Date();
-      existingDevice.isActive = true;
-    } else {
-      user.loginDevices.push({
-        deviceId,
-        deviceName,
-        ipAddress: clientIP,
-        location,
-        lastLogin: new Date(),
-        isActive: true,
-      });
+               if (!user.isEmailVerified) {
+                    const emailCodeExpired = !user.emailVerificationExpires || user.emailVerificationExpires < new Date();
+                    if (emailCodeExpired) {
+                         const newEmailCode = generateVerificationCode();
+                         user.emailVerificationCode = newEmailCode;
+                         user.emailVerificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-      // Send new device login alert
-      await sendEmail(user.email, "new-device-login", {
-        fullName: user.fullName,
-        deviceName,
-        location,
-        ipAddress: clientIP,
-        loginTime: new Date().toLocaleString(),
-      });
-    }
+                         // Send new email verification code
+                         try {
+                              await sendEmail(user.email, "email-verification", { fullName: user.fullName, verificationCode: newEmailCode});
+                              codesSent.email = true;
+                         } catch (error) {
+                              console.error("Failed to send email verification:", error);
+                         }
+                    }
+               }
 
-    // Generate tokens
-    const tokenPayload = {
-      userId: user._id,
-      email: user.email,
-      role: user.role,
-      isEmailVerified: user.isEmailVerified,
-      isPhoneVerified: user.isPhoneVerified,
-    };
+               if (!user.isPhoneVerified) {
+                    const phoneCodeExpired = !user.phoneVerificationExpires || user.phoneVerificationExpires < new Date();
+                    if (phoneCodeExpired) {
+                         const newPhoneCode = generateVerificationCode();
+                         user.phoneVerificationCode = newPhoneCode;
+                         user.phoneVerificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    const { accessToken, refreshToken } = generateTokens(tokenPayload);
+                         // Send new phone verification code
+                         try {
+                              await sendPhoneVerification(user.phone, newPhoneCode, user.fullName);
+                              codesSent.phone = true;
+                         } catch (error) {
+                              console.error("Failed to send phone verification:", error);
+                         }
+                    }
+               }
 
-    // Store refresh token
-    user.refreshTokens.push(refreshToken);
-    console.log(
-      "Refresh token stored for user: ",
-      user.email,
-      "access token: ",
-      accessToken,
-    );
+               await user.save();
 
-    // Keep only last 5 refresh tokens per user
-    if (user.refreshTokens.length > 5) {
-      user.refreshTokens = user.refreshTokens.slice(-5);
-    }
+               return NextResponse.json({
+                    error: "Account not fully verified",
+                    requiresVerification: true,
+                    emailVerified: user.isEmailVerified,
+                    phoneVerified: user.isPhoneVerified,
+                    email: user.email,
+                    phone: user.phone,
+                    codesSent: codesSent,
+                    message:
+                         codesSent.email || codesSent.phone
+                         ? "New verification codes have been sent to your email/phone"
+                         : "Please verify your account to continue",
+                    },
+                    { status: 403 },
+               );
+          }
 
-    await user.save();
+          // Generate device info
+          const userAgent = request.headers.get("user-agent") || "";
+          const deviceId = generateDeviceId(userAgent, clientIP);
+          const deviceName = getDeviceName(userAgent);
+          const location = getLocationFromIP(clientIP);
 
-    // Return success response
-    return NextResponse.json({
-      success: true,
-      tokens: {
-        accessToken,
-        refreshToken,
-      },
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone,
-        profileImage: user.profileImage, // Include profile image URL
-        role: user.role,
-        isEmailVerified: user.isEmailVerified,
-        isPhoneVerified: user.isPhoneVerified,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
-      isNewDevice,
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
-  }
+          // Check if this is a new device
+          const existingDevice = user.loginDevices.find((device: any) => device.deviceId === deviceId);
+          const isNewDevice = !existingDevice;
+
+          // Update or add device info
+          if (existingDevice) {
+               existingDevice.lastLogin = new Date();
+               existingDevice.isActive = true;
+          } else {
+               user.loginDevices.push({
+                    deviceId,
+                    deviceName,
+                    ipAddress: clientIP,
+                    location,
+                    lastLogin: new Date(),
+                    isActive: true,
+               });
+
+               // Send new device login alert
+               await sendEmail(user.email, "new-device-login", {
+                    fullName: user.fullName,
+                    deviceName,
+                    location,
+                    ipAddress: clientIP,
+                    loginTime: new Date().toLocaleString(),
+               });
+          }
+
+          // Generate tokens
+          const tokenPayload = {
+               userId: user._id,
+               email: user.email,
+               role: user.role,
+               isEmailVerified: user.isEmailVerified,
+               isPhoneVerified: user.isPhoneVerified,
+          };
+
+          const { accessToken, refreshToken } = generateTokens(tokenPayload);
+
+          // Store refresh token
+          user.refreshTokens.push(refreshToken);
+          console.log("Refresh token stored for user: ", user.email, "access token: ", accessToken);
+
+          // Keep only last 5 refresh tokens per user
+          if (user.refreshTokens.length > 5) {
+               user.refreshTokens = user.refreshTokens.slice(-5);
+          }
+
+          await user.save();
+
+          // Return success response
+          return NextResponse.json({
+               success: true,
+               tokens: { accessToken, refreshToken},
+               user: {
+                    id: user._id,
+                    fullName: user.fullName,
+                    email: user.email,
+                    phone: user.phone,
+                    profileImage: user.profileImage, // Include profile image URL
+                    role: user.role,
+                    isEmailVerified: user.isEmailVerified,
+                    isPhoneVerified: user.isPhoneVerified,
+                    isActive: user.isActive,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt,
+               },
+               isNewDevice,
+          });
+     } catch (error) {
+          console.error("Login error:", error);
+          return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+     }
 }
