@@ -1,79 +1,63 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import User from '@/models/User';
-import { validatePassword, hashPassword } from '@/lib/utils/auth';
+import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import User from "@/models/User";
+import { validatePassword, hashPassword } from "@/lib/utils/auth";
 
 export async function POST(request: NextRequest) {
-  try {
-    await connectDB();
-    
-    const { identifier, resetCode, newPassword, method } = await request.json();
-    
-    if (!identifier || !resetCode || !newPassword || !method) {
-      return NextResponse.json(
-        { error: 'All fields are required' }, 
-        { status: 400 }
-      );
-    }
+     try {
+          await connectDB();
 
-    // Validate new password
-    const passwordValidation = validatePassword(newPassword);
-    if (!passwordValidation.isValid) {
-      return NextResponse.json(
-        { 
-          error: 'Password does not meet requirements', 
-          details: passwordValidation.errors 
-        }, 
-        { status: 400 }
-      );
-    }
+          const { identifier, resetCode, newPassword, method } = await request.json();
 
-    // Find user with valid reset token
-    const query = method === 'email' 
-      ? { email: identifier.toLowerCase() }
-      : { phone: identifier.replace(/\s/g, '') };
+          if (!identifier || !resetCode || !newPassword || !method) {
+               return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+          }
 
-    const user = await User.findOne({
-      ...query,
-      passwordResetToken: resetCode,
-      passwordResetExpires: { $gt: new Date() }
-    }).select('+passwordResetToken +passwordResetExpires +password +refreshTokens');
+          // Validate new password
+          const passwordValidation = validatePassword(newPassword);
+          if (!passwordValidation.isValid) {
+               return NextResponse.json(
+                    { error: "Password does not meet requirements", details: passwordValidation.errors },
+               { status: 400 },
+               );
+          }
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid or expired reset code' }, 
-        { status: 400 }
-      );
-    }
+          // Find user with valid reset token
+          const query = method === "email" ? { email: identifier.toLowerCase() } : { phone: identifier.replace(/\s/g, "") };
 
-    // Hash new password
-    const hashedPassword = await hashPassword(newPassword);
+          const user = await User.findOne({
+               ...query,
+               passwordResetToken: resetCode,
+               passwordResetExpires: { $gt: new Date() },
+          }).select(
+               "+passwordResetToken +passwordResetExpires +password +refreshTokens",
+          );
 
-    // Update user password and clear reset token
-    user.password = hashedPassword;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    
-    // Clear all refresh tokens to force re-login on all devices
-    user.refreshTokens = [];
-    
-    // Deactivate all login devices for security
-    user.loginDevices.forEach((device: any) => {
-      device.isActive = false;
-    });
-    
-    await user.save();
+          if (!user) {
+               return NextResponse.json({ error: "Invalid or expired reset code" }, { status: 400 });
+          }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Password reset successfully! Please login with your new password.'
-    });
+          // Hash new password
+          const hashedPassword = await hashPassword(newPassword);
 
-  } catch (error) {
-    console.error('Reset password error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' }, 
-      { status: 500 }
-    );
-  }
+          // Update user password and clear reset token
+          user.password = hashedPassword;
+          user.passwordResetToken = undefined;
+          user.passwordResetExpires = undefined;
+
+          // Clear all refresh tokens to force re-login on all devices
+          user.refreshTokens = [];
+
+          // Deactivate all login devices for security
+          user.loginDevices.forEach((device: any) => {
+               device.isActive = false;
+          });
+
+          await user.save();
+
+          return NextResponse.json({ success: true, message: "Password reset successfully! Please login with your new password." });
+     } catch (error) {
+          console.error("Reset password error:", error);
+          return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+     }
 }
