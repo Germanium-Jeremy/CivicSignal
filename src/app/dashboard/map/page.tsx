@@ -91,8 +91,7 @@ export default function PublicMapPage() {
     }, []);
 
     const filteredIssues = issues.filter(issue => {
-        const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            issue.location.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) || issue.location.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = filterStatus === "all" || issue.status === filterStatus;
         const matchesPriority = filterPriority === "all" || issue.priority === filterPriority;
         const matchesCategory = filterCategory === "all" || issue.category === filterCategory;
@@ -145,20 +144,16 @@ export default function PublicMapPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-almost-black">Public Issues Map</h1>
-                    <p className="text-neutral-text mt-1">
-                        Visual overview of all reported issues in your jurisdiction
-                    </p>
+                    <p className="text-neutral-text mt-1">Visual overview of all reported issues in your jurisdiction</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowLegend(!showLegend)}
+                    <button onClick={() => setShowLegend(!showLegend)}
                         className="px-4 py-2 border border-light-gray rounded-lg hover:border-accent2 hover:text-accent2 transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                     >
                         <FaLayerGroup size={14} />
                         {showLegend ? 'Hide' : 'Show'} Legend
                     </button>
-                    <button
-                        onClick={() => setIsFullscreen(!isFullscreen)}
+                    <button onClick={() => setIsFullscreen(!isFullscreen)}
                         className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                     >
                         {isFullscreen ? <FaCompress size={14} /> : <FaExpand size={14} />}
@@ -173,19 +168,13 @@ export default function PublicMapPage() {
                     {/* Search */}
                     <div className="flex-1 relative">
                         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-text" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Search issues on map..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                        <input type="text" placeholder="Search issues on map..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                         />
                     </div>
                     
                     {/* Status Filter */}
-                    <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
+                    <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
                         className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                     >
                         <option value="all">All Status</option>
@@ -196,9 +185,7 @@ export default function PublicMapPage() {
                     </select>
 
                     {/* Priority Filter */}
-                    <select
-                        value={filterPriority}
-                        onChange={(e) => setFilterPriority(e.target.value)}
+                    <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}
                         className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                     >
                         <option value="all">All Priorities</option>
@@ -208,17 +195,12 @@ export default function PublicMapPage() {
                     </select>
 
                     {/* Category Filter */}
-                    <select
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
+                    <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} disabled={loading}
                         className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
-                        disabled={loading}
                     >
                         <option value="all">All Categories</option>
                         {categories.map((category: any) => (
-                            <option key={category.id} value={category.id}>
-                                {category.name}
-                            </option>
+                            <option key={category.id} value={category.id}>{category.name}</option>
                         ))}
                     </select>
                 </div>
@@ -246,8 +228,7 @@ export default function PublicMapPage() {
                                 </span>
                             </div>
                             {isFullscreen && (
-                                <button
-                                    onClick={() => setIsFullscreen(false)}
+                                <button onClick={() => setIsFullscreen(false)}
                                     className="p-2 text-neutral-text hover:text-accent2 transition-colors"
                                 >
                                     <FaCompress size={16} />
@@ -265,14 +246,7 @@ export default function PublicMapPage() {
                                     </div>
                                 </div>
                             ) : (
-                                <LeafletMap 
-                                    issues={filteredIssues} 
-                                    statusColors={statusColors} 
-                                    statusIcons={statusIcons} 
-                                    onIssueClick={handleIssueClick}
-                                    center={[-1.94995, 30.05885]} 
-                                    zoom={13} 
-                                />
+                                <LeafletMap issues={filteredIssues} statusColors={statusColors} statusIcons={statusIcons} onIssueClick={handleIssueClick} center={[-1.94995, 30.05885]} zoom={13} />
                             )}
                         </div>
                     </div>
@@ -288,9 +262,8 @@ export default function PublicMapPage() {
                                         const StatusIcon = getStatusIcon(status);
                                         return (
                                             <div key={status} className="flex items-center gap-3">
-                                                <div 
+                                                <div style={{ backgroundColor: color }}
                                                     className="w-6 h-6 rounded-full border border-white shadow-sm flex items-center justify-center"
-                                                    style={{ backgroundColor: color }}
                                                 >
                                                     <StatusIcon className="text-white" size={12} />
                                                 </div>
@@ -312,21 +285,15 @@ export default function PublicMapPage() {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-sm text-neutral-text">High Priority</span>
-                                    <span className="font-medium text-red-600">
-                                        {filteredIssues.filter(i => i.priority === 'high').length}
-                                    </span>
+                                    <span className="font-medium text-red-600">{filteredIssues.filter(i => i.priority === 'high').length}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-sm text-neutral-text">In Progress</span>
-                                    <span className="font-medium text-yellow-600">
-                                        {filteredIssues.filter(i => i.status === 'pending').length}
-                                    </span>
+                                    <span className="font-medium text-yellow-600">{filteredIssues.filter(i => i.status === 'pending').length}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-sm text-neutral-text">Resolved</span>
-                                    <span className="font-medium text-green-600">
-                                        {filteredIssues.filter(i => i.status === 'resolved').length}
-                                    </span>
+                                    <span className="font-medium text-green-600">{filteredIssues.filter(i => i.status === 'resolved').length}</span>
                                 </div>
                             </div>
                         </div>
@@ -338,32 +305,21 @@ export default function PublicMapPage() {
                                 {filteredIssues.slice(0, 5).map((issue) => {
                                     const StatusIcon = getStatusIcon(issue.status);
                                     return (
-                                        <div
-                                            key={issue.id}
-                                            onClick={() => handleIssueClick(issue)}
+                                        <div key={issue.id} onClick={() => handleIssueClick(issue)}
                                             className="p-3 rounded-lg hover:bg-light-gray/50 cursor-pointer transition-colors duration-200"
                                         >
                                             <div className="flex items-start gap-3">
-                                                <div 
-                                                    className="w-6 h-6 rounded-full flex items-center justify-center  shrink-0"
+                                                <div className="w-6 h-6 rounded-full flex items-center justify-center  shrink-0"
                                                     style={{ backgroundColor: `${statusColors[issue.status as keyof typeof statusColors]}20` }}
                                                 >
-                                                    <StatusIcon 
-                                                        className="text-current" 
-                                                        size={12}
+                                                    <StatusIcon className="text-current" size={12}
                                                         style={{ color: statusColors[issue.status as keyof typeof statusColors] }}
                                                     />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="font-medium text-sm text-almost-black truncate">
-                                                        {issue.title}
-                                                    </h4>
-                                                    <p className="text-xs text-neutral-text truncate">
-                                                        {issue.location}
-                                                    </p>
-                                                    <p className="text-xs text-neutral-text">
-                                                        {formatDate(issue.reportedAt)}
-                                                    </p>
+                                                    <h4 className="font-medium text-sm text-almost-black truncate">{issue.title}</h4>
+                                                    <p className="text-xs text-neutral-text truncate">{issue.location}</p>
+                                                    <p className="text-xs text-neutral-text">{formatDate(issue.reportedAt)}</p>
                                                 </div>
                                             </div>
                                         </div>
