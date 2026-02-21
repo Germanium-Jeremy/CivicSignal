@@ -175,14 +175,10 @@ export default function DashboardHome() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-almost-black">Dashboard Overview</h1>
-                    <p className="text-neutral-text mt-1">
-                        Welcome back to {agencyData.name}! Here's what's happening in {agencyData.district}, {agencyData.sector}.
-                    </p>
+                    <p className="text-neutral-text mt-1">Welcome back to {agencyData.name}! Here's what's happening in {agencyData.district}, {agencyData.sector}.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <select 
-                        value={timeRange}
-                        onChange={(e) => setTimeRange(e.target.value)}
+                    <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)}
                         className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2 text-sm"
                     >
                         <option value="24h">Last 24 Hours</option>
@@ -220,14 +216,7 @@ export default function DashboardHome() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    title="Reported Issues"
-                    count={stats.reported.count}
-                    change={stats.reported.change}
-                    trend={stats.reported.trend}
-                    color={statusColors.reported}
-                    icon={FaExclamationTriangle}
-                />
+                <StatCard title="Reported Issues" count={stats.reported.count} change={stats.reported.change} trend={stats.reported.trend} color={statusColors.reported} icon={FaExclamationTriangle} />
                 <StatCard
                     title="Acknowledged"
                     count={stats.acknowledged.count}
