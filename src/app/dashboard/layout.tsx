@@ -9,12 +9,7 @@ interface DashboardLayoutWrapperProps {
 }
 
 export default function DashboardLayoutWrapper({ children }: DashboardLayoutWrapperProps) {
-    const [agencyData, setAgencyData] = useState({
-        name: "Loading...",
-        logo: "/images/pin.png",
-        isVerified: false,
-        notifications: 0
-    });
+    const [agencyData, setAgencyData] = useState({ name: "Loading...", logo: "/images/pin.png", isVerified: false, notifications: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
@@ -54,12 +49,7 @@ export default function DashboardLayoutWrapper({ children }: DashboardLayoutWrap
     }
 
     return (
-        <DashboardLayout 
-            isVerified={agencyData.isVerified}
-            agencyName={agencyData.name}
-            agencyLogo={agencyData.logo}
-            notificationCount={agencyData.notifications}
-        >
+        <DashboardLayout isVerified={agencyData.isVerified} agencyName={agencyData.name} agencyLogo={agencyData.logo} notificationCount={agencyData.notifications}>
             {children}
         </DashboardLayout>
     );
