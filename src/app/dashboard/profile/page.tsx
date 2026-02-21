@@ -1,25 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
-import { 
-    FaUser, 
-    FaBuilding, 
-    FaEnvelope, 
-    FaPhone, 
-    FaMapMarkerAlt,
-    FaGlobe,
-    FaIdCard,
-    FaEdit,
-    FaSave,
-    FaTimes,
-    FaUpload,
-    FaDownload,
-    FaEye,
-    FaTrash,
-    FaCheckCircle,
-    FaExclamationTriangle,
-    FaShieldAlt
-} from "react-icons/fa";
+import { FaUser, FaBuilding, FaEnvelope, FaPhone, FaMapMarkerAlt, FaGlobe, FaIdCard, FaEdit, FaSave, FaTimes, FaUpload, FaDownload, FaEye, FaTrash, FaCheckCircle, FaExclamationTriangle, FaShieldAlt } from "react-icons/fa";
 
 interface ProfileData {
     officer: {
@@ -195,9 +177,7 @@ export default function ProfilePage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-almost-black">Agency Profile</h1>
-                    <p className="text-neutral-text mt-1">
-                        Manage your agency information and documentation
-                    </p>
+                    <p className="text-neutral-text mt-1">Manage your agency information and documentation</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {profileData.verification.status === 'approved' && (
@@ -207,8 +187,7 @@ export default function ProfilePage() {
                         </div>
                     )}
                     {!isEditing ? (
-                        <button
-                            onClick={() => setIsEditing(true)}
+                        <button onClick={() => setIsEditing(true)}
                             className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                         >
                             <FaEdit size={14} />
@@ -216,15 +195,13 @@ export default function ProfilePage() {
                         </button>
                     ) : (
                         <div className="flex gap-2">
-                            <button
-                                onClick={handleSave}
+                            <button onClick={handleSave}
                                 className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                             >
                                 <FaSave size={14} />
                                 Save Changes
                             </button>
-                            <button
-                                onClick={handleCancel}
+                            <button onClick={handleCancel}
                                 className="px-4 py-2 border border-light-gray text-neutral-text rounded-lg hover:border-red-300 hover:text-red-600 transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                             >
                                 <FaTimes size={14} />
@@ -245,15 +222,10 @@ export default function ProfilePage() {
                     ].map((tab) => {
                         const Icon = tab.icon;
                         return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors duration-300 ${
-                                    activeTab === tab.id
-                                        ? 'text-accent2 border-b-2 border-accent2'
-                                        : 'text-neutral-text hover:text-accent2'
-                                }`}
-                            >
+                                    activeTab === tab.id ? 'text-accent2 border-b-2 border-accent2' : 'text-neutral-text hover:text-accent2'
+                                }`}>
                                 <Icon size={16} />
                                 {tab.label}
                             </button>
@@ -272,14 +244,9 @@ export default function ProfilePage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                First Name
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">First Name</label>
                                             {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={editData.officer.firstName}
-                                                    onChange={(e) => handleInputChange('officer', 'firstName', e.target.value)}
+                                                <input type="text" value={editData.officer.firstName} onChange={(e) => handleInputChange('officer', 'firstName', e.target.value)}
                                                     className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                                 />
                                             ) : (
@@ -287,14 +254,9 @@ export default function ProfilePage() {
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Email Address
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Email Address</label>
                                             {isEditing ? (
-                                                <input
-                                                    type="email"
-                                                    value={editData.officer.email}
-                                                    onChange={(e) => handleInputChange('officer', 'email', e.target.value)}
+                                                <input type="email" value={editData.officer.email} onChange={(e) => handleInputChange('officer', 'email', e.target.value)}
                                                     className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                                 />
                                             ) : (
@@ -307,14 +269,9 @@ export default function ProfilePage() {
                                     </div>
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Last Name
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Last Name</label>
                                             {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={editData.officer.lastName}
-                                                    onChange={(e) => handleInputChange('officer', 'lastName', e.target.value)}
+                                                <input type="text" value={editData.officer.lastName} onChange={(e) => handleInputChange('officer', 'lastName', e.target.value)}
                                                     className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                                 />
                                             ) : (
@@ -322,14 +279,9 @@ export default function ProfilePage() {
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Phone Number
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Phone Number</label>
                                             {isEditing ? (
-                                                <input
-                                                    type="tel"
-                                                    value={editData.officer.phone}
-                                                    onChange={(e) => handleInputChange('officer', 'phone', e.target.value)}
+                                                <input type="tel" value={editData.officer.phone} onChange={(e) => handleInputChange('officer', 'phone', e.target.value)}
                                                     className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                                 />
                                             ) : (
@@ -371,14 +323,9 @@ export default function ProfilePage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Agency Name
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Agency Name</label>
                                             {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={editData.agency.name}
-                                                    onChange={(e) => handleInputChange('agency', 'name', e.target.value)}
+                                                <input type="text" value={editData.agency.name} onChange={(e) => handleInputChange('agency', 'name', e.target.value)}
                                                     className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                                 />
                                             ) : (
@@ -389,60 +336,38 @@ export default function ProfilePage() {
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Agency Type
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Agency Type</label>
                                             <p className="text-neutral-text">{profileData.agency.type}</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Registration Number
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Registration Number</label>
                                             <p className="text-neutral-text">{profileData.agency.registrationNumber}</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Website
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Website</label>
                                             {isEditing ? (
-                                                <input
-                                                    type="url"
-                                                    value={editData.agency.website}
-                                                    onChange={(e) => handleInputChange('agency', 'website', e.target.value)}
+                                                <input type="url" value={editData.agency.website} onChange={(e) => handleInputChange('agency', 'website', e.target.value)}
                                                     className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                                 />
                                             ) : (
                                                 <div className="flex items-center gap-2">
                                                     <FaGlobe className="text-neutral-text" size={16} />
-                                                    <a 
-                                                        href={profileData.agency.website} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        className="text-accent2 hover:text-accent"
-                                                    >
-                                                        {profileData.agency.website}
-                                                    </a>
+                                                    <a href={profileData.agency.website} target="_blank" rel="noopener noreferrer" className="text-accent2 hover:text-accent">{profileData.agency.website}</a>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Service District
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Service District</label>
                                             <p className="text-neutral-text">{profileData.agency.district}</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Service Sector
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Service Sector</label>
                                             <p className="text-neutral-text">{profileData.agency.sector}</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Created Date
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Created Date</label>
                                             <p className="text-neutral-text">{formatDate(profileData.agency.createdAt)}</p>
                                         </div>
                                     </div>
@@ -450,14 +375,10 @@ export default function ProfilePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-almost-black mb-2">
-                                    Office Address
-                                </label>
+                                <label className="block text-sm font-medium text-almost-black mb-2">Office Address</label>
                                 {isEditing ? (
-                                    <textarea
-                                        value={editData.agency.address}
+                                    <textarea value={editData.agency.address} rows={3}
                                         onChange={(e) => handleInputChange('agency', 'address', e.target.value)}
-                                        rows={3}
                                         className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2 resize-none"
                                     />
                                 ) : (
@@ -469,14 +390,10 @@ export default function ProfilePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-almost-black mb-2">
-                                    Agency Description
-                                </label>
+                                <label className="block text-sm font-medium text-almost-black mb-2">Agency Description</label>
                                 {isEditing ? (
-                                    <textarea
-                                        value={editData.agency.description}
+                                    <textarea value={editData.agency.description} rows={4}
                                         onChange={(e) => handleInputChange('agency', 'description', e.target.value)}
-                                        rows={4}
                                         className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2 resize-none"
                                     />
                                 ) : (
@@ -485,17 +402,10 @@ export default function ProfilePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-almost-black mb-3">
-                                    Service Domains
-                                </label>
+                                <label className="block text-sm font-medium text-almost-black mb-3">Service Domains</label>
                                 <div className="flex flex-wrap gap-2">
                                     {profileData.agency.serviceDomains.map((domain: string, index: number) => (
-                                        <span
-                                            key={index}
-                                            className="px-3 py-1 bg-accent2/10 text-accent2 text-sm font-medium rounded-full"
-                                        >
-                                            {domain}
-                                        </span>
+                                        <span key={index} className="px-3 py-1 bg-accent2/10 text-accent2 text-sm font-medium rounded-full">{domain}</span>
                                     ))}
                                 </div>
                             </div>
@@ -507,9 +417,7 @@ export default function ProfilePage() {
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold text-almost-black">Agency Documents</h3>
-                                <button
-                                    onClick={handleDocumentUpload}
-                                    disabled={uploadingDocument}
+                                <button onClick={handleDocumentUpload} disabled={uploadingDocument}
                                     className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent transition-colors duration-300 text-sm font-medium flex items-center gap-2 disabled:opacity-50"
                                 >
                                     <FaUpload size={14} />
@@ -523,63 +431,12 @@ export default function ProfilePage() {
                                 <p className="text-sm text-neutral-text/70 mt-2">Upload and manage your agency documents here</p>
                             </div>
 
-                            {/* Commented out for now until document API is implemented
-                            <div className="grid grid-cols-1 gap-4">
-                                {[].map((doc: any) => {
-                                    const DocIcon = getDocumentIcon(doc.type);
-                                    return (
-                                        <div key={doc.id} className="bg-light-gray/30 rounded-xl p-4 border border-light-gray">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-accent2/10 rounded-lg flex items-center justify-center">
-                                                        <DocIcon className="text-accent2" size={20} />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-medium text-almost-black">{doc.name}</h4>
-                                                        <div className="flex items-center gap-4 text-sm text-neutral-text">
-                                                            <span>{doc.size}</span>
-                                                            <span>Uploaded {formatDate(doc.uploadedAt)}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(doc.status)}`}>
-                                                        {doc.status}
-                                                    </span>
-                                                    <div className="flex gap-2">
-                                                        <button className="p-2 text-neutral-text hover:text-accent2 transition-colors">
-                                                            <FaEye size={14} />
-                                                        </button>
-                                                        <button className="p-2 text-neutral-text hover:text-accent2 transition-colors">
-                                                            <FaDownload size={14} />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleDocumentDelete(doc.id)}
-                                                            className="p-2 text-neutral-text hover:text-red-600 transition-colors"
-                                                        >
-                                                            <FaTrash size={14} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Upload Area */}
                             <div className="border-2 border-dashed border-light-gray rounded-xl p-8 text-center">
                                 <FaUpload className="mx-auto text-neutral-text mb-4" size={32} />
                                 <h4 className="font-medium text-almost-black mb-2">Upload Additional Documents</h4>
-                                <p className="text-neutral-text text-sm mb-4">
-                                    Drag and drop files here, or click to browse
-                                </p>
-                                <button className="px-4 py-2 border border-accent2 text-accent2 rounded-lg hover:bg-accent2 hover:text-white transition-colors duration-300 text-sm font-medium">
-                                    Choose Files
-                                </button>
-                                <p className="text-xs text-neutral-text mt-2">
-                                    Supported formats: PDF, JPG, PNG (Max 10MB)
-                                </p>
+                                <p className="text-neutral-text text-sm mb-4">Drag and drop files here, or click to browse</p>
+                                <button className="px-4 py-2 border border-accent2 text-accent2 rounded-lg hover:bg-accent2 hover:text-white transition-colors duration-300 text-sm font-medium">Choose Files</button>
+                                <p className="text-xs text-neutral-text mt-2">Supported formats: PDF, JPG, PNG (Max 10MB)</p>
                             </div>
                         </div>
                     )}
