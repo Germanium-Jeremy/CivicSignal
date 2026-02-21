@@ -217,30 +217,9 @@ export default function DashboardHome() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="Reported Issues" count={stats.reported.count} change={stats.reported.change} trend={stats.reported.trend} color={statusColors.reported} icon={FaExclamationTriangle} />
-                <StatCard
-                    title="Acknowledged"
-                    count={stats.acknowledged.count}
-                    change={stats.acknowledged.change}
-                    trend={stats.acknowledged.trend}
-                    color={statusColors.acknowledged}
-                    icon={FaCheckCircle}
-                />
-                <StatCard
-                    title="Pending Action"
-                    count={stats.pending.count}
-                    change={stats.pending.change}
-                    trend={stats.pending.trend}
-                    color={statusColors.pending}
-                    icon={FaClock}
-                />
-                <StatCard
-                    title="Resolved"
-                    count={stats.resolved.count}
-                    change={stats.resolved.change}
-                    trend={stats.resolved.trend}
-                    color={statusColors.resolved}
-                    icon={FaCheck}
-                />
+                <StatCard title="Acknowledged" count={stats.acknowledged.count} change={stats.acknowledged.change} trend={stats.acknowledged.trend} color={statusColors.acknowledged} icon={FaCheckCircle} />
+                <StatCard title="Pending Action" count={stats.pending.count} change={stats.pending.change} trend={stats.pending.trend} color={statusColors.pending} icon={FaClock} />
+                <StatCard title="Resolved" count={stats.resolved.count} change={stats.resolved.change} trend={stats.resolved.trend} color={statusColors.resolved} icon={FaCheck} />
             </div>
 
             {/* Recent Issues */}
@@ -273,12 +252,8 @@ export default function DashboardHome() {
                             <div key={issue._id} className="p-6 hover:bg-light-gray/30 transition-colors duration-200">
                                 <div className="flex items-start gap-4">
                                     {/* Status Indicator */}
-                                    <div 
-                                        className="w-10 h-10 rounded-full flex items-center justify-center  shrink-0"
-                                        style={{ 
-                                            backgroundColor: `${statusColors[issue.status as keyof typeof statusColors]}20`,
-                                            color: statusColors[issue.status as keyof typeof statusColors]
-                                        }}
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center  shrink-0"
+                                        style={{ backgroundColor: `${statusColors[issue.status as keyof typeof statusColors]}20`, color: statusColors[issue.status as keyof typeof statusColors] }}
                                     >
                                         <StatusIcon size={16} />
                                     </div>
@@ -289,22 +264,14 @@ export default function DashboardHome() {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <h3 className="font-semibold text-almost-black">{issue.title}</h3>
-                                                    <span 
-                                                        className="px-2 py-1 rounded-full text-xs font-medium"
-                                                        style={{ backgroundColor: `${categoryInfo.color}20`, color: categoryInfo.color }}
-                                                    >
-                                                        {categoryInfo.name}
-                                                    </span>
-                                                    <span 
-                                                        className="px-2 py-1 rounded-full text-xs font-medium"
+                                                    <span className="px-2 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: `${categoryInfo.color}20`, color: categoryInfo.color }}>{categoryInfo.name}</span>
+                                                    <span className="px-2 py-1 rounded-full text-xs font-medium"
                                                         style={{ backgroundColor: `${priorityColors[issue.priority as keyof typeof priorityColors]}20`, color: priorityColors[issue.priority as keyof typeof priorityColors] }}
                                                     >
                                                         {issue.priority}
                                                     </span>
                                                 </div>
-                                                <p className="text-neutral-text text-sm mb-3 line-clamp-2">
-                                                    {issue.description || 'No description provided'}
-                                                </p>
+                                                <p className="text-neutral-text text-sm mb-3 line-clamp-2">{issue.description || 'No description provided'}</p>
                                                 <div className="flex items-center gap-4 text-xs text-gray-500">
                                                     <div className="flex items-center gap-1">
                                                         <FaCalendarAlt size={12} />
