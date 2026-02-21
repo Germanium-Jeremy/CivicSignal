@@ -1,25 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { userAPI } from "@/lib/api";
-import { 
-    FaCog, 
-    FaUser, 
-    FaEnvelope, 
-    FaPhone, 
-    FaLock,
-    FaEye,
-    FaEyeSlash,
-    FaSave,
-    FaTimes,
-    FaEdit,
-    FaTrash,
-    FaExclamationTriangle,
-    FaBell,
-    FaShieldAlt,
-    FaDatabase,
-    FaDownload,
-    FaCheckCircle
-} from "react-icons/fa";
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaEye, FaEyeSlash, FaSave, FaTimes, FaEdit, FaTrash, FaExclamationTriangle, FaBell, FaShieldAlt, FaDatabase, FaDownload, FaCheckCircle } from "react-icons/fa";
 
 interface UserData {
     firstName: string;
@@ -189,9 +171,7 @@ export default function SettingsPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-almost-black">Settings</h1>
-                    <p className="text-neutral-text mt-1">
-                        Manage your account preferences and security settings
-                    </p>
+                    <p className="text-neutral-text mt-1">Manage your account preferences and security settings</p>
                 </div>
             </div>
 
@@ -207,9 +187,7 @@ export default function SettingsPage() {
                     ].map((tab) => {
                         const Icon = tab.icon;
                         return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors duration-300 whitespace-nowrap ${
                                     activeTab === tab.id
                                         ? 'text-accent2 border-b-2 border-accent2'
@@ -231,8 +209,7 @@ export default function SettingsPage() {
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold text-almost-black">Account Information</h3>
                                 {!isEditing ? (
-                                    <button
-                                        onClick={() => setIsEditing(true)}
+                                    <button onClick={() => setIsEditing(true)}
                                         className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                                     >
                                         <FaEdit size={14} />
@@ -240,15 +217,13 @@ export default function SettingsPage() {
                                     </button>
                                 ) : (
                                     <div className="flex gap-2">
-                                        <button
-                                            onClick={handleSaveAccount}
+                                        <button onClick={handleSaveAccount}
                                             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                                         >
                                             <FaSave size={14} />
                                             Save
                                         </button>
-                                        <button
-                                            onClick={handleCancelEdit}
+                                        <button onClick={handleCancelEdit}
                                             className="px-4 py-2 border border-light-gray text-neutral-text rounded-lg hover:border-red-300 hover:text-red-600 transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                                         >
                                             <FaTimes size={14} />
@@ -261,14 +236,9 @@ export default function SettingsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-almost-black mb-2">
-                                            First Name
-                                        </label>
+                                        <label className="block text-sm font-medium text-almost-black mb-2">First Name</label>
                                         {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={userData.firstName}
-                                                onChange={(e) => handleInputChange('firstName', e.target.value)}
+                                            <input type="text" value={userData.firstName} onChange={(e) => handleInputChange('firstName', e.target.value)}
                                                 className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                             />
                                         ) : (
@@ -280,14 +250,9 @@ export default function SettingsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-almost-black mb-2">
-                                            Email Address
-                                        </label>
+                                        <label className="block text-sm font-medium text-almost-black mb-2">Email Address</label>
                                         {isEditing ? (
-                                            <input
-                                                type="email"
-                                                value={userData.email}
-                                                onChange={(e) => handleInputChange('email', e.target.value)}
+                                            <input type="email" value={userData.email} onChange={(e) => handleInputChange('email', e.target.value)}
                                                 className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                             />
                                         ) : (
@@ -301,14 +266,9 @@ export default function SettingsPage() {
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-almost-black mb-2">
-                                            Last Name
-                                        </label>
+                                        <label className="block text-sm font-medium text-almost-black mb-2">Last Name</label>
                                         {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={userData.lastName}
-                                                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                                            <input type="text" value={userData.lastName} onChange={(e) => handleInputChange('lastName', e.target.value)}
                                                 className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                             />
                                         ) : (
@@ -320,14 +280,9 @@ export default function SettingsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-almost-black mb-2">
-                                            Phone Number
-                                        </label>
+                                        <label className="block text-sm font-medium text-almost-black mb-2">Phone Number</label>
                                         {isEditing ? (
-                                            <input
-                                                type="tel"
-                                                value={userData.phone}
-                                                onChange={(e) => handleInputChange('phone', e.target.value)}
+                                            <input type="tel" value={userData.phone} onChange={(e) => handleInputChange('phone', e.target.value)}
                                                 className="w-full px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
                                             />
                                         ) : (
