@@ -303,8 +303,7 @@ export default function SettingsPage() {
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold text-almost-black">Security Settings</h3>
                                 {!isChangingPassword && (
-                                    <button
-                                        onClick={() => setIsChangingPassword(true)}
+                                    <button onClick={() => setIsChangingPassword(true)}
                                         className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                                     >
                                         <FaLock size={14} />
@@ -318,20 +317,12 @@ export default function SettingsPage() {
                                     <h4 className="font-semibold text-almost-black mb-4">Change Password</h4>
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Current Password
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Current Password</label>
                                             <div className="relative">
-                                                <input
-                                                    type={showCurrentPassword ? "text" : "password"}
-                                                    value={userData.currentPassword}
-                                                    onChange={(e) => handleInputChange('currentPassword', e.target.value)}
-                                                    className="w-full px-4 py-2 pr-12 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
-                                                    placeholder="Enter current password"
+                                                <input type={showCurrentPassword ? "text" : "password"} value={userData.currentPassword} onChange={(e) => handleInputChange('currentPassword', e.target.value)}
+                                                    className="w-full px-4 py-2 pr-12 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2" placeholder="Enter current password"
                                                 />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                                                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-text hover:text-accent2"
                                                 >
                                                     {showCurrentPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
@@ -340,20 +331,12 @@ export default function SettingsPage() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                New Password
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">New Password</label>
                                             <div className="relative">
-                                                <input
-                                                    type={showNewPassword ? "text" : "password"}
-                                                    value={userData.newPassword}
-                                                    onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                                                    className="w-full px-4 py-2 pr-12 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
-                                                    placeholder="Enter new password"
+                                                <input type={showNewPassword ? "text" : "password"} value={userData.newPassword} onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                                                    className="w-full px-4 py-2 pr-12 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2" placeholder="Enter new password"
                                                 />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                                <button type="button" onClick={() => setShowNewPassword(!showNewPassword)}
                                                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-text hover:text-accent2"
                                                 >
                                                     {showNewPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
@@ -362,20 +345,12 @@ export default function SettingsPage() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-almost-black mb-2">
-                                                Confirm New Password
-                                            </label>
+                                            <label className="block text-sm font-medium text-almost-black mb-2">Confirm New Password</label>
                                             <div className="relative">
-                                                <input
-                                                    type={showConfirmPassword ? "text" : "password"}
-                                                    value={userData.confirmPassword}
-                                                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                                                    className="w-full px-4 py-2 pr-12 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
-                                                    placeholder="Confirm new password"
+                                                <input type={showConfirmPassword ? "text" : "password"} value={userData.confirmPassword} onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                                                    className="w-full px-4 py-2 pr-12 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2" placeholder="Confirm new password"
                                                 />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-text hover:text-accent2"
                                                 >
                                                     {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
@@ -396,13 +371,8 @@ export default function SettingsPage() {
                                                         { key: 'special', label: 'One special character', met: passwordRequirements.special }
                                                     ].map((req) => (
                                                         <div key={req.key} className="flex items-center gap-2">
-                                                            <FaCheckCircle 
-                                                                className={req.met ? 'text-green-500' : 'text-gray-300'} 
-                                                                size={14} 
-                                                            />
-                                                            <span className={`text-sm ${req.met ? 'text-green-700' : 'text-neutral-text'}`}>
-                                                                {req.label}
-                                                            </span>
+                                                            <FaCheckCircle className={req.met ? 'text-green-500' : 'text-gray-300'} size={14} />
+                                                            <span className={`text-sm ${req.met ? 'text-green-700' : 'text-neutral-text'}`}>{req.label}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -410,15 +380,12 @@ export default function SettingsPage() {
                                         )}
 
                                         <div className="flex gap-3">
-                                            <button
-                                                onClick={handlePasswordChange}
-                                                disabled={!isPasswordValid || userData.newPassword !== userData.confirmPassword}
+                                            <button onClick={handlePasswordChange} disabled={!isPasswordValid || userData.newPassword !== userData.confirmPassword}
                                                 className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 Update Password
                                             </button>
-                                            <button
-                                                onClick={() => setIsChangingPassword(false)}
+                                            <button onClick={() => setIsChangingPassword(false)}
                                                 className="px-4 py-2 border border-light-gray text-neutral-text rounded-lg hover:border-red-300 hover:text-red-600 transition-colors duration-300 text-sm font-medium"
                                             >
                                                 Cancel
@@ -451,8 +418,7 @@ export default function SettingsPage() {
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold text-almost-black">Notification Preferences</h3>
-                                <button
-                                    onClick={handleSaveNotifications}
+                                <button onClick={handleSaveNotifications}
                                     className="px-4 py-2 bg-accent2 text-white rounded-lg hover:bg-accent transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                                 >
                                     <FaSave size={14} />
@@ -476,11 +442,8 @@ export default function SettingsPage() {
                                                     <p className="text-sm text-neutral-text">{setting.description}</p>
                                                 </div>
                                                 <label className="relative inline-flex items-center cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={notificationSettings[setting.key as keyof typeof notificationSettings]}
-                                                        onChange={(e) => handleNotificationChange(setting.key, e.target.checked)}
-                                                        className="sr-only peer"
+                                                    <input type="checkbox" checked={notificationSettings[setting.key as keyof typeof notificationSettings]}
+                                                        onChange={(e) => handleNotificationChange(setting.key, e.target.checked)} className="sr-only peer"
                                                     />
                                                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-accent2/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent2"></div>
                                                 </label>
@@ -504,11 +467,8 @@ export default function SettingsPage() {
                                                     <p className="text-sm text-neutral-text">{setting.description}</p>
                                                 </div>
                                                 <label className="relative inline-flex items-center cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={notificationSettings[setting.key as keyof typeof notificationSettings]}
-                                                        onChange={(e) => handleNotificationChange(setting.key, e.target.checked)}
-                                                        className="sr-only peer"
+                                                    <input type="checkbox" checked={notificationSettings[setting.key as keyof typeof notificationSettings]}
+                                                        onChange={(e) => handleNotificationChange(setting.key, e.target.checked)} className="sr-only peer"
                                                     />
                                                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-accent2/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent2"></div>
                                                 </label>
@@ -533,11 +493,8 @@ export default function SettingsPage() {
                                     </div>
                                     <div className="flex-1">
                                         <h4 className="font-semibold text-almost-black mb-2">Export Your Data</h4>
-                                        <p className="text-neutral-text text-sm mb-4">
-                                            Download a copy of all your data including profile information, issue reports, and activity history.
-                                        </p>
-                                        <button
-                                            onClick={handleExportData}
+                                        <p className="text-neutral-text text-sm mb-4">Download a copy of all your data including profile information, issue reports, and activity history.</p>
+                                        <button onClick={handleExportData}
                                             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                                         >
                                             <FaDownload size={14} />
@@ -559,8 +516,7 @@ export default function SettingsPage() {
                                             Remove your saved preferences, cached data, and temporary files. This will not delete your account or profile information.
                                         </p>
                                         {!showDeleteConfirm ? (
-                                            <button
-                                                onClick={() => setShowDeleteConfirm(true)}
+                                            <button onClick={() => setShowDeleteConfirm(true)}
                                                 className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-300 text-sm font-medium flex items-center gap-2"
                                             >
                                                 <FaTrash size={14} />
@@ -572,18 +528,14 @@ export default function SettingsPage() {
                                                     <FaExclamationTriangle className="text-yellow-600" size={16} />
                                                     <span className="font-medium text-almost-black">Confirm Data Deletion</span>
                                                 </div>
-                                                <p className="text-sm text-neutral-text mb-4">
-                                                    Are you sure you want to delete your saved data? This action cannot be undone.
-                                                </p>
+                                                <p className="text-sm text-neutral-text mb-4">Are you sure you want to delete your saved data? This action cannot be undone.</p>
                                                 <div className="flex gap-3">
-                                                    <button
-                                                        onClick={handleDeleteData}
+                                                    <button onClick={handleDeleteData}
                                                         className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 text-sm font-medium"
                                                     >
                                                         Yes, Delete Data
                                                     </button>
-                                                    <button
-                                                        onClick={() => setShowDeleteConfirm(false)}
+                                                    <button onClick={() => setShowDeleteConfirm(false)}
                                                         className="px-4 py-2 border border-light-gray text-neutral-text rounded-lg hover:border-accent2 hover:text-accent2 transition-colors duration-300 text-sm font-medium"
                                                     >
                                                         Cancel
