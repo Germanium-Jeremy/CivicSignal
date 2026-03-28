@@ -4,7 +4,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { adminAPI, userAPI } from '@/lib/api';
 import { Issue } from '@/lib/types/api';
 import { getCategoryByName } from '@/config/categories';
-import { FaBuilding, FaExclamationTriangle, FaUsers, FaCheckCircle, FaClock, FaTimes, FaChartLine, FaTasks, FaEye, FaFilter } from 'react-icons/fa';
+import { FaBuilding, FaExclamationTriangle, FaUsers, FaCheckCircle, FaClock, FaTimes, FaChartLine, FaTasks, FaEye, FaFilter, FaCog } from 'react-icons/fa';
 import Link from 'next/link';
 
 interface DashboardStats {
@@ -26,13 +26,19 @@ interface DashboardStats {
           officers: number;
           active: number;
      };
+     sla: {
+          within: number;
+          atRisk: number;
+          breached: number;
+     }
 }
 
 export default function AdminDashboardPage() {
      const [stats, setStats] = useState<DashboardStats>({
           agencies: { total: 0, pending: 0, approved: 0, rejected: 0 },
           issues: { total: 0, open: 0, inProgress: 0, resolved: 0 },
-          users: { total: 0, citizens: 0, officers: 0, active: 0 }
+          users: { total: 0, citizens: 0, officers: 0, active: 0 },
+          sla: { within: 0, atRisk: 0, breached: 0 }
      });
      const [recentIssues, setRecentIssues] = useState<Issue[]>([]);
      const [adminData, setAdminData] = useState<{ fullName: string } | null>(null);
@@ -66,6 +72,15 @@ export default function AdminDashboardPage() {
                     inProgress: issues.filter((issue: any) => ['acknowledged', 'pending'].includes(issue.status)).length,
                     resolved: issues.filter((issue: any) => issue.status === 'resolved').length
                };
+
+               const slaStats = {
+                   within: issues.filter((issue: any) => issue.slaStatus === 'within_sla').length,
+                   atRisk: issues.filter((issue: any) => issue.slaStatus === 'at_risk').length,
+                   breached: issues.filter((issue: any) => issue.slaStatus === 'breached').length || issues.filter((issue: any) => {
+                        if (!issue.slaDeadline) return false;
+                        return new Date(issue.slaDeadline) < new Date() && issue.status !== 'resolved';
+                   }).length
+               };
                
                // Get recent issues (last 5)
                const recent = issues.slice(0, 5);
@@ -77,7 +92,8 @@ export default function AdminDashboardPage() {
                if (dashboardResponse.success) {
                     const currentStats = {
                          ...dashboardResponse.stats,
-                         issues: issuesStats
+                         issues: issuesStats,
+                         sla: slaStats
                     };
                     setStats(currentStats);
                     
@@ -102,7 +118,8 @@ export default function AdminDashboardPage() {
                     setStats({
                          agencies: { total: 0, pending: 0, approved: 0, rejected: 0 },
                          issues: issuesStats,
-                         users: { total: 0, citizens: 0, officers: 0, active: 0 }
+                         users: { total: 0, citizens: 0, officers: 0, active: 0 },
+                         sla: { within: 0, atRisk: 0, breached: 0 }
                     });
                }
           } catch (error) {
@@ -111,7 +128,8 @@ export default function AdminDashboardPage() {
                setStats({
                     agencies: { total: 0, pending: 0, approved: 0, rejected: 0 },
                     issues: { total: 0, open: 0, inProgress: 0, resolved: 0 },
-                    users: { total: 0, citizens: 0, officers: 0, active: 0 }
+                    users: { total: 0, citizens: 0, officers: 0, active: 0 },
+                    sla: { within: 0, atRisk: 0, breached: 0 }
                });
           } finally {
                setIsLoading(false);
@@ -181,6 +199,8 @@ export default function AdminDashboardPage() {
                          <StatCard title="Total Issues" value={stats.issues.total} icon={FaExclamationTriangle} color="bg-orange-500" subtitle={`${stats.issues.open} need attention`}
                               trend={`${trends.issues.value >= 0 ? '+' : ''}${trends.issues.value} ${trends.issues.period}`} />
                               
+                         <StatCard title="SLA Compliance" value={stats.issues.total > 0 ? Math.round((stats.sla.within / stats.issues.total) * 100) : 100} icon={FaTasks} color="bg-cyan-500" subtitle={`${stats.sla.breached} breached deadlines`} trend="Active" />
+
                          <StatCard title="Total Users" value={stats.users.total} icon={FaUsers} color="bg-green-500" subtitle={`${stats.users.active} active now`}
                               trend={`${trends.users.value >= 0 ? '+' : ''}${trends.users.value} this ${trends.users.period}`} />
                          
@@ -207,6 +227,13 @@ export default function AdminDashboardPage() {
                                    { label: 'Citizens', value: stats.users.citizens, color: 'text-blue-500', icon: FaUsers },
                                    { label: 'Agency Officers', value: stats.users.officers, color: 'text-purple-500', icon: FaBuilding },
                                    { label: 'Active Users', value: stats.users.active, color: 'text-green-500', icon: FaCheckCircle }
+                              ]}
+                         />
+
+                         <DetailCard title="SLA Performance" items={[
+                                   { label: 'Within SLA', value: stats.sla.within, color: 'text-green-500', icon: FaCheckCircle },
+                                   { label: 'At Risk', value: stats.sla.atRisk, color: 'text-yellow-500', icon: FaClock },
+                                   { label: 'SLA Breached', value: stats.sla.breached, color: 'text-red-500', icon: FaTimes }
                               ]}
                          />
                     </div>
@@ -247,16 +274,19 @@ export default function AdminDashboardPage() {
                                                             </div>
                                                        </div>
                                                   </div>
-                                                  <div className="flex items-center gap-2">
-                                                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                            issue.status === 'submitted' ? 'bg-red-100 text-red-700' :
-                                                            issue.status === 'acknowledged' ? 'bg-yellow-100 text-yellow-700' :
-                                                            issue.status === 'pending' ? 'bg-blue-100 text-blue-700' :
-                                                            'bg-green-100 text-green-700'
-                                                       }`}>
-                                                            {issue.status === 'submitted' ? 'Open' : issue.status === 'acknowledged' ? 'In Review' : issue.status === 'pending' ? 'In Progress' : 'Resolved' }
-                                                       </span>
-                                                  </div>
+                                                   <div className="flex items-center gap-2">
+                                                        {(issue as any).slaStatus === 'breached' && (
+                                                            <span className="px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded animate-pulse">BREACHED</span>
+                                                        )}
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                             issue.status === 'submitted' ? 'bg-red-100 text-red-700' :
+                                                             issue.status === 'acknowledged' ? 'bg-yellow-100 text-yellow-700' :
+                                                             issue.status === 'pending' ? 'bg-blue-100 text-blue-700' :
+                                                             'bg-green-100 text-green-700'
+                                                        }`}>
+                                                             {issue.status === 'submitted' ? 'Open' : issue.status === 'acknowledged' ? 'In Review' : issue.status === 'pending' ? 'In Progress' : 'Resolved' }
+                                                        </span>
+                                                   </div>
                                              </div>
                                         );
                                    })}
@@ -267,7 +297,7 @@ export default function AdminDashboardPage() {
                     {/* Quick Actions */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                          <h3 className="text-lg font-semibold text-almost-black mb-4">Quick Actions</h3>
-                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                               <button onClick={() => window.location.href = '/admin/agencies'}
                                    className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all"
                               >
@@ -295,6 +325,16 @@ export default function AdminDashboardPage() {
                                    <div className="text-left">
                                         <p className="font-semibold text-almost-black">View Users</p>
                                         <p className="text-xs text-neutral-text">{stats.users.total} total</p>
+                                   </div>
+                              </button>
+
+                              <button onClick={() => window.location.href = '/admin/templates'}
+                                   className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-accent2 hover:bg-accent2/5 transition-all"
+                              >
+                                   <FaCog className="text-accent2 text-2xl" />
+                                   <div className="text-left">
+                                        <p className="font-semibold text-almost-black">Template Builder</p>
+                                        <p className="text-xs text-neutral-text">Edit schemas & workflows</p>
                                    </div>
                               </button>
                          </div>
