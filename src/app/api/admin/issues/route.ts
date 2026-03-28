@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Issue from "@/models/Issue";
 import { requireAuth, requireRole } from "@/lib/middleware";
 import connectDB from "@/lib/mongodb";
+import { buildTenantQuery, resolveTenantContext } from "@/lib/utils/tenant";
 
 // GET /api/admin/issues - Get all issues with pagination and filters
 export async function GET(request: NextRequest) {
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
           }
 
           const { searchParams } = new URL(request.url);
+          const { tenantId } = resolveTenantContext(request);
           const page = parseInt(searchParams.get("page") || "1");
           const limit = parseInt(searchParams.get("limit") || "10");
           const status = searchParams.get("status");
@@ -29,7 +31,9 @@ export async function GET(request: NextRequest) {
           const skip = (page - 1) * limit;
 
           // Build query
-          const query: any = {};
+          const query: any = {
+               ...buildTenantQuery(tenantId),
+          };
 
           if (status && status !== "undefined" && status.trim() !== "") {
                query.status = status;
@@ -48,20 +52,10 @@ export async function GET(request: NextRequest) {
 
           const total = await Issue.countDocuments(query);
 
-          console.log("Admin API Results:", {
-               issuesFound: issues.length,
-               total,
-               firstIssue: issues[0] ? {
-                    id: issues[0]._id,
-                    title: issues[0].title,
-                    status: issues[0].status,
-                    } : null,
-               issues: issues,
-          });
-
           // Transform data to match React Native structure
           const transformedIssues = issues.map((issue) => ({
                ...issue,
+               photos: (issue as any).media || [],
                date: issue.submittedAt
                ? new Date(issue.submittedAt).toISOString()
                : issue.createdAt
