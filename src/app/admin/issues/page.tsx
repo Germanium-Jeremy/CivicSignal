@@ -21,7 +21,7 @@ const IssuesPage = () => {
      // State for status change modal
      const [statusModalOpen, setStatusModalOpen] = useState(false);
      const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
-     const [newStatus, setNewStatus] = useState<"submitted" | "acknowledged" | "pending" | "resolved">("submitted");
+     const [newStatus, setNewStatus] = useState<"submitted" | "acknowledged" | "pending" | "resolved" | "closed">("submitted");
      const [statusComment, setStatusComment] = useState("");
      const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
@@ -87,7 +87,7 @@ const IssuesPage = () => {
      };
 
      // Update issue status with comment
-     const updateIssueStatus = async (issue_id?: string, status?: "submitted" | "acknowledged" | "pending" | "resolved") => {
+     const updateIssueStatus = async (issue_id?: string, status?: "submitted" | "acknowledged" | "pending" | "resolved" | "closed") => {
           if (!selectedIssue || !newStatus) return;
 
           setIsUpdatingStatus(true);
@@ -258,12 +258,13 @@ const IssuesPage = () => {
                                             
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                  <select className="text-sm border-0 p-0 bg-transparent focus:ring-2 focus:ring-accent2/50 rounded"
-                                                                      value={issue.status} onChange={(e) => updateIssueStatus(issue._id, e.target.value as | "submitted" | "acknowledged" | "pending" | "resolved")}
+                                                                      value={issue.status} onChange={(e) => updateIssueStatus(issue._id, e.target.value as | "submitted" | "acknowledged" | "pending" | "resolved" | "closed")}
                                                                  >
                                                                       <option value="submitted">Submitted</option>
                                                                       <option value="acknowledged">In Review</option>
                                                                       <option value="pending">In Progress</option>
                                                                       <option value="resolved">Resolved</option>
+                                                                      <option value="closed">Closed</option>
                                                                  </select>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -374,12 +375,13 @@ const IssuesPage = () => {
                                    <label className="block text-sm font-medium text-gray-700 mb-2">New Status</label>
                                    <select
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent2/50"
-                                        value={newStatus} onChange={(e) => setNewStatus(e.target.value as | "submitted" | "acknowledged" | "pending" | "resolved")}
+                                        value={newStatus} onChange={(e) => setNewStatus(e.target.value as | "submitted" | "acknowledged" | "pending" | "resolved" | "closed")}
                                    >
                                         <option value="submitted">Submitted</option>
                                         <option value="acknowledged">In Review</option>
                                         <option value="pending">In Progress</option>
                                         <option value="resolved">Resolved</option>
+                                        <option value="closed">Closed</option>
                                    </select>
                               </div>
 
