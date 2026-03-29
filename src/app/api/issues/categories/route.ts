@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CATEGORIES, getCategoryByName } from '@/config/categories';
+import connectDB from '@/lib/mongodb';
+import { getCategoryTemplates } from '@/lib/services/issueTemplateService';
+import { resolveTenantContext } from '@/lib/utils/tenant';
+import { getOrSetCache } from '@/lib/cache/responseCache';
+
+const CATEGORY_CACHE_TTL_MS = 5 * 60 * 1000;
 
 /**
  * GET /api/issues/categories
@@ -8,11 +13,15 @@ import { CATEGORIES, getCategoryByName } from '@/config/categories';
  */
 export async function GET(request: NextRequest) {
      try {
-          // Return all categories
+          await connectDB();
+          const { tenantId } = resolveTenantContext(request);
+          const cacheKey = `categories:${tenantId}`;
+          const categories = await getOrSetCache(cacheKey, CATEGORY_CACHE_TTL_MS, () => getCategoryTemplates(tenantId));
+
           return NextResponse.json({
                success: true,
                message: 'Issue categories retrieved successfully',
-               data: { categories: CATEGORIES, total: CATEGORIES.length }
+               data: { categories, total: categories.length }
           });
      } catch (error) {
           console.error('Get categories error:', error);
