@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import { comparePassword, generateTokens, isRwandanIP, generateDeviceId, getDeviceName, getLocationFromIP, generateVerificationCode } from "@/lib/utils/auth";
+import {
+     comparePassword,
+     generateTokens,
+     isRwandanIP,
+     generateDeviceId,
+     getDeviceName,
+     getLocationFromIP,
+     generateVerificationCode,
+     attachAuthCookies,
+     attachSessionCookie,
+} from "@/lib/utils/auth";
 import { sendEmail, sendPhoneVerification } from "@/lib/services/notification";
+import { createServerSession } from "@/lib/session/sessionStore";
+import { resolveTenantContext } from "@/lib/utils/tenant";
 
 export async function POST(request: NextRequest) {
      try {
@@ -137,15 +149,22 @@ export async function POST(request: NextRequest) {
                email: user.email,
                role: user.role,
                isEmailVerified: user.isEmailVerified,
-               isPhoneVerified: user.isPhoneVerified,
+               isPhoneVerified: user.isPhoneVerified
           };
 
           const { accessToken, refreshToken } = generateTokens(tokenPayload);
+          const { tenantId } = resolveTenantContext(request);
+          const serverSession = await createServerSession({
+               userId: String(user._id),
+               email: user.email,
+               role: user.role,
+               isEmailVerified: user.isEmailVerified,
+               isPhoneVerified: user.isPhoneVerified,
+               tenantId,
+          });
 
           // Store refresh token
           user.refreshTokens.push(refreshToken);
-          console.log("Refresh token stored for user: ", user.email, "access token: ", accessToken);
-
           // Keep only last 5 refresh tokens per user
           if (user.refreshTokens.length > 5) {
                user.refreshTokens = user.refreshTokens.slice(-5);
@@ -153,8 +172,7 @@ export async function POST(request: NextRequest) {
 
           await user.save();
 
-          // Return success response
-          return NextResponse.json({
+          const response = NextResponse.json({
                success: true,
                tokens: { accessToken, refreshToken},
                user: {
@@ -172,6 +190,10 @@ export async function POST(request: NextRequest) {
                },
                isNewDevice,
           });
+
+          attachAuthCookies(response, { accessToken, refreshToken });
+          attachSessionCookie(response, serverSession.sessionId, serverSession.ttlSeconds);
+          return response;
      } catch (error) {
           console.error("Login error:", error);
           return NextResponse.json({ error: "Internal server error" }, { status: 500 });
