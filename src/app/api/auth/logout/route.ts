@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import { verifyAccessToken, generateDeviceId } from "@/lib/utils/auth";
+import {
+     verifyAccessToken,
+     generateDeviceId,
+     clearAuthCookies,
+     clearSessionCookie,
+     getAccessTokenFromRequest,
+     getSessionIdFromRequest,
+} from "@/lib/utils/auth";
+import { destroyServerSession } from "@/lib/session/sessionStore";
 
 export async function POST(request: NextRequest) {
      try {
@@ -9,9 +17,8 @@ export async function POST(request: NextRequest) {
 
           const { refreshToken, logoutAll = false } = await request.json();
 
-          // Get access token from Authorization header
-          const authHeader = request.headers.get("authorization");
-          const accessToken = authHeader?.replace("Bearer ", "");
+          // Get access token from Authorization header or secure cookie
+          const accessToken = getAccessTokenFromRequest(request);
 
           if (!accessToken) {
                return NextResponse.json({ error: "Access token is required" }, { status: 401 });
@@ -53,12 +60,20 @@ export async function POST(request: NextRequest) {
 
           await user.save();
 
-          return NextResponse.json({
+          const sessionId = getSessionIdFromRequest(request);
+          if (sessionId) {
+               await destroyServerSession(sessionId);
+          }
+
+          const response = NextResponse.json({
                success: true,
                message: logoutAll
                     ? "Logged out from all devices successfully"
                     : "Logged out successfully",
           });
+          clearAuthCookies(response);
+          clearSessionCookie(response);
+          return response;
      } catch (error) {
           console.error("Logout error:", error);
           return NextResponse.json({ error: "Internal server error" }, { status: 500 });
