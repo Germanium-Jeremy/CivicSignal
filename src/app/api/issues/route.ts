@@ -1,319 +1,392 @@
-import { NextRequest, NextResponse } from 'next/server';
-import Issue, { IIssuePhoto } from '@/models/Issue';
-import { verifyAuth } from '@/lib/utils/auth';
-import { verifyDevice, checkSubmissionLimit, registerDevice } from '@/lib/utils/deviceVerification';
-import { isValidCategory, getCategoryByName, CATEGORIES } from '@/config/categories';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
+import Issue, { IIssueMedia } from '@/models/Issue';
+import { requireAuth } from '@/lib/middleware';
+import { checkSubmissionLimit } from '@/lib/utils/deviceVerification';
+import { calculateSlaDeadline, getCategoryTemplateByName, validateCustomFields, validateEvidenceRules, validateLocationForPolicy } from '@/lib/services/issueTemplateService';
+import { generateIssueMarkdown } from '@/lib/utils/reportGenerator';
+import { sanitizeRecord, sanitizeText } from '@/lib/utils/sanitize';
+import { buildTenantQuery, resolveTenantContext } from '@/lib/utils/tenant';
+import { getOrSetCache, invalidateCache } from '@/lib/cache/responseCache';
+
+const ISSUES_CACHE_TTL_MS = 30 * 1000;
+
+function normalizePriority(priority?: string): 'High' | 'Medium' | 'Low' {
+  const value = String(priority || '').toLowerCase();
+  if (value === 'high' || value === 'urgent') return 'High';
+  if (value === 'low') return 'Low';
+  return 'Medium';
+}
+
+function normalizeSource(source?: string): 'web' | 'mobile' | 'ios' | 'android' | 'api' {
+  const value = String(source || '').toLowerCase();
+  if (value === 'mobile') return 'mobile';
+  if (value === 'ios') return 'ios';
+  if (value === 'android') return 'android';
+  if (value === 'api') return 'api';
+  return 'web';
+}
+
+function mapIncomingLocation(location: any) {
+  if (!location) return null;
+
+  if (typeof location.latitude === 'number' && typeof location.longitude === 'number') {
+    return {
+      type: 'Point' as const,
+      coordinates: [location.longitude, location.latitude] as [number, number],
+      address: sanitizeText(location.address || '', 300) || undefined,
+      district: sanitizeText(location.district || '', 120) || undefined,
+      sector: sanitizeText(location.sector || '', 120) || undefined,
+    };
+  }
+
+  if (location.coordinates && Array.isArray(location.coordinates) && location.coordinates.length === 2) {
+    const [longitude, latitude] = location.coordinates;
+    if (typeof latitude === 'number' && typeof longitude === 'number') {
+      return {
+        type: 'Point' as const,
+        coordinates: [longitude, latitude] as [number, number],
+        address: sanitizeText(location.address || '', 300) || undefined,
+        district: sanitizeText(location.district || '', 120) || undefined,
+        sector: sanitizeText(location.sector || '', 120) || undefined,
+      };
+    }
+  }
+
+  if (location.address || location.district || location.sector) {
+    return {
+      type: 'Point' as const,
+      coordinates: [0, 0] as [number, number],
+      address: sanitizeText(location.address || '', 300) || undefined,
+      district: sanitizeText(location.district || '', 120) || undefined,
+      sector: sanitizeText(location.sector || '', 120) || undefined,
+    };
+  }
+
+  return null;
+}
+
+function buildGeospatialSummary(issues: any[]) {
+  const hotspotMap = new Map<string, { key: string; latitude: number; longitude: number; count: number; categories: Set<string> }>();
+
+  for (const issue of issues) {
+    const coords = issue.location?.coordinates;
+    if (!coords || coords.length !== 2) continue;
+
+    const [longitude, latitude] = coords;
+    const cellLat = Number(latitude.toFixed(3));
+    const cellLng = Number(longitude.toFixed(3));
+    const key = `${cellLat},${cellLng}`;
+
+    const existing = hotspotMap.get(key);
+    if (!existing) {
+      hotspotMap.set(key, {
+        key,
+        latitude: cellLat,
+        longitude: cellLng,
+        count: 1,
+        categories: new Set([issue.category]),
+      });
+      continue;
+    }
+
+    existing.count += 1;
+    existing.categories.add(issue.category);
+  }
+
+  return [...hotspotMap.values()]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 30)
+    .map((cell) => ({
+      latitude: cell.latitude,
+      longitude: cell.longitude,
+      count: cell.count,
+      categories: [...cell.categories],
+    }));
+}
 
 export async function GET(request: NextRequest) {
-     try {
-          await connectDB();
+  try {
+    await connectDB();
 
-          const { searchParams } = new URL(request.url);
-          
-          // Pagination
-          const page = parseInt(searchParams.get('page') || '1');
-          const limit = parseInt(searchParams.get('limit') || '200');
-          const skip = (page - 1) * limit;
+    const { tenantId } = resolveTenantContext(request);
+    const { searchParams } = new URL(request.url);
 
-          // Filters
-          const status = searchParams.get('status');
-          const priority = searchParams.get('priority');
-          const category = searchParams.get('category');
-          const district = searchParams.get('district');
-          const sector = searchParams.get('sector');
-          const userId = searchParams.get('userId'); // Get user's own issues
-          
-          // Geolocation filters
-          const latitude = searchParams.get('latitude');
-          const longitude = searchParams.get('longitude');
-          const radius = parseInt(searchParams.get('radius') || '5000'); // Default 5km
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(200, Math.max(1, parseInt(searchParams.get('limit') || '100', 10)));
+    const skip = (page - 1) * limit;
 
-          // Build query
-          const query: any = { isPublic: true, showOnMap: true };
+    const status = searchParams.get('status');
+    const priority = searchParams.get('priority');
+    const category = searchParams.get('category');
+    const district = searchParams.get('district');
+    const sector = searchParams.get('sector');
+    const userId = searchParams.get('userId');
+    const includeGeoSummary = searchParams.get('geoSummary') === 'true';
 
-          if (status) query.status = status;
-          if (priority) query.priority = priority;
-          if (category) query.category = category;
-          if (district) query['location.district'] = district;
-          if (sector) query['location.sector'] = sector;
-          if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-               query.reportedBy = userId;
-               delete query.isPublic; // Allow user to see their own issues regardless of visibility
-          }
+    const latitude = searchParams.get('latitude');
+    const longitude = searchParams.get('longitude');
+    const radius = Math.min(25000, Math.max(100, parseInt(searchParams.get('radius') || '5000', 10)));
 
-          // Geolocation query
-          if (latitude && longitude) {
-               query.location = {
-                    $near: {
-                         $geometry: {
-                              type: 'Point',
-                              coordinates: [parseFloat(longitude), parseFloat(latitude)],
-                         },
-                         $maxDistance: radius,
-                    },
-               };
-          }
+    const cacheKey = `issues:${tenantId}:${searchParams.toString()}`;
 
-          // Execute query
-          const issues = await Issue.find(query)
-               .populate('reportedBy', 'fullName email')
-               .populate('assignedAgency', 'name type')
-               .sort({ submittedAt: -1 })
-               .skip(skip)
-               .limit(limit)
-               .lean();
+    const result = await getOrSetCache(cacheKey, ISSUES_CACHE_TTL_MS, async () => {
+      const query: any = {
+        ...buildTenantQuery(tenantId),
+        isPublic: true,
+      };
 
-          const total = await Issue.countDocuments(query);
+      if (status) query.status = status;
+      if (priority) query.priority = priority;
+      if (category) query.category = category;
+      if (district) query['location.district'] = district;
+      if (sector) query['location.sector'] = sector;
 
-          return NextResponse.json({
-               success: true,
-               message: 'Issues retrieved successfully',
-               data: {
-                    issues,
-                    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-               },
-          });
-     } catch (error) {
-          console.error('Get issues error:', error);
-          return NextResponse.json(
-               { success: false, error: 'Failed to fetch issues' },
-               { status: 500 }
-          );
-     }
+      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+        query.reportedBy = userId;
+        delete query.isPublic;
+      }
+
+      if (latitude && longitude) {
+        query.location = {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            },
+            $maxDistance: radius,
+          },
+        };
+      }
+
+      const issues = await Issue.find(query)
+        .populate('reportedBy', 'fullName email profileImage')
+        .populate('assignedAgency', 'name type')
+        .sort({ submittedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
+      const total = await Issue.countDocuments(query);
+
+      const transformedIssues = issues.map((issue: any) => ({
+        ...issue,
+        photos: issue.media || [],
+      }));
+
+      return {
+        issues: transformedIssues,
+        total,
+        geospatial: includeGeoSummary ? buildGeospatialSummary(transformedIssues) : undefined,
+      };
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Issues retrieved successfully',
+      data: {
+        issues: result.issues,
+        geospatial: result.geospatial,
+        pagination: {
+          page,
+          limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / limit),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Get issues error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to fetch issues' }, { status: 500 });
+  }
 }
 
-/**
- * POST /api/issues
- * Create a new issue report
- * Requires authentication
- * Validates device and enforces submission limits
- */
 export async function POST(request: NextRequest) {
-     try {
-          await connectDB();
+  try {
+    await connectDB();
 
-          // Verify authentication
-          const authResult = verifyAuth(request);
-          if (!authResult.isAuthenticated) {
-               return authResult.error || NextResponse.json(
-                    { success: false, error: 'Authentication required' },
-                    { status: 401 }
-               );
-          }
+    const auth = await requireAuth(request);
+    if (!auth.success || !auth.user?.userId) {
+      return NextResponse.json({ success: false, error: auth.error || 'Authentication required' }, { status: auth.status || 401 });
+    }
 
-          const userId = authResult.userId;
-          const body = await request.json();
+    const { tenantId, tenantSlug } = resolveTenantContext(request);
+    const body = await request.json();
 
-          // Validate required fields (location is now optional)
-          const { title, description, category, location, photos, deviceInfo } = body;
+    const categoryInput = sanitizeText(body.category || '', 120);
+    if (!categoryInput) {
+      return NextResponse.json({ success: false, error: 'Category is required' }, { status: 400 });
+    }
 
-          if (!category) {
-               return NextResponse.json(
-                    {
-                         success: false,
-                         error: 'Missing required fields',
-                         details: { title: false, category: !category, location: false, deviceInfo: !deviceInfo, },
-                    },
-                    { status: 400 }
-               );
-          }
+    const categoryTemplate = await getCategoryTemplateByName(categoryInput, tenantId);
+    if (!categoryTemplate) {
+      return NextResponse.json({ success: false, error: 'Invalid category for this tenant' }, { status: 400 });
+    }
 
-          // Helper to get client IP (X-Forwarded-For aware)
-          const getClientIp = () => {
-               const xff = request.headers.get('x-forwarded-for');
-               if (xff) return xff.split(',')[0].trim();
-               // Next.js may not expose request.ip; leave undefined when not available
-               return undefined as string | undefined;
-          };
+    const rawCustomFields = (body.customFields || {}) as Record<string, unknown>;
+    const fieldValidation = validateCustomFields(categoryTemplate.fields, rawCustomFields);
+    if (!fieldValidation.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Category field validation failed',
+          details: fieldValidation.errors,
+        },
+        { status: 400 }
+      );
+    }
 
-          // If no location provided, try to resolve by IP
-          let finalLocation: any = null;
-          if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
-               finalLocation = {
-                    type: 'Point',
-                    coordinates: [location.longitude, location.latitude],
-                    address: location.address,
-                    district: location.district,
-                    sector: location.sector,
-               };
-          } else {
-               try {
-                    const ip = getClientIp();
-                    if (ip) {
-                         // Use a public IP geolocation service (no key). Suitable for dev; consider configuring a paid provider for prod.
-                         const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { cache: 'no-store' });
-                         if (geoRes.ok) {
-                              const geo = await geoRes.json();
-                              if (geo && typeof geo.latitude === 'number' && typeof geo.longitude === 'number') {
-                                   finalLocation = {
-                                        type: 'Point',
-                                        coordinates: [geo.longitude, geo.latitude],
-                                        address: geo.city || undefined,
-                                        district: geo.region || undefined,
-                                        sector: geo.country_name || undefined,
-                                   };
-                              }
-                         }
-                    }
-               } catch (e) {
-                    console.warn('IP geolocation failed:', e);
-               }
-          }
+    const rawMedia = Array.isArray(body.media) ? body.media : Array.isArray(body.photos) ? body.photos : [];
+    const media: IIssueMedia[] = rawMedia
+      .map((item: any) => ({
+        url: sanitizeText(item.url || '', 2000),
+        thumbnailUrl: sanitizeText(item.thumbnailUrl || '', 2000) || undefined,
+        uploadedAt: new Date(),
+        size: Number(item.size || 0),
+        mimeType: sanitizeText(item.mimeType || 'image/jpeg', 100),
+        mediaType: item.mediaType || (String(item.mimeType || '').startsWith('audio/') ? 'audio' : String(item.mimeType || '').startsWith('video/') ? 'video' : 'image'),
+      }))
+      .filter((item: IIssueMedia) => !!item.url);
 
-          // Validate category
-          if (!isValidCategory(category)) {
-               return NextResponse.json(
-                    {
-                         success: false,
-                         error: 'Invalid category',
-                         availableCategories: CATEGORIES.map((c: any) => c.id),
-                    },
-                    { status: 400 }
-               );
-          }
+    const evidenceValidation = validateEvidenceRules(categoryTemplate.evidenceRules, media);
+    if (!evidenceValidation.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Evidence does not meet category requirements',
+          details: evidenceValidation.errors,
+        },
+        { status: 400 }
+      );
+    }
 
-          // Verify device to prevent scam reports
-          // const deviceVerification = await verifyDevice(userId, deviceInfo);
-          
-          // if (!deviceVerification.isVerified) {
-          //   // Register device if it's a new device (trust score above minimum threshold)
-          //   if (deviceVerification.trustScore >= 30) {
-          //     await registerDevice(userId, deviceInfo);
-          //   } else {
-          //     return NextResponse.json(
-          //       {
-          //         success: false,
-          //         error: 'Device verification failed',
-          //         message: 'This device is not registered with your account. Please use the device you registered with or contact support.',
-          //         trustScore: deviceVerification.trustScore,
-          //       },
-          //       { status: 403 }
-          //     );
-          //   }
-          // }
+    const locationInput = body.location || null;
+    const locationValidation = validateLocationForPolicy(categoryTemplate.locationPolicy, locationInput);
+    if (!locationValidation.valid) {
+      return NextResponse.json({ success: false, error: locationValidation.error }, { status: 400 });
+    }
 
-          // Check submission limit to prevent spam
-          if (!userId) return
-          const submissionCheck = await checkSubmissionLimit(userId);
-          if (!submissionCheck.allowed) {
-               return NextResponse.json(
-                    {
-                         success: false,
-                         error: 'Daily submission limit reached',
-                         message: `You have reached the maximum number of issue reports for today. Please try again after ${submissionCheck.resetAt.toLocaleTimeString()}.`,
-                         remaining: submissionCheck.remaining,
-                         resetAt: submissionCheck.resetAt,
-                    },
-                    { status: 429 }
-               );
-          }
+    const finalLocation = mapIncomingLocation(locationInput);
+    const hasValidCoordinates = Boolean(finalLocation && finalLocation.coordinates[0] !== 0 && finalLocation.coordinates[1] !== 0);
 
-          // Get category details for priority suggestion
-          const categoryDetails = getCategoryByName(category);
-          const normalizePriority = (p?: string) => {
-               const v = String(p || '').toLowerCase();
-               if (v === 'high') return 'High';
-               if (v === 'medium' || v === 'normal' || v === '') return 'Medium';
-               if (v === 'low') return 'Low';
-               return 'Medium';
-          };
-          const suggestedPriority = normalizePriority(body.priority || categoryDetails?.priority);
+    const submissionCheck = await checkSubmissionLimit(auth.user.userId);
+    if (!submissionCheck.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Daily submission limit reached',
+          remaining: submissionCheck.remaining,
+          resetAt: submissionCheck.resetAt,
+        },
+        { status: 429 }
+      );
+    }
 
-          // Derive a title when not provided: `${CategoryName}: snippet`
-          const snippet = (description || '').split(/\s+/).slice(0, 6).join(' ').trim();
-          const derivedTitle = `${categoryDetails?.name || category}${snippet ? ': ' + snippet : ''}`.trim();
-          const finalTitle = (typeof title === 'string' && title.trim().length > 0) ? title.trim() : derivedTitle;
+    const description = sanitizeText(body.description || '', 5000);
+    const titleFromBody = sanitizeText(body.title || '', 200);
+    const snippet = description.split(/\s+/).slice(0, 8).join(' ').trim();
+    const derivedTitle = `${categoryTemplate.name}${snippet ? `: ${snippet}` : ''}`;
+    const title = titleFromBody || derivedTitle;
 
-          // Prepare photos array
-          const issuePhotos: IIssuePhoto[] = (photos || []).map((photo: any) => ({
-               url: photo.url,
-               thumbnailUrl: photo.thumbnailUrl,
-               uploadedAt: new Date(),
-               size: photo.size || 0,
-               mimeType: photo.mimeType || 'image/jpeg',
-          }));
+    const issue = new Issue({
+      tenantId,
+      tenantSlug,
+      title,
+      description: description || undefined,
+      category: categoryTemplate.name,
+      categoryTemplateId: categoryTemplate.id,
+      categoryTemplateVersion: categoryTemplate.templateVersion,
+      priority: normalizePriority(body.priority || categoryTemplate.priority),
+      status: categoryTemplate.workflow.initialStatus,
+      location: finalLocation || undefined,
+      media,
+      customFields: sanitizeRecord(fieldValidation.sanitizedFields),
+      slaDeadline: calculateSlaDeadline(categoryTemplate.slaHours),
+      reportedBy: auth.user.userId,
+      reporterDevice: {
+        deviceId: sanitizeText(body.deviceInfo?.deviceId || 'web-portal', 120),
+        deviceModel: sanitizeText(body.deviceInfo?.deviceModel || '', 200) || undefined,
+        osVersion: sanitizeText(body.deviceInfo?.osVersion || '', 80) || undefined,
+        appVersion: sanitizeText(body.deviceInfo?.appVersion || '', 80) || undefined,
+        registeredAt: new Date(),
+      },
+      submittedAt: new Date(),
+      isPublic: true,
+      showOnMap: Boolean(finalLocation && hasValidCoordinates),
+      viewCount: 0,
+      upvoteCount: 0,
+      upvotedBy: [],
+      source: normalizeSource(body.source || body.deviceInfo?.platform),
+      activities: [
+        {
+          action: 'submitted',
+          description: 'Issue submitted by citizen',
+          performedBy: auth.user.userId,
+          performedByModel: 'User',
+          timestamp: new Date(),
+        },
+      ],
+      workflowHistory: [
+        {
+          toStatus: categoryTemplate.workflow.initialStatus,
+          changedAt: new Date(),
+          changedBy: auth.user.userId,
+          changedByModel: 'User',
+          comment: 'Initial submission',
+        },
+      ],
+    });
 
-          // Create issue document
-          const issue = new Issue({
-               title: finalTitle,
-               description: description?.trim() || undefined,
-               category,
-               priority: suggestedPriority,
-               status: 'submitted',
-               ...(finalLocation ? { location: finalLocation } : {}),
-               photos: issuePhotos,
-               reportedBy: userId,
-               reporterDevice: {
-                    deviceId: deviceInfo.deviceId,
-                    deviceModel: deviceInfo.deviceModel,
-                    osVersion: deviceInfo.osVersion,
-                    appVersion: deviceInfo.appVersion,
-                    registeredAt: new Date(),
-               },
-               // isVerifiedReporter: deviceVerification.trustScore >= 70,
-               submittedAt: new Date(),
-               isPublic: true,
-               showOnMap: !!finalLocation,
-               viewCount: 0,
-               upvoteCount: 0,
-               upvotedBy: [],
-               activities: [
-                    {
-                         action: 'submitted',
-                         description: 'Issue submitted by citizen',
-                         performedBy: userId as any,
-                         performedByModel: 'User',
-                         timestamp: new Date(),
-                    },
-               ],
-          });
+    issue.reportMarkdown = generateIssueMarkdown(issue);
 
-          // Save issue
-          await issue.save();
+    await issue.save();
+    await issue.populate('reportedBy', 'fullName email profileImage');
 
-          // Populate reporter information for response
-          await issue.populate('reportedBy', 'fullName email');
+    await invalidateCache(`issues:${tenantId}:`);
 
-          return NextResponse.json(
-               {
-                    success: true,
-                    message: 'Issue reported successfully',
-                    data: {
-                         issue: {
-                              _id: issue._id,
-                              trackingNumber: issue.trackingNumber,
-                              title: issue.title,
-                              description: issue.description,
-                              category: issue.category,
-                              priority: issue.priority,
-                              status: issue.status,
-                              location: issue.location,
-                              photos: issue.photos,
-                              submittedAt: issue.submittedAt,
-                              reportedBy: issue.reportedBy,
-                         },
-                         trackingNumber: issue.trackingNumber,
-                         estimatedResponseTime: categoryDetails?.estimatedResponseTime || '3-5 days',
-                    },
-               },
-               { status: 201 }
-          );
-     } catch (error) {
-          console.error('Create issue error:', error);
-          
-          // Handle validation errors
-          if (error instanceof Error && error.name === 'ValidationError') {
-               return NextResponse.json(
-                    { success: false, error: 'Validation error', details: error.message },
-                    { status: 400 }
-               );
-          }
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Issue reported successfully',
+        data: {
+          issue: {
+            _id: issue._id,
+            trackingNumber: issue.trackingNumber,
+            title: issue.title,
+            description: issue.description,
+            category: issue.category,
+            priority: issue.priority,
+            status: issue.status,
+            location: issue.location,
+            media: issue.media,
+            customFields: issue.customFields,
+            slaDeadline: issue.slaDeadline,
+            reportMarkdown: issue.reportMarkdown,
+            submittedAt: issue.submittedAt,
+            reportedBy: issue.reportedBy,
+          },
+          trackingNumber: issue.trackingNumber,
+          estimatedResponseTime: categoryTemplate.estimatedResponseTime,
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error('Create issue error:', error);
 
-          return NextResponse.json(
-               { success: false, error: 'Failed to create issue', message: 'An error occurred while reporting the issue. Please try again.', },
-               { status: 500 }
-          );
-     }
+    if (error?.name === 'ValidationError') {
+      return NextResponse.json({ success: false, error: 'Validation error', details: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to create issue',
+        message: 'An error occurred while reporting the issue. Please try again.',
+      },
+      { status: 500 }
+    );
+  }
 }
+
