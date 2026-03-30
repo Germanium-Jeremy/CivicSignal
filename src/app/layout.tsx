@@ -20,7 +20,13 @@ const garamond = localFont({
   display: "swap",
 });
 
-export const metadata: Metadata = { title: "CivicSignal", description: "Public Issue Reporting" };
+export const metadata: Metadata = {
+  title: "CivicSignal",
+  description: "Public Issue Reporting",
+  applicationName: "Civic Signal",
+  authors: { name: "NKUNDABAGENZI Jeremie", url: "github link" },
+  generator: "issue, reporting, citizens, public, civic"
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode; }>) {
     return (
