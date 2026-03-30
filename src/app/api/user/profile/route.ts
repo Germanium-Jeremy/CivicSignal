@@ -1,31 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import { verifyAccessToken } from '@/lib/utils/auth';
+import { requireAuth } from '@/lib/middleware';
 
 export async function GET(request: NextRequest) {
      try {
           await connectDB();
           
-          // Get token from Authorization header
-          const authHeader = request.headers.get('Authorization');
-          if (!authHeader || !authHeader.startsWith('Bearer ')) {
-               return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+          const auth = await requireAuth(request);
+          if (!auth.success || !auth.user?.userId) {
+               return NextResponse.json({ error: auth.error || 'Authentication required' }, { status: auth.status || 401 });
           }
-
-          const token = authHeader.split(' ')[1];
-          
-          // Verify token and get user ID
-          let userId;
-          try {
-               const decoded = verifyAccessToken(token);
-               if (!decoded) {
-                    return NextResponse.json({ error: 'Invalid access token' }, { status: 401 });
-               }
-               userId = decoded.userId;
-          } catch (err) {
-               return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
-          }
+          const userId = auth.user.userId;
 
           // Find user
           const user = await User.findById(userId);
@@ -66,25 +52,11 @@ export async function PATCH(request: NextRequest) {
      try {
           await connectDB();
           
-          // Get token from Authorization header
-          const authHeader = request.headers.get('Authorization');
-          if (!authHeader || !authHeader.startsWith('Bearer ')) {
-               return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+          const auth = await requireAuth(request);
+          if (!auth.success || !auth.user?.userId) {
+               return NextResponse.json({ error: auth.error || 'Authentication required' }, { status: auth.status || 401 });
           }
-
-          const token = authHeader.split(' ')[1];
-          
-          // Verify token and get user ID
-          let userId;
-          try {
-               const decoded = verifyAccessToken(token);
-               if (!decoded) {
-                    return NextResponse.json({ error: 'Invalid access token' }, { status: 401 });
-               }
-               userId = decoded.userId;
-          } catch (err) {
-               return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
-          }
+          const userId = auth.user.userId;
 
           const updateData = await request.json();
           
