@@ -1,37 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth } from "@/lib/utils/auth";
+import { requireAuth } from "@/lib/middleware";
 import { put } from "@vercel/blob";
-import { unlink } from "fs/promises";
 import sharp from "sharp";
 
 /**
  * POST /api/issues/upload
- * Upload images for issue reporting
+ * Upload media for issue reporting
  * Supports both base64 and multipart/form-data
  * Compresses images automatically
- * Generates thumbnails
  */
 
 export const runtime = "nodejs";
 
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png"];
+const ALLOWED_MIME_TYPES = [
+     "image/jpeg", "image/jpg", "image/png", 
+     "audio/mpeg", "audio/wav", "audio/m4a", "audio/aac",
+     "video/mp4", "video/quicktime", "video/webm"
+];
 
 export async function POST(request: NextRequest) {
      try {
           // Verify authentication
-          const authResult = verifyAuth(request);
-          if (!authResult.isAuthenticated) {
-               return (authResult.error || NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 }));
+          const authResult = await requireAuth(request);
+          if (!authResult.success || !authResult.user?.userId) {
+               return NextResponse.json({ success: false, error: authResult.error || "Authentication required" }, { status: authResult.status || 401 });
           }
 
           const contentType = request.headers.get("content-type");
 
           if (contentType?.includes("application/json")) {
                // Handle base64 image upload (from mobile apps)
-               return handleBase64Upload(request, authResult.userId ? authResult.userId : "");
+               return handleBase64Upload(request, authResult.user.userId);
           } else if (contentType?.includes("multipart/form-data")) {
                // Handle form data upload (from web)
-               return handleFormDataUpload(request, authResult.userId ? authResult.userId : "");
+               return handleFormDataUpload(request, authResult.user.userId);
           } else {
                return NextResponse.json(
                     {
@@ -69,7 +71,7 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
                     {
                          success: false,
                          error: "No images provided",
-                         message: "Please provide at least one image",
+                         message: "Please provide at least one media file",
                     },
                     { status: 400 },
                );
@@ -106,8 +108,10 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
                     );
                }
 
-               // Remove data URL prefix if present (data:image/jpeg;base64,...)
-               const base64Data = image.data.replace(/^data:image\/\w+;base64,/, "");
+               // Remove data URL prefix if present (data:<mime>;base64,...)
+               const base64Data = String(image.data).includes('base64,')
+                    ? String(image.data).substring(String(image.data).indexOf('base64,') + 7)
+                    : String(image.data);
                const buffer = Buffer.from(base64Data, "base64");
 
                // Check file size (max 10MB)
@@ -122,8 +126,7 @@ async function handleBase64Upload(request: NextRequest, userId: string) {
                     );
                }
 
-               // Process and compress image
-               const result = await processAndSaveImage(buffer, userId, image.mimeType);
+               const result = await processAndSaveMedia(buffer, userId, image.mimeType);
                uploadedImages.push(result);
           }
 
@@ -153,7 +156,7 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
                     {
                          success: false,
                          error: "No files provided",
-                         message: "Please select at least one image",
+                         message: "Please select at least one media file",
                     },
                     { status: 400 },
                );
@@ -184,7 +187,7 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
                          {
                               success: false,
                               error: "Invalid file type",
-                              message: `File ${file.name} is not a valid image type. Only JPEG, JPG, and PNG images are allowed`,
+                         message: `File ${file.name} is not a valid media type`,
                          },
                          { status: 400 },
                     );
@@ -203,7 +206,7 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
                }
 
                const buffer = Buffer.from(await file.arrayBuffer());
-               const result = await processAndSaveImage(buffer, userId, file.type);
+               const result = await processAndSaveMedia(buffer, userId, file.type);
                uploadedImages.push(result);
           }
 
@@ -223,29 +226,38 @@ async function handleFormDataUpload(request: NextRequest, userId: string) {
 /**
  * Process, compress, and save image to Vercel Blob Storage
  */
-async function processAndSaveImage(buffer: Buffer, userId: string, mimeType: string) {
+async function processAndSaveMedia(buffer: Buffer, userId: string, mimeType: string) {
      try {
           // Generate unique filename
           const timestamp = Date.now();
           const random = Math.random().toString(36).substring(7);
-          const filename = `${userId}-${timestamp}-${random}.jpg`;
+          const extension = mimeType.split('/')[1] || 'bin';
+          const filename = `${userId}-${timestamp}-${random}.${extension}`;
 
-          // Process image with sharp
-          let processedImage: Buffer;
-          try {
-               processedImage = await sharp(buffer)
-                    .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
-                    .jpeg({ quality: 80 })
-                    .toBuffer();
-          } catch (e) {
-               console.warn("sharp failed, storing original buffer as-is:", e);
-               processedImage = buffer;
+          const isImage = mimeType.startsWith("image/");
+          
+          // Process and compress image only if it's an image
+          let processedBuffer: Buffer = buffer;
+          if (isImage) {
+               try {
+                    processedBuffer = await sharp(buffer)
+                         .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
+                         .jpeg({ quality: 80 })
+                         .toBuffer();
+               } catch (e) {
+                    console.warn("sharp failed, storing original buffer as-is:", e);
+               }
           }
 
           // Upload to Vercel Blob Storage
-          const { url } = await put(`issues/${filename}`, processedImage, { contentType: mimeType, access: "public" });
+          const { url } = await put(`issues/${filename}`, processedBuffer, { contentType: mimeType, access: "public" });
 
-          return { url, size: processedImage.length, mimeType: "image/jpeg"};
+          return { 
+               url, 
+               size: processedBuffer.length, 
+               mimeType,
+               mediaType: isImage ? "image" : mimeType.startsWith("audio/") ? "audio" : "video"
+          };
      } catch (error) {
           console.error("Image processing error:", error);
           throw new Error("Failed to process image");
