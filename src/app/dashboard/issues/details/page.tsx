@@ -21,7 +21,10 @@ interface Issue {
      createdAt: string;
      trackingNumber: string;
      photos: { url: string }[];
-     reportedBy: string; // User ID
+     media?: { url: string; mediaType?: string }[];
+     slaDeadline?: string;
+     activities?: { action: string; description: string; timestamp: string }[];
+     reportedBy: string | User; // User ID or populated user
 }
 
 const IssueDetailsPage = () => {
@@ -46,12 +49,14 @@ const IssueDetailsPage = () => {
                     setIssue(fetchedIssue);
 
                     // Fetch user details if reportedBy is a user ID
-                    if (fetchedIssue.reportedBy) {
+                    if (fetchedIssue.reportedBy && typeof fetchedIssue.reportedBy === "string") {
                          const userResponse = await axios.get(
                               `/api/user/profile?userId=${fetchedIssue.reportedBy}`, 
                               { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
                          );
                          setReporter(userResponse.data.user);
+                    } else if (fetchedIssue.reportedBy && typeof fetchedIssue.reportedBy === "object") {
+                         setReporter(fetchedIssue.reportedBy);
                     }
                } catch (err) {
                     setError("Failed to fetch issue details.");
@@ -88,8 +93,16 @@ const IssueDetailsPage = () => {
                                         <p className="text-sm font-medium">{issue.category}</p>
                                    </div>
                                    <div>
+                                        <p className="text-sm text-gray-500">Tracking Number:</p>
+                                        <p className="text-sm font-medium">{issue.trackingNumber}</p>
+                                   </div>
+                                   <div>
                                         <p className="text-sm text-gray-500">Submitted At:</p>
                                         <p className="text-sm font-medium">{new Date(issue.submittedAt).toLocaleString()}</p>
+                                   </div>
+                                   <div>
+                                        <p className="text-sm text-gray-500">SLA Deadline:</p>
+                                        <p className="text-sm font-medium">{issue.slaDeadline ? new Date(issue.slaDeadline).toLocaleString() : "Not set"}</p>
                                    </div>
                               </div>
             
@@ -113,11 +126,29 @@ const IssueDetailsPage = () => {
                               <div>
                                    <h3 className="text-lg font-semibold mb-2">Media Files</h3>
                                    <div className="grid grid-cols-3 gap-4">
-                                        {issue.photos && issue.photos.map((photo, index) => (
+                                        {(issue.media || issue.photos || []).map((photo, index) => (
                                              <img key={index} src={photo.url} alt={`Media ${index + 1}`} className="w-full h-auto rounded-lg shadow-md" />
                                         ))}
                                    </div>
                               </div>
+
+                              {issue.activities && issue.activities.length > 0 && (
+                                   <div className="mt-6">
+                                        <h3 className="text-lg font-semibold mb-2">Status Timeline</h3>
+                                        <div className="space-y-2">
+                                             {issue.activities
+                                                  .slice()
+                                                  .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                                                  .map((activity, idx) => (
+                                                       <div key={idx} className="p-3 border rounded-lg bg-gray-50">
+                                                            <p className="text-sm font-medium">{activity.action.toUpperCase()}</p>
+                                                            <p className="text-sm text-gray-600">{activity.description}</p>
+                                                            <p className="text-xs text-gray-500 mt-1">{new Date(activity.timestamp).toLocaleString()}</p>
+                                                       </div>
+                                                  ))}
+                                        </div>
+                                   </div>
+                              )}
                          </div>
                     )}
                </div>
