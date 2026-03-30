@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth } from "@/lib/utils/auth";
+import { requireAuth } from "@/lib/middleware";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
 import connectDB from "@/lib/mongodb";
@@ -24,15 +24,12 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export async function POST(request: NextRequest) {
      try {
           // Verify authentication
-          const authResult = verifyAuth(request);
-          if (!authResult.isAuthenticated) {
-               return (authResult.error || NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 }));
+          const authResult = await requireAuth(request);
+          if (!authResult.success || !authResult.user?.userId) {
+               return NextResponse.json({ success: false, error: authResult.error || "Authentication required" }, { status: authResult.status || 401 });
           }
 
-          const userId = authResult.userId;
-          if (!userId) {
-               return NextResponse.json({ success: false, error: "User ID not found" }, { status: 401 });
-          }
+          const userId = authResult.user.userId;
 
           await connectDB();
 
