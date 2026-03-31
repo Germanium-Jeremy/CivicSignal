@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/utils/auth';
+import { NextRequest } from 'next/server';
+import { getSessionIdFromRequest, verifyAuth } from '@/lib/utils/auth';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import { getServerSession } from '@/lib/session/sessionStore';
 
 export interface AuthResult {
   success: boolean;
@@ -11,6 +12,7 @@ export interface AuthResult {
     role: string;
     isEmailVerified: boolean;
     isPhoneVerified: boolean;
+    tenantId?: string;
   };
   error?: string;
   status?: number;
@@ -19,43 +21,47 @@ export interface AuthResult {
 export async function requireAuth(request: NextRequest): Promise<AuthResult> {
   try {
     const authResult = verifyAuth(request);
-    
-    console.log('Auth result:', { 
-      isAuthenticated: authResult.isAuthenticated, 
-      userId: authResult.userId,
-      error: authResult.error 
-    });
-    
-    if (!authResult.isAuthenticated) {
-      let errorMessage = 'Authentication required';
-      if (authResult.error) {
-        try {
-          // Try to extract error message from NextResponse
-          const errorResponse = authResult.error as NextResponse;
-          const errorData = await errorResponse.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          errorMessage = 'Authentication failed';
+    let authenticatedUser: AuthResult['user'] | null = null;
+
+    if (authResult.isAuthenticated && authResult.userId && authResult.user) {
+      authenticatedUser = {
+        userId: authResult.userId,
+        email: authResult.user.email,
+        role: authResult.user.role,
+        isEmailVerified: authResult.user.isEmailVerified,
+        isPhoneVerified: authResult.user.isPhoneVerified,
+        tenantId: authResult.user.tenantId,
+      };
+    }
+
+    if (!authenticatedUser) {
+      const sessionId = getSessionIdFromRequest(request);
+      if (sessionId) {
+        const session = await getServerSession(sessionId);
+        if (session) {
+          authenticatedUser = {
+            userId: session.userId,
+            email: session.email,
+            role: session.role,
+            isEmailVerified: session.isEmailVerified,
+            isPhoneVerified: session.isPhoneVerified,
+            tenantId: session.tenantId,
+          };
         }
       }
-      
+    }
+
+    if (!authenticatedUser) {
       return {
         success: false,
-        error: errorMessage,
+        error: 'Authentication required',
         status: 401
       };
     }
 
     // Connect to database and verify user still exists and is active
     await connectDB();
-    const user = await User.findById(authResult.userId);
-    
-    console.log('Found user:', { 
-      userId: user?._id, 
-      email: user?.email, 
-      role: user?.role,
-      isActive: user?.isActive 
-    });
+    const user = await User.findById(authenticatedUser.userId);
     
     if (!user || !user.isActive) {
       return {
@@ -72,7 +78,8 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult> {
         email: user.email,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
-        isPhoneVerified: user.isPhoneVerified
+        isPhoneVerified: user.isPhoneVerified,
+        tenantId: authenticatedUser.tenantId,
       }
     };
 
