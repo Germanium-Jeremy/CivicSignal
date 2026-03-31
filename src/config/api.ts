@@ -4,13 +4,10 @@
 export const API_CONFIG = {
   // CORS Configuration
   cors: {
-    // In development: Allow all origins
-    // In production: You can specify allowed domains if needed
-
-    // allowedOrigins: process.env.NODE_ENV === 'production' 
-    //   ? process.env.ALLOWED_ORIGINS?.split(',') || ['*']
-    //   : ['*'],
-    allowedOrigins: ['*'],
+    // In production we default to explicit allow-list from environment.
+    allowedOrigins: process.env.NODE_ENV === 'production'
+      ? (process.env.ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim()).filter(Boolean) || [])
+      : ['*'],
 
     
     // Allow credentials (needed for cookies, auth headers)
@@ -58,6 +55,7 @@ export function isOriginAllowed(origin: string | null): boolean {
   
   // If wildcard is in allowed origins, allow all
   if (API_CONFIG.cors.allowedOrigins.includes('*')) return true;
+  if (!API_CONFIG.cors.allowedOrigins.length) return false;
   
   // Check if origin is in the allowed list
   return API_CONFIG.cors.allowedOrigins.some(allowed => {
@@ -77,7 +75,9 @@ export function isOriginAllowed(origin: string | null): boolean {
  * Get CORS headers for a given origin
  */
 export function getCorsHeaders(origin: string | null): Record<string, string> {
-  const allowedOrigin = isOriginAllowed(origin) ? (origin || '*') : 'null';
+  const allowedOrigin = isOriginAllowed(origin)
+    ? (origin || (API_CONFIG.cors.allowedOrigins.includes('*') ? '*' : API_CONFIG.cors.allowedOrigins[0] || 'null'))
+    : 'null';
   
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
