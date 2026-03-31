@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   FaHome, FaBuilding, FaExclamationTriangle, FaUsers, 
-  FaChartBar, FaCog, FaSignOutAlt, FaBars, FaTimes,
+  FaCog, FaSignOutAlt, FaBars, FaTimes,
   FaCheckCircle, FaUserShield
 } from 'react-icons/fa';
-import { adminAPI, userAPI } from '@/lib/api';
+import { userAPI } from '@/lib/api';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -18,10 +18,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [adminData, setAdminData] = useState<{ fullName: string; email: string } | null>(null);
   const pathname = usePathname();
   const router = useRouter();
-
-  useEffect(() => {
-    fetchAdminData();
-  }, []);
 
   const fetchAdminData = async () => {
     try {
@@ -34,11 +30,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   };
 
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: FaHome },
     { name: 'Agency Management', href: '/admin/agencies', icon: FaBuilding },
     { name: 'Issue Management', href: '/admin/issues', icon: FaExclamationTriangle },
     { name: 'User Management', href: '/admin/users', icon: FaUsers },
+    { name: 'Template Builder', href: '/admin/templates', icon: FaCog },
   ];
 
   const handleLogout = () => {
