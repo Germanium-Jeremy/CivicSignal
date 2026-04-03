@@ -3,24 +3,40 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { FaEnvelope, FaPhone, FaArrowRight } from "react-icons/fa";
+import { authAPI } from "@/lib/api";
+import { FaEnvelope, FaPhone, FaArrowRight, FaExclamationTriangle } from "react-icons/fa";
 
 export default function ForgotPasswordPage() {
     const [contactMethod, setContactMethod] = useState<'email' | 'phone'>('email');
     const [contactValue, setContactValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+        const identifier = contactMethod === 'email'
+            ? contactValue.trim().toLowerCase()
+            : contactValue.trim().replace(/\s+/g, '');
+        if (!identifier || (contactMethod === 'email' && !identifier.includes('@'))) {
+            setError(`Please enter a valid ${contactMethod === 'email' ? 'email address' : 'phone number'}.`);
+            return;
+        }
         setIsLoading(true);
-        
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const response = await authAPI.forgotPassword(identifier, contactMethod);
+            if (response.success) {
+                const params = new URLSearchParams({ method: contactMethod, contact: identifier });
+                router.push(`/auth/verify-code?${params.toString()}`);
+            } else {
+                setError('We could not send a reset code. Please try again.');
+            }
+        } catch (err: any) {
+            setError(err.message || 'We could not send a reset code. Please try again.');
+        } finally {
             setIsLoading(false);
-            // Navigate to verification page with contact method and value
-            router.push(`/auth/verify-code?method=${contactMethod}&contact=${encodeURIComponent(contactValue)}`);
-        }, 2000);
+        }
     };
 
     const formatContactDisplay = (value: string) => {
@@ -90,6 +106,12 @@ export default function ForgotPasswordPage() {
 
                 {/* Contact Input Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {error && (
+                        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <FaExclamationTriangle className="text-red-500 mt-0.5 shrink-0" size={14} />
+                            <p className="text-red-800 text-sm">{error}</p>
+                        </div>
+                    )}
                     <div className="space-y-2">
                         <label htmlFor="contact" className="block text-sm font-medium text-almost-black">
                             {contactMethod === 'email' ? 'Email Address' : 'Phone Number'}
