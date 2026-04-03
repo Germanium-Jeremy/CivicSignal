@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import { validatePassword, hashPassword, generateVerificationToken, generateVerificationCode, isRwandanIP } from '@/lib/utils/auth';
+import { validatePassword, hashPassword, generateVerificationToken, generateVerificationCode, isRwandanIP, normalizeEmail, normalizePhone } from '@/lib/utils/auth';
 import { sendEmail, sendPhoneVerification } from '@/lib/services/notification';
 
 export async function POST(request: NextRequest) {
@@ -54,13 +54,13 @@ export async function POST(request: NextRequest) {
           // Check if user already exists
           const existingUser = await User.findOne({
                $or: [
-                    { email: email.toLowerCase() },
-                    { phone: phone.replace(/\s/g, '') }
+                    { email: normalizeEmail(email) },
+                    { phone: normalizePhone(phone) }
                ]
           });
 
           if (existingUser) {
-               if (existingUser.email === email.toLowerCase()) {
+               if (existingUser.email === normalizeEmail(email)) {
                     return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
                } else {
                     return NextResponse.json({ error: 'An account with this phone number already exists' }, { status: 409 });
@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
           // Create new user
           const newUser = new User({
                fullName: fullName.trim(),
-               email: email.toLowerCase(),
-               phone: phone.replace(/\s/g, ''),
+               email: normalizeEmail(email),
+               phone: normalizePhone(phone),
                password: hashedPassword,
                emailVerificationCode,
                phoneVerificationCode,
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
           //  Send verification SMS
           const smsSent = await sendPhoneVerification(
-               phone.replace(/\s/g, ''), 
+               normalizePhone(phone),
                phoneVerificationCode, 
                fullName.trim()
           );
