@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import { generateVerificationCode } from "@/lib/utils/auth";
+import { generateVerificationCode, normalizeEmail, normalizePhone } from "@/lib/utils/auth";
 import { sendEmail, sendPasswordResetSMS } from "@/lib/services/notification";
 
 export async function POST(request: NextRequest) {
@@ -21,8 +21,8 @@ export async function POST(request: NextRequest) {
           // Find user by email or phone
           const query =
                method === "email"
-               ? { email: identifier.toLowerCase() }
-               : { phone: identifier.replace(/\s/g, "") };
+               ? { email: normalizeEmail(identifier) }
+               : { phone: normalizePhone(identifier) };
 
           const user = await User.findOne(query);
 
