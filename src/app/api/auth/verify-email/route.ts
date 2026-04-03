@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import { generateTokens } from "@/lib/utils/auth";
-import { generateVerificationCode } from "@/lib/utils/auth";
+import { generateTokens, generateVerificationCode, normalizeEmail } from "@/lib/utils/auth";
 import { sendEmail } from "@/lib/services/notification";
 
 export async function POST(request: NextRequest) {
@@ -22,7 +21,7 @@ export async function POST(request: NextRequest) {
 
           // Find user with valid code
           const user = await User.findOne({
-               email: email.toLowerCase(),
+               email: normalizeEmail(email),
                emailVerificationCode: code,
                emailVerificationExpires: { $gt: new Date() },
           }).select("+emailVerificationCode +emailVerificationExpires");
@@ -99,7 +98,7 @@ export async function GET(request: NextRequest) {
           await connectDB();
 
           // Find user and check verification status
-          const user = await User.findOne({ email: email.toLowerCase() });
+          const user = await User.findOne({ email: normalizeEmail(email) });
 
           if (!user) {
                return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -130,7 +129,7 @@ export async function PATCH(request: NextRequest) {
           }
 
           // Find user
-          const user = await User.findOne({ email: email.toLowerCase(), isEmailVerified: false });
+          const user = await User.findOne({ email: normalizeEmail(email), isEmailVerified: false });
 
           if (!user) {
                return NextResponse.json({ error: "User not found or email already verified" }, { status: 404 });
