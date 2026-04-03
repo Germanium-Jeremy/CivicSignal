@@ -11,6 +11,7 @@ import {
      generateVerificationCode,
      attachAuthCookies,
      attachSessionCookie,
+     normalizeEmail,
 } from "@/lib/utils/auth";
 import { sendEmail, sendPhoneVerification } from "@/lib/services/notification";
 import { createServerSession } from "@/lib/session/sessionStore";
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Find user and include password for comparison
-          const user = await User.findOne({ email }).select("+password +refreshTokens");
+          const user = await User.findOne({ email: normalizeEmail(email) }).select("+password +refreshTokens");
           if (!user) {
                return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
           }
