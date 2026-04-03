@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { authAPI, userAPI } from "@/lib/api";
+import { authAPI, tokenManager, userAPI } from "@/lib/api";
 import { FaBuilding, FaGlobe, FaMapMarkerAlt, FaCheck, FaExclamationTriangle } from "react-icons/fa";
 import { CATEGORIES } from "@/config/categories";
 
@@ -55,13 +55,12 @@ function AgencyRegistrationContent() {
     const searchParams = useSearchParams();
 
     useEffect(() => {
-        // Check for tokens in URL parameters and store them
+        // Verification may hand off a new session through URL parameters.
         const accessToken = searchParams.get('accessToken');
         const refreshToken = searchParams.get('refreshToken');
         
         if (accessToken && refreshToken) {
-            localStorage.setItem('accessToken', accessToken);
-            localStorage.setItem('refreshToken', refreshToken);
+            tokenManager.setTokens({ accessToken, refreshToken });
             // Clean URL by removing tokens
             const cleanUrl = window.location.pathname;
             window.history.replaceState({}, '', cleanUrl);
@@ -73,35 +72,27 @@ function AgencyRegistrationContent() {
                 setIsLoading(true);
                 
                 // First, get user profile to ensure authentication
-                console.log('Fetching user profile...');
                 const profile = await userAPI.getProfile();
                 
                 if (!profile.success) {
-                    console.error('Profile fetch failed:', profile);
                     // User not authenticated, redirect to login
                     router.push('/auth/login');
                     return;
                 }
                 
-                console.log('User profile fetched successfully:', profile.user);
-                
                 // Check if user is verified
                 if (!profile.user.isEmailVerified || !profile.user.isPhoneVerified) {
-                    console.log('User not fully verified, redirecting...');
                     // User not verified, redirect to verification
                     router.push(`/auth/verify-account?email=${encodeURIComponent(profile.user.email)}&phone=${encodeURIComponent(profile.user.phone)}`);
                     return;
                 }
                 
                 // Check if user has already registered an agency
-                console.log('Checking agency status...');
                 try {
                     const agencyStatus = await authAPI.getAgencyStatus();
-                    console.log('Agency status:', agencyStatus);
                     
                     if (agencyStatus.hasAgency) {
                         // User already has an agency, redirect to dashboard
-                        console.log('User already has agency, redirecting to dashboard');
                         router.push('/dashboard');
                         return;
                     }
@@ -116,7 +107,7 @@ function AgencyRegistrationContent() {
                 console.error('Error fetching user data:', err);
                 setError(err.message || 'Failed to load user data');
                 // If authentication fails, redirect to login
-                setTimeout(() => router.push('/auth/login'), 2000);
+                router.push('/auth/login');
             } finally {
                 setIsLoading(false);
             }
@@ -167,10 +158,7 @@ function AgencyRegistrationContent() {
                 localStorage.removeItem('officerData');
                 localStorage.removeItem('agencyData');
                 
-                // Navigate to confirmation page after a short delay
-                setTimeout(() => {
-                    router.push('/auth/confirmation?type=agency-registered');
-                }, 2000);
+                router.push('/auth/confirmation?type=agency-registered');
             }
         } catch (err: any) {
             console.error('Agency registration error:', err);
@@ -179,7 +167,7 @@ function AgencyRegistrationContent() {
                 setError("Please verify your email and phone number before registering an agency.");
             } else if (err.message.includes('Authentication')) {
                 setError("Your session has expired. Please log in again.");
-                setTimeout(() => router.push('/auth/login'), 2000);
+                router.push('/auth/login');
             } else {
                 setError(err.message || "Failed to register agency. Please try again.");
             }
