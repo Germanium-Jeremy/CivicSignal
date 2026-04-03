@@ -60,7 +60,7 @@ function AgencyRegistrationContent() {
         const refreshToken = searchParams.get('refreshToken');
         
         if (accessToken && refreshToken) {
-            tokenManager.setTokens({ accessToken, refreshToken });
+            tokenManager.setTokens({ accessToken, refrewshToken });
             // Clean URL by removing tokens
             const cleanUrl = window.location.pathname;
             window.history.replaceState({}, '', cleanUrl);

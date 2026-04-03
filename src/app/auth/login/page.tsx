@@ -20,6 +20,7 @@ export default function LoginPage() {
         emailVerified: false,
         phoneVerified: false
     });
+    const [verificationContacts, setVerificationContacts] = useState({ email: "", phone: "" });
     const router = useRouter();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,6 +98,10 @@ export default function LoginPage() {
                     emailVerified: errorData?.emailVerified || false,
                     phoneVerified: errorData?.phoneVerified || false
                 });
+                setVerificationContacts({
+                    email: errorData?.email || formData.email.trim().toLowerCase(),
+                    phone: errorData?.phone || "",
+                });
                 setError("Your account requires verification to continue.");
                 return;
             }
@@ -127,11 +132,11 @@ export default function LoginPage() {
     };
 
     const handleVerificationRedirect = () => {
-        if (!verificationStatus.emailVerified) {
-            router.push('/auth/verify-code?method=email&contact=' + encodeURIComponent(formData.email));
-        } else if (!verificationStatus.phoneVerified) {
-            router.push('/auth/verify-code?method=phone');
-        }
+        const params = new URLSearchParams({
+            email: verificationContacts.email || formData.email.trim().toLowerCase(),
+            phone: verificationContacts.phone,
+        });
+        router.push(`/auth/verify-account?${params.toString()}`);
     };
 
     return (
