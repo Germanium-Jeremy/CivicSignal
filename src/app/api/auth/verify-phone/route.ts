@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import { generateVerificationCode, generateTokens } from "@/lib/utils/auth";
+import { generateVerificationCode, generateTokens, normalizePhone } from "@/lib/utils/auth";
 import { sendPhoneVerification } from "@/lib/services/notification";
 
 // Verify phone with code
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
           // Find user with valid code
           const user = await User.findOne({
-               phone: phone.replace(/\s/g, ""),
+               phone: normalizePhone(phone),
                phoneVerificationCode: code,
                phoneVerificationExpires: { $gt: new Date() },
           }).select("+phoneVerificationCode +phoneVerificationExpires");
@@ -93,7 +93,7 @@ export async function PATCH(request: NextRequest) {
           }
 
           // Find user
-          const user = await User.findOne({ phone: phone.replace(/\s/g, ""), isPhoneVerified: false });
+          const user = await User.findOne({ phone: normalizePhone(phone), isPhoneVerified: false });
 
           if (!user) {
                return NextResponse.json({ error: "User not found or phone already verified" }, { status: 404 });
