@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import { validatePassword, hashPassword } from "@/lib/utils/auth";
+import { validatePassword, hashPassword, normalizeEmail, normalizePhone } from "@/lib/utils/auth";
 
 export async function POST(request: NextRequest) {
      try {
@@ -23,7 +23,11 @@ export async function POST(request: NextRequest) {
           }
 
           // Find user with valid reset token
-          const query = method === "email" ? { email: identifier.toLowerCase() } : { phone: identifier.replace(/\s/g, "") };
+          if (!["email", "phone"].includes(method)) {
+               return NextResponse.json({ error: "Method must be either email or phone" }, { status: 400 });
+          }
+
+          const query = method === "email" ? { email: normalizeEmail(identifier) } : { phone: normalizePhone(identifier) };
 
           const user = await User.findOne({
                ...query,
