@@ -6,6 +6,19 @@ const API_BASE = process.env.NODE_ENV === 'production' ? `${process.env.NEXT_PUB
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+const normalizePhone = (phone: string) => phone.trim().replace(/\s+/g, '');
+
+export class APIError extends Error {
+    data?: Record<string, unknown>;
+
+    constructor(message: string, data?: Record<string, unknown>) {
+        super(message);
+        this.name = 'APIError';
+        this.data = data;
+    }
+}
+
 export const tokenManager = {
     setTokens: (tokens: { accessToken: string; refreshToken: string }) => {
         accessToken = tokens.accessToken;
@@ -96,26 +109,18 @@ async function apiCall<T = any>(endpoint: string, options: RequestInit = {}): Pr
                 headers,
             });
         } catch (error) {
-            // Refresh failed, redirect to login
+            // Let the caller decide how to present an expired session.
             tokenManager.clearTokens();
-            if (typeof window !== 'undefined') {
-                window.location.href = '/auth/login';
-            }
             throw new Error('Authentication failed');
         }
     }
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-    
-    // For verification required errors, include the full error data
-    if (errorData.requiresVerification) {
-        const errorWithData = new Error(errorData.error || 'Verification required');
-        (errorWithData as any).data = errorData;
-        throw errorWithData;
-    }
-    
-    throw new Error(errorData.error || `API Error: ${response.status}`);
+        const errorData: Record<string, unknown> = await response.json().catch(() => ({}));
+        const message = typeof errorData.error === 'string'
+            ? errorData.error
+            : `API Error: ${response.status}`;
+        throw new APIError(message, errorData);
     }
 
     return response.json();
@@ -138,16 +143,14 @@ export const authAPI = {
     login: async (email: string, password: string, deviceInfo?: any) => {
         const response = await apiCall('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ email, password, deviceInfo }),
+            body: JSON.stringify({ email: normalizeEmail(email), password, deviceInfo }),
         });
 
-    console.log("Login Response: ", response.data)
-    
-    if (response.success && response.tokens) {
-        tokenManager.setTokens(response.tokens);
-    }
-    
-    return response;
+        if (response.success && response.tokens) {
+            tokenManager.setTokens(response.tokens);
+        }
+
+        return response;
     },
 
     logout: async (logoutAll = false) => {
@@ -166,37 +169,56 @@ export const authAPI = {
     },
 
     verifyEmail: async (email: string, code: string) => {
-        return apiCall('/auth/verify-email', {
+        const response = await apiCall('/auth/verify-email', {
             method: 'POST',
-            body: JSON.stringify({ email, code }),
+            body: JSON.stringify({ email: normalizeEmail(email), code }),
         });
+        if (response.success && response.tokens) tokenManager.setTokens(response.tokens);
+        return response;
     },
 
     verifyPhone: async (phone: string, code: string) => {
-        return apiCall('/auth/verify-phone', {
+        const response = await apiCall('/auth/verify-phone', {
             method: 'POST',
-            body: JSON.stringify({ phone, code }),
+            body: JSON.stringify({ phone: normalizePhone(phone), code }),
         });
+        if (response.success && response.tokens) tokenManager.setTokens(response.tokens);
+        return response;
     },
 
     resendEmailVerification: async (email: string) => {
         return apiCall('/auth/verify-email', {
             method: 'PATCH',
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ email: normalizeEmail(email) }),
         });
     },
 
     resendPhoneVerification: async (phone: string) => {
         return apiCall('/auth/verify-phone', {
             method: 'PATCH',
-            body: JSON.stringify({ phone }),
+            body: JSON.stringify({ phone: normalizePhone(phone) }),
         });
+    },
+
+    getVerificationStatus: async (email: string) => {
+        return apiCall(`/auth/verify-email?email=${encodeURIComponent(normalizeEmail(email))}`);
     },
 
     forgotPassword: async (identifier: string, method: 'email' | 'phone') => {
         return apiCall('/auth/forgot-password', {
             method: 'POST',
-            body: JSON.stringify({ identifier, method }),
+            body: JSON.stringify({ identifier: method === 'email' ? normalizeEmail(identifier) : normalizePhone(identifier), method }),
+        });
+    },
+
+    verifyResetCode: async (identifier: string, resetCode: string, method: 'email' | 'phone') => {
+        return apiCall('/auth/verify-reset-code', {
+            method: 'POST',
+            body: JSON.stringify({
+                identifier: method === 'email' ? normalizeEmail(identifier) : normalizePhone(identifier),
+                resetCode,
+                method,
+            }),
         });
     },
 
@@ -208,7 +230,12 @@ export const authAPI = {
     ) => {
         return apiCall('/auth/reset-password', {
             method: 'POST',
-            body: JSON.stringify({ identifier, resetCode, newPassword, method }),
+            body: JSON.stringify({
+                identifier: method === 'email' ? normalizeEmail(identifier) : normalizePhone(identifier),
+                resetCode,
+                newPassword,
+                method,
+            }),
         });
     },
 
