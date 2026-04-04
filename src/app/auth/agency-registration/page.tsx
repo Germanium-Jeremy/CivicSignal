@@ -34,8 +34,28 @@ const sectors = [
     "Suburban", "Special Economic Zone"
 ];
 
+type AgencyFormData = {
+    agencyName: string;
+    agencyType: string;
+    registrationNumber: string;
+    website: string;
+    address: string;
+    district: string;
+    sector: string;
+    description: string;
+    serviceDomains: string[];
+};
+
+type UserProfile = {
+    fullName: string;
+    email: string;
+    phone: string;
+    isEmailVerified: boolean;
+    isPhoneVerified: boolean;
+};
+
 function AgencyRegistrationContent() {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<AgencyFormData>({
         agencyName: "",
         agencyType: "",
         registrationNumber: "",
@@ -44,11 +64,11 @@ function AgencyRegistrationContent() {
         district: "",
         sector: "",
         description: "",
-        serviceDomains: [] as string[]
+        serviceDomains: []
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [userData, setUserData] = useState<any>(null);
+    const [userData, setUserData] = useState<UserProfile | null>(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const router = useRouter();
@@ -60,7 +80,7 @@ function AgencyRegistrationContent() {
         const refreshToken = searchParams.get('refreshToken');
         
         if (accessToken && refreshToken) {
-            tokenManager.setTokens({ accessToken, refrewshToken });
+            tokenManager.setTokens({ accessToken, refreshToken });
             // Clean URL by removing tokens
             const cleanUrl = window.location.pathname;
             window.history.replaceState({}, '', cleanUrl);
@@ -96,16 +116,18 @@ function AgencyRegistrationContent() {
                         router.push('/dashboard');
                         return;
                     }
-                } catch (agencyErr: any) {
+                } catch (agencyErr: unknown) {
+                    const message = agencyErr instanceof Error ? agencyErr.message : 'Agency status check failed';
                     // If agency status check fails, log but continue
                     // (user might not have registered agency yet, which is fine)
-                    console.warn('Agency status check failed (this is OK for new registration):', agencyErr.message);
+                    console.warn('Agency status check failed (this is OK for new registration):', message);
                 }
                 
-                setUserData(profile.user);
-            } catch (err: any) {
+                setUserData(profile.user as UserProfile);
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Failed to load user data';
                 console.error('Error fetching user data:', err);
-                setError(err.message || 'Failed to load user data');
+                setError(message);
                 // If authentication fails, redirect to login
                 router.push('/auth/login');
             } finally {
@@ -160,16 +182,17 @@ function AgencyRegistrationContent() {
                 
                 router.push('/auth/confirmation?type=agency-registered');
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to register agency. Please try again.';
             console.error('Agency registration error:', err);
             
-            if (err.message.includes('verification required')) {
+            if (message.includes('verification required')) {
                 setError("Please verify your email and phone number before registering an agency.");
-            } else if (err.message.includes('Authentication')) {
+            } else if (message.includes('Authentication')) {
                 setError("Your session has expired. Please log in again.");
                 router.push('/auth/login');
             } else {
-                setError(err.message || "Failed to register agency. Please try again.");
+                setError(message);
             }
         } finally {
             setIsSubmitting(false);
