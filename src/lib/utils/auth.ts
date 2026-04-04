@@ -21,6 +21,11 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'development-only-r
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+/** Normalizes user-supplied contacts before they are persisted or queried. */
+export const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
+export const normalizePhone = (phone: string): string => phone.trim().replace(/\s+/g, '');
+
 function getCookieOptions(maxAgeSeconds: number) {
     return {
         httpOnly: true,
