@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { FaEnvelope, FaPhone, FaArrowRight, FaRedo } from "react-icons/fa";
+import { authAPI } from "@/lib/api";
+import { FaEnvelope, FaPhone, FaArrowRight, FaRedo, FaExclamationTriangle } from "react-icons/fa";
 
 function VerifyCodeContent() {
     const [code, setCode] = useState(['', '', '', '', '', '']);
@@ -10,11 +11,12 @@ function VerifyCodeContent() {
     const [isResending, setIsResending] = useState(false);
     const [timeLeft, setTimeLeft] = useState(60);
     const [canResend, setCanResend] = useState(false);
+    const [error, setError] = useState('');
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const router = useRouter();
     const searchParams = useSearchParams();
     
-    const method = searchParams.get('method') || 'email';
+    const method: 'email' | 'phone' = searchParams.get('method') === 'phone' ? 'phone' : 'email';
     const contact = searchParams.get('contact') || '';
 
     // Timer for resend functionality
@@ -77,34 +79,58 @@ function VerifyCodeContent() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
         const fullCode = code.join('');
         
         if (fullCode.length !== 6) {
-            alert('Please enter the complete 6-digit code');
+            setError('Please enter the complete 6-digit code.');
+            return;
+        }
+        if (!contact) {
+            setError('The reset contact is missing. Start the password reset again.');
             return;
         }
 
         setIsLoading(true);
-        
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const response = await authAPI.verifyResetCode(contact, fullCode, method);
+            if (response.success) {
+                const params = new URLSearchParams({ method, contact, code: fullCode });
+                router.push(`/auth/reset-password?${params.toString()}`);
+            } else {
+                setError('The reset code could not be verified.');
+            }
+        } catch (err: any) {
+            setError(err.message || 'The reset code is invalid or has expired.');
+            setCode(['', '', '', '', '', '']);
+            inputRefs.current[0]?.focus();
+        } finally {
             setIsLoading(false);
-            // Navigate to reset password page
-            router.push('/auth/reset-password');
-        }, 2000);
+        }
     };
 
     const handleResendCode = async () => {
+        setError('');
+        if (!contact) {
+            setError('The reset contact is missing. Start the password reset again.');
+            return;
+        }
         setIsResending(true);
-        
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const response = await authAPI.forgotPassword(contact, method);
+            if (response.success) {
+                setTimeLeft(60);
+                setCanResend(false);
+                setCode(['', '', '', '', '', '']);
+                inputRefs.current[0]?.focus();
+            } else {
+                setError('We could not resend a reset code.');
+            }
+        } catch (err: any) {
+            setError(err.message || 'We could not resend a reset code.');
+        } finally {
             setIsResending(false);
-            setTimeLeft(60);
-            setCanResend(false);
-            setCode(['', '', '', '', '', '']);
-            inputRefs.current[0]?.focus();
-        }, 2000);
+        }
     };
 
     return (
@@ -125,6 +151,12 @@ function VerifyCodeContent() {
 
                 {/* Verification Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {error && (
+                        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <FaExclamationTriangle className="text-red-500 mt-0.5 shrink-0" size={14} />
+                            <p className="text-red-800 text-sm">{error}</p>
+                        </div>
+                    )}
                     {/* Code Input */}
                     <div className="space-y-4">
                         <label className="block text-sm font-medium text-almost-black text-center">
