@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { FaEye, FaEyeSlash, FaCheck, FaTimes } from "react-icons/fa";
+import { authAPI } from "@/lib/api";
+import { FaEye, FaEyeSlash, FaCheck, FaTimes, FaExclamationTriangle } from "react-icons/fa";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
     const [formData, setFormData] = useState({
         password: "",
         confirmPassword: ""
@@ -13,14 +14,19 @@ export default function ResetPasswordPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [passwordStrength, setPasswordStrength] = useState(0);
+    const [error, setError] = useState('');
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const method: 'email' | 'phone' = searchParams.get('method') === 'phone' ? 'phone' : 'email';
+    const contact = searchParams.get('contact') || '';
+    const resetCode = searchParams.get('code') || '';
 
     const passwordRequirements = [
         { text: "At least 8 characters", test: (pwd: string) => pwd.length >= 8 },
         { text: "One uppercase letter", test: (pwd: string) => /[A-Z]/.test(pwd) },
         { text: "One lowercase letter", test: (pwd: string) => /[a-z]/.test(pwd) },
         { text: "One number", test: (pwd: string) => /[0-9]/.test(pwd) },
-        { text: "One special character", test: (pwd: string) => /[^A-Za-z0-9]/.test(pwd) }
+        { text: "One special character (@$!%*?&)", test: (pwd: string) => /[@$!%*?&]/.test(pwd) }
     ];
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,25 +65,37 @@ export default function ResetPasswordPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+
+        if (!contact || !resetCode) {
+            setError('Your reset session is incomplete or expired. Request a new reset code.');
+            return;
+        }
         
         if (formData.password !== formData.confirmPassword) {
-            alert("Passwords don't match!");
+            setError("Passwords don't match!");
             return;
         }
 
-        if (passwordStrength < 4) {
-            alert("Please create a stronger password that meets all requirements.");
+        if (passwordStrength < 5) {
+            setError("Please create a password that meets all requirements.");
             return;
         }
 
         setIsLoading(true);
         
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const response = await authAPI.resetPassword(contact, resetCode, formData.password, method);
+            if (response.success) {
+                router.push('/auth/confirmation?type=password-reset');
+            } else {
+                setError('Password reset failed. Please request a new reset code.');
+            }
+        } catch (err: any) {
+            setError(err.message || 'Password reset failed. Please request a new reset code.');
+        } finally {
             setIsLoading(false);
-            // Navigate to confirmation page
-            router.push('/auth/confirmation?type=password-reset');
-        }, 2000);
+        }
     };
 
     return (
@@ -85,9 +103,15 @@ export default function ResetPasswordPage() {
             title="Create New Password" 
             subtitle="Your new password must be different from your previous password"
             showBackButton={true}
-            backHref="/auth/verify-code"
+            backHref={`/auth/verify-code?method=${method}&contact=${encodeURIComponent(contact)}`}
         >
             <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                    <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <FaExclamationTriangle className="text-red-500 mt-0.5 shrink-0" size={14} />
+                        <p className="text-red-800 text-sm">{error}</p>
+                    </div>
+                )}
                 {/* New Password Input */}
                 <div className="space-y-2">
                     <label htmlFor="password" className="block text-sm font-medium text-almost-black">
@@ -204,7 +228,7 @@ export default function ResetPasswordPage() {
                         !formData.password || 
                         !formData.confirmPassword || 
                         formData.password !== formData.confirmPassword ||
-                        passwordStrength < 4
+                        passwordStrength < 5
                     }
                     className="w-full bg-linear-to-r from-accent2 to-accent text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm md:text-base"
                 >
@@ -237,5 +261,13 @@ export default function ResetPasswordPage() {
                 </div>
             </form>
         </AuthLayout>
+    );
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={null}>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }
