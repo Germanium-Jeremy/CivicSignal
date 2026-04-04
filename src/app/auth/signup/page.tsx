@@ -47,7 +47,7 @@ export default function SignupPage() {
         if (/[A-Z]/.test(password)) strength++;
         if (/[a-z]/.test(password)) strength++;
         if (/[0-9]/.test(password)) strength++;
-        if (/[^A-Za-z0-9]/.test(password)) strength++;
+        if (/[@$!%*?&]/.test(password)) strength++;
         setPasswordStrength(strength);
     };
 
@@ -86,8 +86,8 @@ export default function SignupPage() {
             return;
         }
 
-        if (passwordStrength < 3) {
-            setError("Please choose a stronger password.");
+        if (passwordStrength < 5) {
+            setError("Please choose a password that meets all security requirements.");
             return;
         }
 
@@ -104,17 +104,20 @@ export default function SignupPage() {
             
             const response = await authAPI.register({
                 fullName,
-                email: formData.email,
+                email: formData.email.trim().toLowerCase(),
                 phone: formData.phone,
                 password: formData.password
             });
 
-            if (response.success) {
+            if (response.success && response.user?.email && response.user?.phone) {
                 setSuccess(true);
-                // Redirect to verification page after a short delay with both email and phone
-                setTimeout(() => {
-                    router.push(`/auth/verify-account?email=${encodeURIComponent(formData.email)}&phone=${encodeURIComponent(formData.phone)}`);
-                }, 2000);
+                const params = new URLSearchParams({
+                    email: response.user.email,
+                    phone: response.user.phone,
+                });
+                router.push(`/auth/verify-account?${params.toString()}`);
+            } else {
+                setError("Registration could not be completed. Please try again.");
             }
         } catch (err: any) {
             console.error('Registration error:', err);
