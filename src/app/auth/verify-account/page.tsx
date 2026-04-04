@@ -5,6 +5,11 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import { authAPI } from "@/lib/api";
 import { FaEnvelope, FaPhone, FaCheck, FaRedo, FaExclamationTriangle } from "react-icons/fa";
 
+type VerificationResponse = {
+    fullyVerified?: boolean;
+    tokens?: { accessToken: string; refreshToken: string } | null;
+};
+
 function VerifyAccountContent() {
     const [emailCode, setEmailCode] = useState(['', '', '', '', '', '']);
     const [phoneCode, setPhoneCode] = useState(['', '', '', '', '', '']);
@@ -29,6 +34,30 @@ function VerifyAccountContent() {
     // Get user data from URL params
     const userEmail = searchParams.get('email') || "";
     const userPhone = searchParams.get('phone') || "";
+
+    useEffect(() => {
+        if (!userEmail) {
+            setEmailError("A valid email address is required to verify this account.");
+            return;
+        }
+        if (!userPhone) {
+            setPhoneError("A valid phone number is required to verify this account.");
+        }
+
+        const loadStatus = async () => {
+            try {
+                const response = await authAPI.getVerificationStatus(userEmail);
+                if (response.success) {
+                    setEmailVerified(response.isEmailVerified);
+                    setPhoneVerified(response.isPhoneVerified);
+                }
+            } catch (err: any) {
+                setEmailError(err.message || "Unable to load verification status.");
+            }
+        };
+
+        void loadStatus();
+    }, [userEmail, userPhone]);
 
     // Timer for email resend
     useEffect(() => {
@@ -103,6 +132,10 @@ function VerifyAccountContent() {
     };
 
     const handleVerifyEmail = async (code: string) => {
+        if (!userEmail) {
+            setEmailError("A valid email address is required to verify this account.");
+            return;
+        }
         setIsVerifyingEmail(true);
         setEmailError("");
         
@@ -111,7 +144,7 @@ function VerifyAccountContent() {
             
             if (response.success) {
                 setEmailVerified(true);
-                checkBothVerified(true, phoneVerified, response.tokens);
+                completeVerification(response);
             }
         } catch (err: any) {
             console.error('Email verification error:', err);
@@ -125,6 +158,10 @@ function VerifyAccountContent() {
     };
 
     const handleVerifyPhone = async (code: string) => {
+        if (!userPhone) {
+            setPhoneError("A valid phone number is required to verify this account.");
+            return;
+        }
         setIsVerifyingPhone(true);
         setPhoneError("");
         
@@ -133,25 +170,25 @@ function VerifyAccountContent() {
             
             if (response.success) {
                 setPhoneVerified(true);
-                checkBothVerified(emailVerified, true, response.tokens);
+                completeVerification(response);
             }
         } catch (err: any) {
             console.error('Phone verification error:', err);
             setPhoneError(err.message || 'Verification failed. Please try again.');
             // Clear the code inputs on error
-            setPhoneCode(['', '', '', '', '']);
+            setPhoneCode(['', '', '', '', '', '']);
             phoneInputRefs.current[0]?.focus();
         } finally {
             setIsVerifyingPhone(false);
         }
     };
 
-    const checkBothVerified = (emailStatus: boolean, phoneStatus: boolean, tokens?: any) => {
-        if (emailStatus && phoneStatus && tokens) {
+    const completeVerification = (response: VerificationResponse) => {
+        if (response.fullyVerified && response.tokens) {
             // Redirect to agency registration page with tokens as URL parameters
             const params = new URLSearchParams({
-                accessToken: tokens.accessToken,
-                refreshToken: tokens.refreshToken
+                accessToken: response.tokens.accessToken,
+                refreshToken: response.tokens.refreshToken
             });
             router.push(`/auth/agency-registration?${params.toString()}`);
         }
@@ -159,6 +196,10 @@ function VerifyAccountContent() {
 
     const handleResendCode = async (type: 'email' | 'phone') => {
         if (type === 'email') {
+            if (!userEmail) {
+                setEmailError("A valid email address is required to resend a code.");
+                return;
+            }
             setIsResendingEmail(true);
             setEmailError("");
             
@@ -178,6 +219,10 @@ function VerifyAccountContent() {
                 setIsResendingEmail(false);
             }
         } else {
+            if (!userPhone) {
+                setPhoneError("A valid phone number is required to resend a code.");
+                return;
+            }
             setIsResendingPhone(true);
             setPhoneError("");
             
