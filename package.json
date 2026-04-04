@@ -21,6 +21,7 @@
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
     "geoip-country": "^5.0.2",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.547.0",
