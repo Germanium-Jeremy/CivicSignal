@@ -33,6 +33,14 @@ export default function ReportedIssuesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedPriority, setSelectedPriority] = useState('all');
+    const [page, setPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [paginationData, setPaginationData] = useState({
+        total: 0,
+        totalPages: 0,
+        page: 1,
+        limit: 10,
+    });
 
     // State for status change modal
     const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -43,18 +51,35 @@ export default function ReportedIssuesPage() {
 
     useEffect(() => {
         fetchReportedIssues();
-    }, []);
+    }, [page, itemsPerPage]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchTerm, selectedCategory, selectedPriority, itemsPerPage]);
 
     const fetchReportedIssues = async () => {
         try {
             const response = await agencyAPI.getIssues({ 
                 status: 'submitted',
-                page: 1, 
-                limit: 50 
+                page,
+                limit: itemsPerPage
             });
             
             if (response.success) {
-                setIssues(response.data?.issues || []);
+                const issueList = response.data?.issues ?? [];
+                const pagination = response.data?.pagination ?? {
+                    page: 1,
+                    limit: itemsPerPage,
+                    total: 0,
+                    totalPages: 0,
+                };
+                setIssues(issueList);
+                setPaginationData({
+                    total: pagination.total,
+                    totalPages: pagination.totalPages,
+                    page: pagination.page,
+                    limit: pagination.limit,
+                });
             } else {
                 console.error('Failed to fetch reported issues:', response.error);
             }
@@ -142,7 +167,7 @@ export default function ReportedIssuesPage() {
                 </div>
                 <div className="flex items-center gap-3">
                     <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
-                        {filteredIssues.length} Issues
+                        {paginationData.total} {paginationData.total === 1 ? 'Issue' : 'Issues'}
                     </span>
                 </div>
             </div>
