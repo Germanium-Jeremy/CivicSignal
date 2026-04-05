@@ -3,7 +3,7 @@ export interface User {
   fullName: string;
   email: string;
   phone?: string;
-  role: 'citizen' | 'admin' | 'agency_officer';
+  role: "citizen" | "admin" | "agency_officer";
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   isActive: boolean;
@@ -16,11 +16,11 @@ export interface IssueMedia {
   key: string;
   description?: string;
   uploadedAt: string;
-  mediaType: 'image' | 'audio' | 'video';
+  mediaType: "image" | "audio" | "video";
 }
 
 export interface IssueLocation {
-  type: 'Point';
+  type: "Point";
   coordinates: [number, number];
   address?: string;
   district?: string;
@@ -31,8 +31,8 @@ export interface Issue {
   title: string;
   description: string;
   category: string;
-  status: 'submitted' | 'acknowledged' | 'pending' | 'resolved' | 'closed';
-  priority: 'High' | 'Medium' | 'Low';
+  status: "submitted" | "acknowledged" | "pending" | "resolved" | "closed";
+  priority: "High" | "Medium" | "Low";
   location: IssueLocation;
   media: IssueMedia[];
   photos?: IssueMedia[];
@@ -40,22 +40,29 @@ export interface Issue {
   categoryTemplateId?: string;
   categoryTemplateVersion?: number;
   slaDeadline?: string;
-  slaStatus: 'within_sla' | 'at_risk' | 'breached';
+  slaStatus: "within_sla" | "at_risk" | "breached";
   assignedTo?: string;
   trackingNumber: string;
   date: string; // For compatibility with React Native structure
-  submittedAt: string
-  createdAt: string
-  success?: boolean
+  submittedAt: string;
+  createdAt: string;
+  success?: boolean;
+}
+
+export interface AdminIssuesPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
 
 export interface AdminIssuesResponse {
-  issues: Issue[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  data: any
+  success: boolean;
+  message?: string;
+  data?: {
+    issues: Issue[];
+    pagination: AdminIssuesPagination;
+  };
 }
 
 export interface ApiResponse<T = any> {
@@ -89,7 +96,7 @@ export interface Agency {
   sector: string;
   description?: string;
   serviceDomains: string[];
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   approvedAt?: string;
   rejectedAt?: string;
   approvedBy?: string;
