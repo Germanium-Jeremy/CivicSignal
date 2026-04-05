@@ -102,11 +102,7 @@ export default function PendingIssuesPage() {
         "Resolved by agency",
       );
       if (response.success) {
-        setIssues(
-          issues.map((it) =>
-            it._id === issue._id ? { ...it, status: "resolved" } : it,
-          ),
-        );
+        await fetchPendingIssues();
       }
     } catch (err) {
       console.error("Mark as resolved failed", err);
@@ -151,11 +147,7 @@ export default function PendingIssuesPage() {
         "Moved to resolved by agency",
       );
       if (response.success) {
-        setIssues(
-          issues.map((it) =>
-            it._id === issueId ? { ...it, status: "resolved" } : it,
-          ),
-        );
+        await fetchPendingIssues();
       }
     } catch (err) {
       console.error("Mark as resolved failed", err);

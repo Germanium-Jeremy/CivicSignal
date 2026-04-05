@@ -114,18 +114,11 @@ export default function ReportedIssuesPage() {
         statusComment,
       );
       if (response.success) {
-        // Update the issue in the local state
-        setIssues(
-          issues.map((issue) =>
-            issue._id === selectedIssue._id
-              ? { ...issue, status: newStatus }
-              : issue,
-          ),
-        );
         setStatusModalOpen(false);
         setSelectedIssue(null);
         setStatusComment("");
         setNewStatus("submitted");
+        await fetchReportedIssues();
       }
     } catch (error) {
       console.error("Error updating issue status:", error);

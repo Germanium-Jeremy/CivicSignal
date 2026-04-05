@@ -101,11 +101,7 @@ export default function AcknowledgedIssuesPage() {
         "Moved to pending by agency",
       );
       if (response.success) {
-        setIssues(
-          issues.map((it) =>
-            it._id === issue._id ? { ...it, status: "pending" } : it,
-          ),
-        );
+        await fetchAcknowledgedIssues();
       }
     } catch (err) {
       console.error("Mark as pending failed", err);

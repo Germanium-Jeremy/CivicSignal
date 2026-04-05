@@ -55,6 +55,7 @@ export default function ResolvedIssuesPage() {
 
   const fetchResolvedIssues = async () => {
     try {
+      setIsLoading(true);
       const response = await agencyAPI.getIssues({
         status: "resolved",
         page,
