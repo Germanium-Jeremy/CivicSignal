@@ -2,324 +2,387 @@
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
 import { getCategoryByName, CATEGORIES } from "@/config/categories";
-import { 
-    FaClock, 
-    FaMapMarkerAlt, 
-    FaCalendarAlt, 
-    FaUser, 
-    FaSearch,
-    FaEye,
-    FaEdit,
-    FaCheckCircle,
-    FaComments,
-    FaTools,
-    FaExclamationTriangle
+import {
+  FaClock,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaUser,
+  FaSearch,
+  FaEye,
+  FaEdit,
+  FaCheckCircle,
+  FaComments,
+  FaTools,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 
 interface Issue {
-    _id: string;
-    title: string;
-    description?: string;
-    category: string;
-    priority: 'High' | 'Medium' | 'Low';
-    status: 'submitted' | 'acknowledged' | 'pending' | 'resolved';
-    submittedAt: string;
-    createdAt: string;
-    trackingNumber: string;
+  _id: string;
+  title: string;
+  description?: string;
+  category: string;
+  priority: "High" | "Medium" | "Low";
+  status: "submitted" | "acknowledged" | "pending" | "resolved";
+  submittedAt: string;
+  createdAt: string;
+  trackingNumber: string;
 }
 
 export default function PendingIssuesPage() {
-    const [issues, setIssues] = useState<Issue[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('all');
-    const [selectedPriority, setSelectedPriority] = useState('all');
-    const [page, setPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [paginationData, setPaginationData] = useState({
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: 10,
-    });
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedPriority, setSelectedPriority] = useState("all");
+  const [page, setPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [paginationData, setPaginationData] = useState({
+    total: 0,
+    totalPages: 0,
+    page: 1,
+    limit: 10,
+  });
 
-    // State for status change modal
-    const [statusModalOpen, setStatusModalOpen] = useState(false);
-    const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
-    const [newStatus, setNewStatus] = useState<'submitted' | 'acknowledged' | 'pending' | 'resolved'>('submitted');
-    const [statusComment, setStatusComment] = useState('');
-    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  // State for status change modal
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+  const [newStatus, setNewStatus] = useState<
+    "submitted" | "acknowledged" | "pending" | "resolved"
+  >("submitted");
+  const [statusComment, setStatusComment] = useState("");
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-    useEffect(() => {
-        fetchPendingIssues();
-    }, [page, itemsPerPage]);
+  useEffect(() => {
+    fetchPendingIssues();
+  }, [page, itemsPerPage]);
 
-    useEffect(() => {
-        setPage(1);
-    }, [searchTerm, selectedCategory, selectedPriority, itemsPerPage]);
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedCategory, selectedPriority, itemsPerPage]);
 
-    const fetchPendingIssues = async () => {
-        try {
-            const response = await agencyAPI.getIssues({ 
-                status: 'pending',
-                page,
-                limit: itemsPerPage
-            });
-            
-            if (response.success) {
-                const issueList = response.data?.issues ?? [];
-                const pagination = response.data?.pagination ?? {
-                    page: 1,
-                    limit: itemsPerPage,
-                    total: 0,
-                    totalPages: 0,
-                };
-                setIssues(issueList);
-                setPaginationData({
-                    total: pagination.total,
-                    totalPages: pagination.totalPages,
-                    page: pagination.page,
-                    limit: pagination.limit,
-                });
-            } else {
-                console.error('Failed to fetch pending issues:', response.error);
-            }
-        } catch (error) {
-            console.error('Error fetching pending issues:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const fetchPendingIssues = async () => {
+    try {
+      const response = await agencyAPI.getIssues({
+        status: "pending",
+        page,
+        limit: itemsPerPage,
+      });
 
-    // Quick mark as resolved
-    const markAsResolved = async (issue: Issue) => {
-        try {
-            const response = await agencyAPI.updateIssueStatus(issue._id, 'resolved', 'Resolved by agency');
-            if (response.success) {
-                setIssues(issues.map(it => it._id === issue._id ? { ...it, status: 'resolved' } : it));
-            }
-        } catch (err) {
-            console.error('Mark as resolved failed', err);
-        }
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+      if (response.success) {
+        const issueList = response.data?.issues ?? [];
+        const pagination = response.data?.pagination ?? {
+          page: 1,
+          limit: itemsPerPage,
+          total: 0,
+          totalPages: 0,
+        };
+        setIssues(issueList);
+        setPaginationData({
+          total: pagination.total,
+          totalPages: pagination.totalPages,
+          page: pagination.page,
+          limit: pagination.limit,
         });
-    };
-
-    const filteredIssues = issues.filter(issue => {
-        const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (issue.description && issue.description.toLowerCase().includes(searchTerm.toLowerCase()));
-        const matchesPriority = selectedPriority === 'all' || issue.priority.toLowerCase() === selectedPriority.toLowerCase();
-        const matchesCategory = selectedCategory === 'all' || issue.category === selectedCategory;
-        
-        return matchesSearch && matchesPriority && matchesCategory;
-    });
-
-    const priorityColors = {
-        low: "#10B981",
-        medium: "#F59E0B",
-        high: "#EF4444"
-    };
-
-    const handleMarkResolved = async (issueId: string) => {
-        try {
-            const response = await agencyAPI.updateIssueStatus(issueId, 'resolved', 'Moved to resolved by agency');
-            if (response.success) {
-                setIssues(issues.map(it => it._id === issueId ? { ...it, status: 'resolved' } : it));
-            }
-        } catch (err) {
-            console.error('Mark as resolved failed', err);
-        }
-    };
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="w-12 h-12 border-4 border-accent2/30 border-t-accent2 rounded-full animate-spin"></div>
-            </div>
-        );
+      } else {
+        console.error("Failed to fetch pending issues:", response.error);
+      }
+    } catch (error) {
+      console.error("Error fetching pending issues:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
+  // Quick mark as resolved
+  const markAsResolved = async (issue: Issue) => {
+    try {
+      const response = await agencyAPI.updateIssueStatus(
+        issue._id,
+        "resolved",
+        "Resolved by agency",
+      );
+      if (response.success) {
+        setIssues(
+          issues.map((it) =>
+            it._id === issue._id ? { ...it, status: "resolved" } : it,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error("Mark as resolved failed", err);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const filteredIssues = issues.filter((issue) => {
+    const matchesSearch =
+      issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (issue.description &&
+        issue.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesPriority =
+      selectedPriority === "all" ||
+      issue.priority.toLowerCase() === selectedPriority.toLowerCase();
+    const matchesCategory =
+      selectedCategory === "all" || issue.category === selectedCategory;
+
+    return matchesSearch && matchesPriority && matchesCategory;
+  });
+
+  const priorityColors = {
+    low: "#10B981",
+    medium: "#F59E0B",
+    high: "#EF4444",
+  };
+
+  const handleMarkResolved = async (issueId: string) => {
+    try {
+      const response = await agencyAPI.updateIssueStatus(
+        issueId,
+        "resolved",
+        "Moved to resolved by agency",
+      );
+      if (response.success) {
+        setIssues(
+          issues.map((it) =>
+            it._id === issueId ? { ...it, status: "resolved" } : it,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error("Mark as resolved failed", err);
+    }
+  };
+
+  if (isLoading) {
     return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-almost-black">Pending Issues</h1>
-                    <p className="text-neutral-text mt-1">
-                        Issues currently being worked on by agency teams
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
-                        {paginationData.total} {paginationData.total === 1 ? 'Issue' : 'Issues'}
-                    </span>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-light-gray">
-                <div className="flex flex-col md:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex-1 relative">
-                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-text" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Search issues..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
-                        />
-                    </div>
-                    
-                    {/* Priority Filter */}
-                    <select
-                        value={selectedPriority}
-                        onChange={(e) => setSelectedPriority(e.target.value)}
-                        className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
-                    >
-                        <option value="all">All Priorities</option>
-                        <option value="high">High Priority</option>
-                        <option value="medium">Medium Priority</option>
-                        <option value="low">Low Priority</option>
-                    </select>
-
-                    {/* Category Filter */}
-                    <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
-                    >
-                        <option value="all">All Categories</option>
-                        <option value="Infrastructure">Infrastructure</option>
-                        <option value="Roads">Roads</option>
-                        <option value="Parks">Parks</option>
-                        <option value="Utilities">Utilities</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* Issues List */}
-            <div className="bg-white rounded-xl shadow-sm border border-light-gray">
-                <div className="p-6 border-b border-light-gray">
-                    <h2 className="text-lg font-semibold text-almost-black">Pending Issues</h2>
-                </div>
-                <div className="divide-y divide-light-gray">
-                    {filteredIssues.map((issue) => {
-                        const categoryInfo = getCategoryByName(issue.category) || { name: 'Other', color: '#999' };
-                        return (
-                            <div key={issue._id} className="p-6 hover:bg-light-gray/30 transition-colors">
-                                <div className="flex items-start gap-4">
-                                    {/* Status Indicator */}
-                                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center shrink-0">
-                                        <FaClock className="text-yellow-600" size={16} />
-                                    </div>
-
-                                    {/* Issue Details */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <h3 className="font-semibold text-almost-black">{issue.title}</h3>
-                                                    <span 
-                                                        className="px-2 py-1 rounded-full text-xs font-medium"
-                                                        style={{ backgroundColor: `${categoryInfo.color}20`, color: categoryInfo.color }}
-                                                    >
-                                                        {categoryInfo.name}
-                                                    </span>
-                                                    <span 
-                                                        className="px-2 py-1 rounded-full text-xs font-medium"
-                                                        style={{ backgroundColor: `${priorityColors[issue.priority.toLowerCase() as keyof typeof priorityColors]}20`, color: priorityColors[issue.priority.toLowerCase() as keyof typeof priorityColors] }}
-                                                    >
-                                                        {issue.priority}
-                                                    </span>
-                                                </div>
-                                                <p className="text-neutral-text text-sm mb-3 line-clamp-2">
-                                                    {issue.description || 'No description provided'}
-                                                </p>
-                                                <div className="flex items-center gap-4 text-xs text-gray-500">
-                                                    <div className="flex items-center gap-1">
-                                                        <FaCalendarAlt size={12} />
-                                                        <span>{formatDate(issue.submittedAt || issue.createdAt)}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-xs font-medium text-accent2">
-                                                            #{issue.trackingNumber ? issue.trackingNumber.split('-')[1] : 'N/A'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 shrink-0">
-                                                <button
-                                                    onClick={() => handleMarkResolved(issue._id)}
-                                                    className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
-                                                >
-                                                    Mark Resolved
-                                                </button>
-                                                <button className="text-accent2 hover:text-accent font-medium text-sm flex items-center gap-1">
-                                                    <FaEye size={14} />
-                                                    View
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                    {filteredIssues.length === 0 && (
-                        <div className="p-12 text-center">
-                            <FaClock className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                            <p className="text-neutral-text">No pending issues found</p>
-                            <p className="text-sm text-gray-400 mt-1">
-                                Issues that are currently being worked on will appear here.
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {paginationData.totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-1 pb-2">
-                    <div className="text-sm text-gray-700">
-                        Showing {(paginationData.page - 1) * paginationData.limit + 1} to {Math.min(paginationData.page * paginationData.limit, paginationData.total)} of {paginationData.total} issues
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <button
-                            className={`px-3 py-2 border rounded-lg ${page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                            onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            disabled={page === 1}
-                        >
-                            Previous
-                        </button>
-                        <div className="flex items-center space-x-1">
-                            {Array.from({ length: paginationData.totalPages }, (_, index) => index + 1).map((pageNumber) => (
-                                <button
-                                    key={pageNumber}
-                                    className={`px-3 py-2 border rounded ${page === pageNumber ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}
-                                    onClick={() => setPage(pageNumber)}
-                                >
-                                    {pageNumber}
-                                </button>
-                            ))}
-                        </div>
-                        <button
-                            className={`px-3 py-2 border rounded-lg ${page === paginationData.totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                            onClick={() => setPage((p) => Math.min(paginationData.totalPages, p + 1))}
-                            disabled={page === paginationData.totalPages}
-                        >
-                            Next
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
+      <div className="flex items-center justify-center h-96">
+        <div className="w-12 h-12 border-4 border-accent2/30 border-t-accent2 rounded-full animate-spin"></div>
+      </div>
     );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-almost-black">
+            Pending Issues
+          </h1>
+          <p className="text-neutral-text mt-1">
+            Issues currently being worked on by agency teams
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
+            {paginationData.total}{" "}
+            {paginationData.total === 1 ? "Issue" : "Issues"}
+          </span>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-light-gray">
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1 relative">
+            <FaSearch
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-text"
+              size={16}
+            />
+            <input
+              type="text"
+              placeholder="Search issues..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
+            />
+          </div>
+
+          {/* Priority Filter */}
+          <select
+            value={selectedPriority}
+            onChange={(e) => setSelectedPriority(e.target.value)}
+            className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
+          >
+            <option value="all">All Priorities</option>
+            <option value="high">High Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="low">Low Priority</option>
+          </select>
+
+          {/* Category Filter */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-accent2"
+          >
+            <option value="all">All Categories</option>
+            <option value="Infrastructure">Infrastructure</option>
+            <option value="Roads">Roads</option>
+            <option value="Parks">Parks</option>
+            <option value="Utilities">Utilities</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Issues List */}
+      <div className="bg-white rounded-xl shadow-sm border border-light-gray">
+        <div className="p-6 border-b border-light-gray">
+          <h2 className="text-lg font-semibold text-almost-black">
+            Pending Issues
+          </h2>
+        </div>
+        <div className="divide-y divide-light-gray">
+          {filteredIssues.map((issue) => {
+            const categoryInfo = getCategoryByName(issue.category) || {
+              name: "Other",
+              color: "#999",
+            };
+            return (
+              <div
+                key={issue._id}
+                className="p-6 hover:bg-light-gray/30 transition-colors"
+              >
+                <div className="flex items-start gap-4">
+                  {/* Status Indicator */}
+                  <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center shrink-0">
+                    <FaClock className="text-yellow-600" size={16} />
+                  </div>
+
+                  {/* Issue Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-almost-black">
+                            {issue.title}
+                          </h3>
+                          <span
+                            className="px-2 py-1 rounded-full text-xs font-medium"
+                            style={{
+                              backgroundColor: `${categoryInfo.color}20`,
+                              color: categoryInfo.color,
+                            }}
+                          >
+                            {categoryInfo.name}
+                          </span>
+                          <span
+                            className="px-2 py-1 rounded-full text-xs font-medium"
+                            style={{
+                              backgroundColor: `${priorityColors[issue.priority.toLowerCase() as keyof typeof priorityColors]}20`,
+                              color:
+                                priorityColors[
+                                  issue.priority.toLowerCase() as keyof typeof priorityColors
+                                ],
+                            }}
+                          >
+                            {issue.priority}
+                          </span>
+                        </div>
+                        <p className="text-neutral-text text-sm mb-3 line-clamp-2">
+                          {issue.description || "No description provided"}
+                        </p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <FaCalendarAlt size={12} />
+                            <span>
+                              {formatDate(issue.submittedAt || issue.createdAt)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-medium text-accent2">
+                              #
+                              {issue.trackingNumber
+                                ? issue.trackingNumber.split("-")[1]
+                                : "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleMarkResolved(issue._id)}
+                          className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                        >
+                          Mark Resolved
+                        </button>
+                        <button className="text-accent2 hover:text-accent font-medium text-sm flex items-center gap-1">
+                          <FaEye size={14} />
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {filteredIssues.length === 0 && (
+            <div className="p-12 text-center">
+              <FaClock className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+              <p className="text-neutral-text">No pending issues found</p>
+              <p className="text-sm text-gray-400 mt-1">
+                Issues that are currently being worked on will appear here.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {paginationData.totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-1 pb-2">
+          <div className="text-sm text-gray-700">
+            Showing {(paginationData.page - 1) * paginationData.limit + 1} to{" "}
+            {Math.min(
+              paginationData.page * paginationData.limit,
+              paginationData.total,
+            )}{" "}
+            of {paginationData.total} issues
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              className={`px-3 py-2 border rounded-lg ${page === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </button>
+            <div className="flex items-center space-x-1">
+              {Array.from(
+                { length: paginationData.totalPages },
+                (_, index) => index + 1,
+              ).map((pageNumber) => (
+                <button
+                  key={pageNumber}
+                  className={`px-3 py-2 border rounded ${page === pageNumber ? "bg-blue-50 border-blue-500 text-blue-600" : "hover:bg-gray-50"}`}
+                  onClick={() => setPage(pageNumber)}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+            </div>
+            <button
+              className={`px-3 py-2 border rounded-lg ${page === paginationData.totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
+              onClick={() =>
+                setPage((p) => Math.min(paginationData.totalPages, p + 1))
+              }
+              disabled={page === paginationData.totalPages}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
