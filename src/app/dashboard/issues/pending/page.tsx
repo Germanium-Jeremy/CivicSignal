@@ -34,6 +34,14 @@ export default function PendingIssuesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedPriority, setSelectedPriority] = useState('all');
+    const [page, setPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [paginationData, setPaginationData] = useState({
+        total: 0,
+        totalPages: 0,
+        page: 1,
+        limit: 10,
+    });
 
     // State for status change modal
     const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -44,18 +52,35 @@ export default function PendingIssuesPage() {
 
     useEffect(() => {
         fetchPendingIssues();
-    }, []);
+    }, [page, itemsPerPage]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchTerm, selectedCategory, selectedPriority, itemsPerPage]);
 
     const fetchPendingIssues = async () => {
         try {
             const response = await agencyAPI.getIssues({ 
                 status: 'pending',
-                page: 1, 
-                limit: 50 
+                page,
+                limit: itemsPerPage
             });
             
             if (response.success) {
-                setIssues(response.data?.issues || []);
+                const issueList = response.data?.issues ?? [];
+                const pagination = response.data?.pagination ?? {
+                    page: 1,
+                    limit: itemsPerPage,
+                    total: 0,
+                    totalPages: 0,
+                };
+                setIssues(issueList);
+                setPaginationData({
+                    total: pagination.total,
+                    totalPages: pagination.totalPages,
+                    page: pagination.page,
+                    limit: pagination.limit,
+                });
             } else {
                 console.error('Failed to fetch pending issues:', response.error);
             }
@@ -134,7 +159,7 @@ export default function PendingIssuesPage() {
                 </div>
                 <div className="flex items-center gap-3">
                     <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
-                        {filteredIssues.length} Issues
+                        {paginationData.total} {paginationData.total === 1 ? 'Issue' : 'Issues'}
                     </span>
                 </div>
             </div>
@@ -260,6 +285,41 @@ export default function PendingIssuesPage() {
                     )}
                 </div>
             </div>
+
+            {paginationData.totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-1 pb-2">
+                    <div className="text-sm text-gray-700">
+                        Showing {(paginationData.page - 1) * paginationData.limit + 1} to {Math.min(paginationData.page * paginationData.limit, paginationData.total)} of {paginationData.total} issues
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <button
+                            className={`px-3 py-2 border rounded-lg ${page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                        >
+                            Previous
+                        </button>
+                        <div className="flex items-center space-x-1">
+                            {Array.from({ length: paginationData.totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                                <button
+                                    key={pageNumber}
+                                    className={`px-3 py-2 border rounded ${page === pageNumber ? 'bg-blue-50 border-blue-500 text-blue-600' : 'hover:bg-gray-50'}`}
+                                    onClick={() => setPage(pageNumber)}
+                                >
+                                    {pageNumber}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            className={`px-3 py-2 border rounded-lg ${page === paginationData.totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                            onClick={() => setPage((p) => Math.min(paginationData.totalPages, p + 1))}
+                            disabled={page === paginationData.totalPages}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
