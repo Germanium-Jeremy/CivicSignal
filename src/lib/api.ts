@@ -466,12 +466,6 @@ export const issueAPI = {
             district?: string;
             sector?: string;
         };
-        photos?: Array<{
-            url: string;
-            thumbnailUrl?: string;
-            size?: number;
-            mimeType?: string;
-        }>;
         media?: Array<{
             url: string;
             mediaType: 'image' | 'audio' | 'video';
