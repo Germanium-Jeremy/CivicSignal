@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: 'Issue not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: { issue: { ...issue, photos: issue.media || [] } } });
+    return NextResponse.json({ success: true, data: { issue } });
   } catch (error) {
     console.error('GET issue error:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch issue' }, { status: 500 });
@@ -114,7 +114,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       data: {
         issue: {
           ...issue.toObject(),
-          photos: issue.media,
         },
       },
     });
