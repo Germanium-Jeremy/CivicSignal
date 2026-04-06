@@ -172,7 +172,6 @@ export async function GET(request: NextRequest) {
 
       const transformedIssues = issues.map((issue: any) => ({
         ...issue,
-        photos: issue.media || [],
       }));
 
       return {
@@ -356,6 +355,8 @@ export async function POST(request: NextRequest) {
             title: issue.title,
             description: issue.description,
             category: issue.category,
+            categoryTemplateId: issue.categoryTemplateId,
+            categoryTemplateVersion: issue.categoryTemplateVersion,
             priority: issue.priority,
             status: issue.status,
             location: issue.location,
