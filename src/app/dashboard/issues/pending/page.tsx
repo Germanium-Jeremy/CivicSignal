@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
 import { getCategoryByName, CATEGORIES } from "@/config/categories";
+import { Issue } from "@/lib/types/api";
 import {
   FaClock,
   FaMapMarkerAlt,
@@ -16,17 +17,7 @@ import {
   FaExclamationTriangle,
 } from "react-icons/fa";
 
-interface Issue {
-  _id: string;
-  title: string;
-  description?: string;
-  category: string;
-  priority: "High" | "Medium" | "Low";
-  status: "submitted" | "acknowledged" | "pending" | "resolved";
-  submittedAt: string;
-  createdAt: string;
-  trackingNumber: string;
-}
+// removed local Issue interface
 
 export default function PendingIssuesPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
