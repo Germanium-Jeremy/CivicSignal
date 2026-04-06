@@ -2,30 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import axios from "axios";
-
-interface User {
-     fullName: string;
-     email: string;
-     profileImage?: string;
-}
-
-interface Issue {
-     _id: string;
-     title: string;
-     description?: string;
-     category: string;
-     priority: "High" | "Medium" | "Low";
-     status: "submitted" | "acknowledged" | "pending" | "resolved";
-     submittedAt: string;
-     createdAt: string;
-     trackingNumber: string;
-     photos: { url: string }[];
-     media?: { url: string; mediaType?: string }[];
-     slaDeadline?: string;
-     activities?: { action: string; description: string; timestamp: string }[];
-     reportedBy: string | User; // User ID or populated user
-}
+import { issueAPI, userAPI } from "@/lib/api";
+import { Issue, User } from "@/lib/types/api";
+import { getCategoryByName } from "@/config/categories";
 
 const IssueDetailsPage = () => {
      const searchParams = useSearchParams();
@@ -44,22 +23,23 @@ const IssueDetailsPage = () => {
                }
 
                try {
-                    const response = await axios.get(`/api/issues/${issueId}`);
-                    const fetchedIssue = response.data.data.issue;
+                    const response = await issueAPI.getIssue(issueId);
+                    if (!response.success) throw new Error(response.error || "Failed to fetch issue");
+
+                    const fetchedIssue = response.data.issue;
                     setIssue(fetchedIssue);
 
                     // Fetch user details if reportedBy is a user ID
                     if (fetchedIssue.reportedBy && typeof fetchedIssue.reportedBy === "string") {
-                         const userResponse = await axios.get(
-                              `/api/user/profile?userId=${fetchedIssue.reportedBy}`, 
-                              { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
-                         );
-                         setReporter(userResponse.data.user);
+                         const userResponse = await userAPI.getProfile(fetchedIssue.reportedBy);
+                         if (userResponse.success) {
+                              setReporter(userResponse.data);
+                         }
                     } else if (fetchedIssue.reportedBy && typeof fetchedIssue.reportedBy === "object") {
-                         setReporter(fetchedIssue.reportedBy);
+                         setReporter(fetchedIssue.reportedBy as User);
                     }
-               } catch (err) {
-                    setError("Failed to fetch issue details.");
+               } catch (err: any) {
+                    setError(err.message || "Failed to fetch issue details.");
                } finally {
                     setLoading(false);
                }
@@ -105,10 +85,28 @@ const IssueDetailsPage = () => {
                                         <p className="text-sm font-medium">{issue.slaDeadline ? new Date(issue.slaDeadline).toLocaleString() : "Not set"}</p>
                                    </div>
                               </div>
-            
-                              <div className="mb-4">
-                                   <h3 className="text-lg font-semibold mb-2">Reported By</h3>
-                                   {reporter ? (
+
+                              {issue.customFields && Object.keys(issue.customFields).length > 0 && (
+                                <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Category-Specific Details</h3>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {Object.entries(issue.customFields).map(([key, value]) => {
+                                      const categoryInfo = getCategoryByName(issue.category);
+                                      const fieldConfig = categoryInfo?.fields.find(f => f.name === key);
+                                      return (
+                                        <div key={key}>
+                                          <p className="text-xs text-gray-500">{fieldConfig ? fieldConfig.label : key}</p>
+                                          <p className="text-sm font-medium">{typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value || 'N/A')}</p>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="mb-4 mt-6">
+                                <h3 className="text-lg font-semibold mb-2">Reported By</h3>
+                                {reporter ? (
                                         <div className="flex items-center gap-4">
                                              {reporter.profileImage && (
                                                   <img src={reporter.profileImage} alt="Reporter Profile" className="w-16 h-16 rounded-full object-cover border" />
@@ -126,7 +124,7 @@ const IssueDetailsPage = () => {
                               <div>
                                    <h3 className="text-lg font-semibold mb-2">Media Files</h3>
                                    <div className="grid grid-cols-3 gap-4">
-                                        {(issue.media || issue.photos || []).map((photo, index) => (
+                                        {(issue.media || []).map((photo, index) => (
                                              <img key={index} src={photo.url} alt={`Media ${index + 1}`} className="w-full h-auto rounded-lg shadow-md" />
                                         ))}
                                    </div>
