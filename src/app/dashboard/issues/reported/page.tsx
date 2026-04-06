@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { agencyAPI } from "@/lib/api";
 import { getCategoryByName, CATEGORIES } from "@/config/categories";
+import { Issue } from "@/lib/types/api";
 import {
   FaExclamationTriangle,
   FaMapMarkerAlt,
@@ -14,17 +15,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 
-interface Issue {
-  _id: string;
-  title: string;
-  description?: string;
-  category: string;
-  priority: "High" | "Medium" | "Low";
-  status: "submitted" | "acknowledged" | "pending" | "resolved";
-  submittedAt: string;
-  createdAt: string;
-  trackingNumber: string;
-}
+// removed local Issue interface
 
 export default function ReportedIssuesPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -383,6 +374,24 @@ export default function ReportedIssuesPage() {
                     </p>
                   </div>
                 </div>
+
+                {activeIssue.customFields && Object.keys(activeIssue.customFields).length > 0 && (
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Category-Specific Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(activeIssue.customFields).map(([key, value]) => {
+                        const categoryInfo = getCategoryByName(activeIssue.category);
+                        const fieldConfig = categoryInfo?.fields.find(f => f.name === key);
+                        return (
+                          <div key={key}>
+                            <p className="text-xs text-gray-500">{fieldConfig ? fieldConfig.label : key}</p>
+                            <p className="text-sm font-medium">{typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value || 'N/A')}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
