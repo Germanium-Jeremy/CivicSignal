@@ -8,7 +8,7 @@ export default function Download() {
 
   const handleDownloadAndroid = () => {
     const downloadmobile = document.createElement("a");
-    downloadmobile.href = "https://expo.dev/artifacts/eas/hfrhZpRv6EitzNEg8AvSnE.apk";
+    downloadmobile.href = "https://expo.dev/artifacts/eas/dX6CqL7VHZuDdDejaKFqUdFtD8oaoLYOceYbMfYV0kg.apk";
     downloadmobile.target = "_blank";
     downloadmobile.download = "CivicSignal.apk"; // Optional: Set a default filename
     document.body.appendChild(downloadmobile);
