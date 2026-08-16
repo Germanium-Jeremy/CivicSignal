@@ -390,18 +390,18 @@ export const adminAPI = {
     // Issues
     getIssues: (params?: { page?: number; limit?: number; status?: string; priority?: string; category?: string }) => apiCall<AdminIssuesResponse>(`/admin/issues?${new URLSearchParams(params as any).toString()}`),
     
-    getIssue: (issueId: string) => apiCall<Issue>(`/admin/issues/${issueId}`),
-    
-    updateIssue: (issueId: string, updates: Partial<Issue>) => apiCall<Issue>(`/admin/issues/${issueId}`, { 
-        method: 'PATCH', 
-        body: JSON.stringify(updates) 
+    getIssue: (issueId: string) => apiCall<ApiResponse<{ issue: Issue }>>(`/admin/issues/${issueId}`),
+
+    updateIssue: (issueId: string, updates: Partial<Issue>) => apiCall<ApiResponse<{ issue: Issue }>>(`/admin/issues/${issueId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates)
     }),
 
     deleteIssue: (issueId: string) => apiCall<{ success: boolean }>(`/admin/issues/${issueId}`, { method: 'DELETE' }),
     
-    updateIssueStatus: (issueId: string, status: Issue['status'], comment?: string) => apiCall<Issue>(`/admin/issues/${issueId}/status`, { 
-        method: 'PATCH', 
-        body: JSON.stringify({ status, comment }) 
+    updateIssueStatus: (issueId: string, status: Issue['status'], comment?: string) => apiCall<ApiResponse<Issue>>(`/admin/issues/${issueId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, comment })
     }),
     
     assignIssue: (issueId: string, assigneeId: string) => apiCall<Issue>(`/admin/issues/${issueId}/assign`, { 
@@ -517,7 +517,7 @@ export const issueAPI = {
 
     // Get single issue by ID
     getIssue: async (issueId: string) => {
-        return apiCall(`/issues/${issueId}`);
+        return apiCall<ApiResponse<{ issue: Issue }>>(`/issues/${issueId}`);
     },
 
     // Get issues by tracking number
