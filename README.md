@@ -25,7 +25,7 @@ Success will be measured by:
 We are seeking support through this competition to launch our pilot program and demonstrate the trans-formative potential of civic technologies in creating more responsive, transparent local governments.
 
 
-# What to try it out? Web Platform <a href="https://civic-signal.vercel.app" target="_black">Web Platform</a> or download our mobile application <a href="https://expo.dev/accounts/djeremiah/projects/civic-signal/builds/2bdc2779-08eb-4d1b-a361-45eb315268d5" target="_blank">Mobile App</a>
+# What to try it out? Web Platform <a href="https://civic-signal.vercel.app" target="_black">Web Platform</a> or download our mobile application <a href="https://expo.dev/accounts/djeremiah/projects/civic-signal/builds" target="_blank">Mobile App</a>
 
 ## Enterprise Runtime Configuration
 
