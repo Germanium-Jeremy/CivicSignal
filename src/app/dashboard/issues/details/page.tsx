@@ -26,7 +26,11 @@ const IssueDetailsPage = () => {
                     const response = await issueAPI.getIssue(issueId);
                     if (!response.success) throw new Error(response.error || "Failed to fetch issue");
 
-                    const fetchedIssue = response.data.issue;
+                    const fetchedIssue = response.data?.issue;
+                    if (!fetchedIssue) {
+                         throw new Error("Issue payload was missing issue data.");
+                    }
+
                     setIssue(fetchedIssue);
 
                     // Fetch user details if reportedBy is a user ID

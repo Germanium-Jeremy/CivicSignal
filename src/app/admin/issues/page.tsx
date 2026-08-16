@@ -383,8 +383,8 @@ const IssuesPage = () => {
                           {getPriorityBadge(issue.priority)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {issue.date
-                            ? new Date(issue.date).toLocaleDateString()
+                          {issue.submittedAt
+                            ? new Date(issue.submittedAt).toLocaleDateString()
                             : "No date"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

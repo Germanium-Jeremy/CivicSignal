@@ -3,6 +3,7 @@ export interface User {
   fullName: string;
   email: string;
   phone?: string;
+  profileImage?: string;
   role: "citizen" | "admin" | "agency_officer";
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
@@ -35,6 +36,7 @@ export interface Issue {
   tenantId: string;
   tenantSlug?: string;
   trackingNumber: string;
+  date?: string;
   title: string;
   description?: string;
   category: string;

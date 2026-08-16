@@ -1,5 +1,5 @@
 // API utility functions for CivicSignal app
-import { User, Issue, PaginatedResponse, AdminIssuesResponse } from '@/lib/types/api';
+import { User, Issue, PaginatedResponse, AdminIssuesResponse, ApiResponse } from '@/lib/types/api';
 const API_BASE = process.env.NODE_ENV === 'production' ? `${process.env.NEXT_PUBLIC_APP_URL}/api` : 'http://localhost:3000/api';
 
 // Token management
@@ -303,7 +303,10 @@ export const issuesAPI = {
 
 // User API
 export const userAPI = {
-    getProfile: async () => {
+    getProfile: async (userId?: string) => {
+        if (userId) {
+            return apiCall(`/user/profile?userId=${encodeURIComponent(userId)}`);
+        }
         return apiCall('/user/profile');
     },
 
