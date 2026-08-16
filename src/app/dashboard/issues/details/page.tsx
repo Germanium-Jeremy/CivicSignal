@@ -7,155 +7,212 @@ import { Issue, User } from "@/lib/types/api";
 import { getCategoryByName } from "@/config/categories";
 
 const IssueDetailsPage = () => {
-     const searchParams = useSearchParams();
-     const issueId = searchParams.get("issue_id");
-     const [issue, setIssue] = useState<Issue | null>(null);
-     const [reporter, setReporter] = useState<User | null>(null);
-     const [loading, setLoading] = useState(true);
-     const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const issueId = searchParams.get("issue_id");
+  const [issue, setIssue] = useState<Issue | null>(null);
+  const [reporter, setReporter] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-     useEffect(() => {
-          const fetchIssueDetails = async () => {
-               if (!issueId) {
-                    setError("Issue ID is missing.");
-                    setLoading(false);
-                    return;
-               }
+  useEffect(() => {
+    const fetchIssueDetails = async () => {
+      if (!issueId) {
+        setError("Issue ID is missing.");
+        setLoading(false);
+        return;
+      }
 
-               try {
-                    const response = await issueAPI.getIssue(issueId);
-                    if (!response.success) throw new Error(response.error || "Failed to fetch issue");
+      try {
+        const response = await issueAPI.getIssue(issueId);
+        if (!response.success)
+          throw new Error(response.error || "Failed to fetch issue");
 
-                    const fetchedIssue = response.data?.issue;
-                    if (!fetchedIssue) {
-                         throw new Error("Issue payload was missing issue data.");
-                    }
+        const fetchedIssue = response.data?.issue;
+        if (!fetchedIssue) {
+          throw new Error("Issue payload was missing issue data.");
+        }
 
-                    setIssue(fetchedIssue);
+        setIssue(fetchedIssue);
 
-                    // Fetch user details if reportedBy is a user ID
-                    if (fetchedIssue.reportedBy && typeof fetchedIssue.reportedBy === "string") {
-                         const userResponse = await userAPI.getProfile(fetchedIssue.reportedBy);
-                         if (userResponse.success) {
-                              setReporter(userResponse.data);
-                         }
-                    } else if (fetchedIssue.reportedBy && typeof fetchedIssue.reportedBy === "object") {
-                         setReporter(fetchedIssue.reportedBy as User);
-                    }
-               } catch (err: any) {
-                    setError(err.message || "Failed to fetch issue details.");
-               } finally {
-                    setLoading(false);
-               }
-          };
+        // Fetch user details if reportedBy is a user ID
+        if (
+          fetchedIssue.reportedBy &&
+          typeof fetchedIssue.reportedBy === "string"
+        ) {
+          const userResponse = await userAPI.getProfile(
+            fetchedIssue.reportedBy,
+          );
+          if (userResponse.success) {
+            setReporter(userResponse.data);
+          }
+        } else if (
+          fetchedIssue.reportedBy &&
+          typeof fetchedIssue.reportedBy === "object"
+        ) {
+          setReporter(fetchedIssue.reportedBy as User);
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch issue details.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-          fetchIssueDetails();
-     }, [issueId]);
+    fetchIssueDetails();
+  }, [issueId]);
 
-     if (loading) return <div className="text-center py-10">Loading...</div>;
-     if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (error)
+    return <div className="text-center py-10 text-red-500">{error}</div>;
 
-     return (
-          <div className="p-6 bg-gray-50 min-h-screen">
-               <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
-                    <h1 className="text-2xl font-bold mb-4">Issue Details</h1>
-                    {issue && (
-                         <div>
-                              <h2 className="text-xl font-semibold mb-2">{issue.title}</h2>
-                              <p className="text-gray-700 mb-4">{issue.description || "No description provided."}</p>
-                              <div className="grid grid-cols-2 gap-4 mb-4">
-                                   <div>
-                                        <p className="text-sm text-gray-500">Status:</p>
-                                        <p className="text-sm font-medium capitalize">{issue.status}</p>
-                                   </div>
-                                   <div>
-                                        <p className="text-sm text-gray-500">Priority:</p>
-                                        <p className="text-sm font-medium capitalize">{issue.priority}</p>
-                                   </div>
-                                   <div>
-                                        <p className="text-sm text-gray-500">Category:</p>
-                                        <p className="text-sm font-medium">{issue.category}</p>
-                                   </div>
-                                   <div>
-                                        <p className="text-sm text-gray-500">Tracking Number:</p>
-                                        <p className="text-sm font-medium">{issue.trackingNumber}</p>
-                                   </div>
-                                   <div>
-                                        <p className="text-sm text-gray-500">Submitted At:</p>
-                                        <p className="text-sm font-medium">{new Date(issue.submittedAt).toLocaleString()}</p>
-                                   </div>
-                                   <div>
-                                        <p className="text-sm text-gray-500">SLA Deadline:</p>
-                                        <p className="text-sm font-medium">{issue.slaDeadline ? new Date(issue.slaDeadline).toLocaleString() : "Not set"}</p>
-                                   </div>
-                              </div>
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
+        <h1 className="text-2xl font-bold mb-4">Issue Details</h1>
+        {issue && (
+          <div>
+            <h2 className="text-xl font-semibold mb-2">{issue.title}</h2>
+            <p className="text-gray-700 mb-4">
+              {issue.description || "No description provided."}
+            </p>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-sm text-gray-500">Status:</p>
+                <p className="text-sm font-medium capitalize">{issue.status}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Priority:</p>
+                <p className="text-sm font-medium capitalize">
+                  {issue.priority}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Category:</p>
+                <p className="text-sm font-medium">{issue.category}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Tracking Number:</p>
+                <p className="text-sm font-medium">{issue.trackingNumber}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Submitted At:</p>
+                <p className="text-sm font-medium">
+                  {new Date(issue.submittedAt).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">SLA Deadline:</p>
+                <p className="text-sm font-medium">
+                  {issue.slaDeadline
+                    ? new Date(issue.slaDeadline).toLocaleString()
+                    : "Not set"}
+                </p>
+              </div>
+            </div>
 
-                              {issue.customFields && Object.keys(issue.customFields).length > 0 && (
-                                <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Category-Specific Details</h3>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {Object.entries(issue.customFields).map(([key, value]) => {
-                                      const categoryInfo = getCategoryByName(issue.category);
-                                      const fieldConfig = categoryInfo?.fields.find(f => f.name === key);
-                                      return (
-                                        <div key={key}>
-                                          <p className="text-xs text-gray-500">{fieldConfig ? fieldConfig.label : key}</p>
-                                          <p className="text-sm font-medium">{typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value || 'N/A')}</p>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
+            {issue.customFields &&
+              Object.keys(issue.customFields).length > 0 && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                    Category-Specific Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(issue.customFields).map(([key, value]) => {
+                      const categoryInfo = getCategoryByName(issue.category);
+                      const fieldConfig = categoryInfo?.fields.find(
+                        (f) => f.name === key,
+                      );
+                      return (
+                        <div key={key}>
+                          <p className="text-xs text-gray-500">
+                            {fieldConfig ? fieldConfig.label : key}
+                          </p>
+                          <p className="text-sm font-medium">
+                            {typeof value === "boolean"
+                              ? value
+                                ? "Yes"
+                                : "No"
+                              : String(value || "N/A")}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
-                              <div className="mb-4 mt-6">
-                                <h3 className="text-lg font-semibold mb-2">Reported By</h3>
-                                {reporter ? (
-                                        <div className="flex items-center gap-4">
-                                             {reporter.profileImage && (
-                                                  <img src={reporter.profileImage} alt="Reporter Profile" className="w-16 h-16 rounded-full object-cover border" />
-                                             )}
-                                             <div>
-                                                  <p className="text-sm font-medium">{reporter.fullName}</p>
-                                                  <p className="text-sm text-gray-500">{reporter.email}</p>
-                                             </div>
-                                        </div>
-                                   ) : (
-                                        <p className="text-sm text-gray-500">Reporter details not available.</p>
-                                   )}
-                              </div>
-                              
-                              <div>
-                                   <h3 className="text-lg font-semibold mb-2">Media Files</h3>
-                                   <div className="grid grid-cols-3 gap-4">
-                                        {(issue.media || []).map((photo, index) => (
-                                             <img key={index} src={photo.url} alt={`Media ${index + 1}`} className="w-full h-auto rounded-lg shadow-md" />
-                                        ))}
-                                   </div>
-                              </div>
+            <div className="mb-4 mt-6">
+              <h3 className="text-lg font-semibold mb-2">Reported By</h3>
+              {reporter ? (
+                <div className="flex items-center gap-4">
+                  {reporter.profileImage && (
+                    <img
+                      src={reporter.profileImage}
+                      alt="Reporter Profile"
+                      className="w-16 h-16 rounded-full object-cover border"
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium">{reporter.fullName}</p>
+                    <p className="text-sm text-gray-500">{reporter.email}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Reporter details not available.
+                </p>
+              )}
+            </div>
 
-                              {issue.activities && issue.activities.length > 0 && (
-                                   <div className="mt-6">
-                                        <h3 className="text-lg font-semibold mb-2">Status Timeline</h3>
-                                        <div className="space-y-2">
-                                             {issue.activities
-                                                  .slice()
-                                                  .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-                                                  .map((activity, idx) => (
-                                                       <div key={idx} className="p-3 border rounded-lg bg-gray-50">
-                                                            <p className="text-sm font-medium">{activity.action.toUpperCase()}</p>
-                                                            <p className="text-sm text-gray-600">{activity.description}</p>
-                                                            <p className="text-xs text-gray-500 mt-1">{new Date(activity.timestamp).toLocaleString()}</p>
-                                                       </div>
-                                                  ))}
-                                        </div>
-                                   </div>
-                              )}
-                         </div>
-                    )}
-               </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Media Files</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {(issue.media || []).map((photo, index) => (
+                  <img
+                    key={index}
+                    src={photo.url}
+                    alt={`Media ${index + 1}`}
+                    className="w-full h-auto rounded-lg shadow-md"
+                  />
+                ))}
+              </div>
+            </div>
+
+            {issue.activities && issue.activities.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-2">Status Timeline</h3>
+                <div className="space-y-2">
+                  {issue.activities
+                    .slice()
+                    .sort(
+                      (a, b) =>
+                        new Date(a.timestamp).getTime() -
+                        new Date(b.timestamp).getTime(),
+                    )
+                    .map((activity, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 border rounded-lg bg-gray-50"
+                      >
+                        <p className="text-sm font-medium">
+                          {activity.action.toUpperCase()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(activity.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
-     );
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default IssueDetailsPage;

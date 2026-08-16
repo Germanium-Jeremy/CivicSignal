@@ -12,10 +12,15 @@ export interface User {
   updatedAt: string;
 }
 
-export type IssueStatus = 'submitted' | 'acknowledged' | 'pending' | 'resolved' | 'closed';
+export type IssueStatus =
+  | "submitted"
+  | "acknowledged"
+  | "pending"
+  | "resolved"
+  | "closed";
 
 export interface IssueLocation {
-  type: 'Point';
+  type: "Point";
   coordinates: [number, number];
   address?: string;
   district?: string;
@@ -28,7 +33,7 @@ export interface IssueMedia {
   uploadedAt: string;
   size: number;
   mimeType: string;
-  mediaType: 'image' | 'audio' | 'video';
+  mediaType: "image" | "audio" | "video";
 }
 
 export interface Issue {
@@ -42,14 +47,14 @@ export interface Issue {
   category: string;
   categoryTemplateId?: string;
   categoryTemplateVersion?: number;
-  priority: 'High' | 'Medium' | 'Low';
+  priority: "High" | "Medium" | "Low";
   status: IssueStatus;
   location?: IssueLocation;
   media: IssueMedia[];
   customFields: Record<string, any>;
   reportMarkdown?: string;
   slaDeadline?: string;
-  slaStatus: 'within_sla' | 'at_risk' | 'breached';
+  slaStatus: "within_sla" | "at_risk" | "breached";
   reportedBy: string;
   reporterDevice: {
     deviceId: string;
@@ -67,10 +72,15 @@ export interface Issue {
   resolvedAt?: string;
   closedAt?: string;
   activities: Array<{
-    action: IssueStatus | 'status_changed' | 'sla_breached' | 'assigned' | 'submitted';
+    action:
+      | IssueStatus
+      | "status_changed"
+      | "sla_breached"
+      | "assigned"
+      | "submitted";
     description: string;
     performedBy: string;
-    performedByModel: 'User' | 'Agency';
+    performedByModel: "User" | "Agency";
     timestamp: string;
     metadata?: Record<string, any>;
   }>;
@@ -79,7 +89,7 @@ export interface Issue {
     toStatus: IssueStatus;
     changedAt: string;
     changedBy: string;
-    changedByModel: 'User' | 'Agency';
+    changedByModel: "User" | "Agency";
     comment?: string;
   }>;
   isPublic: boolean;
@@ -89,7 +99,7 @@ export interface Issue {
   upvotedBy: string[];
   resolutionNotes?: string;
   resolutionMedia: IssueMedia[];
-  source: 'web' | 'mobile' | 'ios' | 'android' | 'api';
+  source: "web" | "mobile" | "ios" | "android" | "api";
   tags?: string[];
   metadata?: Record<string, any>;
   createdAt: string;
